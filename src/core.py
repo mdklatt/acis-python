@@ -11,9 +11,19 @@ import json
 import re
 import urllib
 import urlparse
-import numpy
 import dateutil.relativedelta as relativedelta
 
+
+def date_delta(interval):
+	deltas = {
+		'dly': datetime.timedelta(days=1),
+		'mly': relativedelta.relativedelta(months=1),
+		'yly': relativedelta.relativedelta(years=1),
+	}
+	try:
+		return deltas[interval]
+	except KeyError:
+		raise ValueError('uknown interval %s' % interval)
 	
 def parse_date(sdate):
 	"""
@@ -28,19 +38,6 @@ def parse_date(sdate):
 	except AttributeError:  # match is None
 		raise ValueError('invalid date format')
 	return datetime.date(y, m, d)
-
-
-def date_delta(interval):
-	deltas = {
-		'dly': datetime.timedelta(days=1),
-		'mly': relativedelta.relativedelta(months=1),
-		'yly': relativedelta.relativedelta(years=1),
-	}
-	try:
-		delta = deltas[interval]
-	except KeyError:
-		raise ValueError('unknown interval')
-	return delta
 	
 	
 class ServerError(Exception):
@@ -55,7 +52,7 @@ class ServerError(Exception):
 		Exception.__init__(self, status)
 		self.status = status
 		return
-	
+		
 
 class RequestError(Exception):
 	"""
@@ -71,13 +68,9 @@ class Request(object):
 	"""
 	An ACIS request.
 	
-	"""
-	_server = 'http://data.rcc-acis.org'
-	
+	"""	
 	def __init__(self, action, server='http://data.rcc-acis.org'):
-		self.url = urlparse.urljoin(Request._server, action)
-		self.params = None
-		return
+		self.server = urlparse.urljoin(server, action)
 		
 	def get(self, params):
 		"""
@@ -86,9 +79,9 @@ class Request(object):
 		The request is returned as an ACIS result JSON object.
 		"""
 		HTTP_OK = 200; HTTP_NF = 404
-		self.params = json.dumps(params)
-		query = urllib.urlencode({ 'params': self.params })
-		conn = urllib.urlopen(self.url, data=query)  # POST request
+		self.params = params
+		query = urllib.urlencode({ 'params': json.dumps(self.params) })
+		conn = urllib.urlopen(self.server, data=query)  # POST request
 		status = conn.getcode()
 		if status != HTTP_OK:  # server did return a result object
 			if status == HTTP_NF:  # server returns HTML not plain text
@@ -109,87 +102,105 @@ class StnMetaRequest(Request):
 		if params is not None:
 			self.get(params)
 		return
-
+		
 	def get(self, params):
 		"""
 		Retrieve and parse a StnMeta request.
 		
-		Elements must be specified using the full object syntax, i.e.
-		{ 'name': 'elem', ... }. Sites are keyed by their ACIS UID, so this
-		must be included in the 'meta' parameter, i.e. 'meta': 'uid'.
 		"""
 		result = Request.get(self, params)
-		self.meta = { site.pop('uid'): site for site in result['meta'] }
- 		return
-
+		try:
+			self.meta = { site.pop('uid'): site for site in result['meta'] }
+		except KeyError:
+			raise ValueError('uid is a required meta element')
+		return
 		
-class StnDataRequest(Request):
+
+class DataRequest(Request):
+	
+	def __init__(self, action, params=None):
+		Request.__init__(self, action)
+		if params is not None:
+			self.get(params)
+		return
+		
+	def __len__(self):
+		count = 0
+		for uid in self.data:
+			count += len(self.data[uid])
+		return count
+				
+				
+class StnDataRequest(DataRequest):
 	"""
 	A single-station data request.
 	
 	"""
 	def __init__(self, params=None):
-		Request.__init__(self, 'StnData')
-		if params is not None:
-			self.get(params)
+		DataRequest.__init__(self, 'StnData', params)
 		return
-
+		
 	def get(self, params):
 		"""
 		Retrieve and parse a StnData request.
 		
-		Elements must be specified using the full object syntax, i.e.
-		{ 'name': 'elem', ... }. Sites are keyed by their ACIS UID, so this
-		must be included in the 'meta' parameter, i.e. 'meta': 'uid'.
 		"""
-		elems = ( elem['name'] for elem in params['elems'] )
- 		dtype = [('uid', int), ('date', object)] + [(elem, object) for elem 
- 			in elems]	
 		result = Request.get(self, params)
-		uid = result['meta'].pop('uid')
+		try:
+			uid = result['meta'].pop('uid')
+		except KeyError:
+			raise ValueError('uid is a required meta element')
 		self.meta = { uid: result['meta'] }
-		data = []
-		for record in result['data']:
-			date = parse_date(record[0])
-			data.append(tuple([uid, date] + record[1:]))
-		self.data = numpy.array(data, dtype)
+		self.data = { uid: result['data'] }
 		return
-
-				
-class MultiStnDataRequest(Request):
+		
+	def __iter__(self):
+	
+		for uid, data in self.data.items():
+			for record in data:
+				record[0] = parse_date(record[0])
+				record.insert(0, uid)
+				yield tuple(record)
+		return
+		
+						
+class MultiStnDataRequest(DataRequest):
 
 	def __init__(self, params=None):
-		Request.__init__(self, 'MultiStnData')
-		if params is not None:
-			self.get(params)
-		return
+		DataRequest.__init__(self, 'MultiStnData', params)
 		
 	def get(self, params):
 		"""
 		Retrieve and parse a MultiStnData result.
 		
-		Elements must be specified using the full object syntax, i.e.
-		{ 'name': 'elem', ... }. Sites are keyed by their ACIS UID, so this
-		must be included in the 'meta' parameter. Requests with a groupby
-		value are not currently supported.
 		"""
-		elems = ( elem['name'] for elem in params['elems'] )
- 		dtype = [('uid', int), ('date', object)] + [(elem, object) for elem 
- 			in elems]	
-		if 'date' in params:
-			sdate = data_parse(params['date'])
-		elif 'sdate' and 'edate' in params:
-			sdate = parse_date(params['sdate'])
-		delta = date_delta(params['elems'][0].get('interval', 'dly'))			
-		result = Request.get(self, params)		
+		result = DataRequest.get(self, params)
 		self.meta = {}
-		data = []
+		self.data = {}
 		for site in result['data']:
-			date = sdate
-			uid = site['meta'].pop('uid')
+			try:
+				uid = site['meta'].pop('uid')
+			except KeyError:
+				raise ValueError('uid is a required meta element')
 			self.meta[uid] = site['meta']
-			for record in site['data']:
-				data.append(tuple([uid, date] + record))
+			self.data[uid] = site['data']
+		return
+		
+	def __iter__(self):
+		if 'date' in self.params:
+			sdate = data_parse(self.params['date'])
+		elif 'sdate' and 'edate' in self.params:
+			sdate = parse_date(self.params['sdate'])
+		try:
+			interval = self.params['elems'][0]['interval']
+		except (TypeError, KeyError):
+			interval = 'dly'
+		delta = date_delta(interval)
+		for uid, data in self.data.items():
+			date = sdate
+			for record in data:
+				record.insert(0, uid)
+				record.insert(1, date)
+				yield tuple(record)
 				date += delta
-		self.data = numpy.array(data, dtype)
 		return
