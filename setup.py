@@ -12,7 +12,6 @@ def main():
 		'author': 'Michael Klatt',
 		'author_email': 'mdklatt@ou.edu',
 		'packages': ['acis'],
-		'package_dir': {'acis': 'src'}
 	}
 	setup(**dist)
 	return 0

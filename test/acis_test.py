@@ -1,8 +1,23 @@
 #!/usr/bin/python
 
-from sys import stdout
+# Standard modules.
+
+import os.path
+import sys
+
+
+# Local modules.
+
 import utillib.chron as chron
+
+
+# Test module.
+
+root_dir = os.path.join(os.path.dirname(__file__), '..')
+sys.path.insert(0, root_dir)
 import acis
+
+
 
 timer = chron.Timer()
 
