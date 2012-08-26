@@ -24,77 +24,81 @@ def date_delta(interval):
 		return deltas[interval]
 	except KeyError:
 		raise ValueError('uknown interval %s' % interval)
-	
+
 def parse_date(sdate):
 	"""
 	Parse a date string into a datetime.date object.
-	
+
 	Valid date formats are YYYY[-MM[-DD]] and hyphens are optional.
 	"""
 	date_regex = re.compile(r'^(\d{4})(?:-?(\d{2}))?(?:-?(\d{2}))?$')
 	match = date_regex.search(sdate)
 	try:
 		y, m, d = (int(s) if s is not None else 1 for s in match.groups())
-	except AttributeError:  # match is None
+	except AttributeError:	# match is None
 		raise ValueError('invalid date format')
 	return datetime.date(y, m, d)
-	
-	
+
+
 class ServerError(Exception):
 	"""
 	The server was unable to return a result object.
-	
+
 	This is reported as an HTTP status other than OK. In addition to the usual
 	HTTP errors, this will occur if the server could not parse the request. The
 	'status' attribute contains the HTTP status code.
 	"""
-	def __init__(self, message, status):
-		Exception.__init__(self, status)
-		self.status = status
+	def __init__(self, message, code):
+
+		# message might be HTML; extract text from <p>...</p>
+		regex = r'<html>[\s\S]*<p>([\s\S]*)</p>'
+		try:
+			message = re.search(regex, message).group(1)
+		except AttributeError:	# match is None, plain text
+			pass
+		Exception.__init__(self, message)
+		self.code = code
 		return
-		
+
 
 class RequestError(Exception):
 	"""
 	The returned result object is reporting an error.
-	
+
 	This is reported as an 'error' attribute in the result object. The server
 	was able to parse the request, but it was invalid in some way.
 	"""
 	pass
-		
+
 
 class Request(object):
 	"""
 	An ACIS request.
-	
-	"""	
+
+	"""
+	HTTP_OK = 200
+
 	def __init__(self, action, server='http://data.rcc-acis.org'):
 		self.server = urlparse.urljoin(server, action)
-		
+
 	def get(self, params):
 		"""
 		Request the data defined by 'params' from the server.
-		
+
 		The request is returned as an ACIS result JSON object.
 		"""
-		HTTP_OK = 200; HTTP_NF = 404
 		self.params = params
 		query = urllib.urlencode({ 'params': json.dumps(self.params) })
-		conn = urllib.urlopen(self.server, data=query)  # POST request
-		status = conn.getcode()
-		if status != HTTP_OK:  # server did return a result object
-			if status == HTTP_NF:  # server returns HTML not plain text
-				message = 'resource not found'
-			else:
-				message = conn.read()  # server should return plain text
-			raise ServerError(message, status)
+		conn = urllib.urlopen(self.server, data=query)	# POST request
+		code = conn.getcode()
+		if code != Request.HTTP_OK:	 # server could not complete the request
+			raise ServerError(conn.read(), code)
 		result = json.loads(conn.read())
-		if 'error' in result:
+		if 'error' in result:  # server returned an error object
 			raise RequestError(result['error'])
-		return result	
+		return result
 
-		
+
 class StnMetaRequest(Request):
 
 	def __init__(self, params=None):
@@ -102,11 +106,11 @@ class StnMetaRequest(Request):
 		if params is not None:
 			self.get(params)
 		return
-		
+
 	def get(self, params):
 		"""
 		Retrieve and parse a StnMeta request.
-		
+
 		"""
 		result = Request.get(self, params)
 		try:
@@ -114,36 +118,36 @@ class StnMetaRequest(Request):
 		except KeyError:
 			raise ValueError('uid is a required meta element')
 		return
-		
+
 
 class DataRequest(Request):
-	
+
 	def __init__(self, action, params=None):
 		Request.__init__(self, action)
 		if params is not None:
 			self.get(params)
 		return
-		
+
 	def __len__(self):
 		count = 0
 		for uid in self.data:
 			count += len(self.data[uid])
 		return count
-				
-				
+
+
 class StnDataRequest(DataRequest):
 	"""
 	A single-station data request.
-	
+
 	"""
 	def __init__(self, params=None):
 		DataRequest.__init__(self, 'StnData', params)
 		return
-		
+
 	def get(self, params):
 		"""
 		Retrieve and parse a StnData request.
-		
+
 		"""
 		result = Request.get(self, params)
 		try:
@@ -153,26 +157,26 @@ class StnDataRequest(DataRequest):
 		self.meta = { uid: result['meta'] }
 		self.data = { uid: result['data'] }
 		return
-		
+
 	def __iter__(self):
-	
+
 		for uid, data in self.data.items():
 			for record in data:
 				record[0] = parse_date(record[0])
 				record.insert(0, uid)
 				yield tuple(record)
 		return
-		
-						
+
+
 class MultiStnDataRequest(DataRequest):
 
 	def __init__(self, params=None):
 		DataRequest.__init__(self, 'MultiStnData', params)
-		
+
 	def get(self, params):
 		"""
 		Retrieve and parse a MultiStnData result.
-		
+
 		"""
 		result = DataRequest.get(self, params)
 		self.meta = {}
@@ -185,7 +189,7 @@ class MultiStnDataRequest(DataRequest):
 			self.meta[uid] = site['meta']
 			self.data[uid] = site['data']
 		return
-		
+
 	def __iter__(self):
 		if 'date' in self.params:
 			sdate = data_parse(self.params['date'])
