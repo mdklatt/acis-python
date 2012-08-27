@@ -1,56 +1,86 @@
-"""
-Classes for working with an ACIS result object.
+""" Classes for working with an ACIS web services result object.
+
+This implementation is based on ACIS Web Services Version 2:
+<http://data.rcc-acis.org/doc/>.
+
+Requires the dateutil library: <http//:pypi.python.org/pypi/python-dateutil/>.
 
 """
-__version__ = '0.1.dev'
-__all__ = ('StnMetaResult', 'StnDataResult', 'MultiStnDataResult',
-    'ResultError')
+__version__ = "0.1.dev"
 
 import datetime
 import re
+
 import dateutil.relativedelta as relativedelta
 
+__all__ = ("StnMetaResult", "StnDataResult", "MultiStnDataResult",
+           "ResultError")
 
-def _parse_date(sdate):
-    """
-    Parse a date string into a datetime.date object.
+
+def _parse_date(date):
+    """ Parse a date string into a datetime.date object.
 
     Valid date formats are YYYY[-MM[-DD]] and hyphens are optional.
     """
-    date_regex = re.compile(r'^(\d{4})(?:-?(\d{2}))?(?:-?(\d{2}))?$')
-    match = date_regex.search(sdate)
+    date_regex = re.compile(r"^(\d{4})(?:-?(\d{2}))?(?:-?(\d{2}))?$")
+    match = date_regex.search(date)
     try:
         y, m, d = (int(s) if s is not None else 1 for s in match.groups())
     except AttributeError:  # match is None
-        raise ValueError('invalid date format')
+        raise ValueError("invalid date format")
     return datetime.date(y, m, d)
 
 
 class _Result(object):
+    """ Base class for all result objects.
 
-    def __init__(self, request):
+    """
+    def __init__(self, response):
+        """ Initialize a _Result object.
+
+        """
+        result = response["result"]
         try:
-            raise ResultError(request['result']['error'])
+            raise ResultError(result["error"])
         except KeyError:  # no error
-            pass
-        return
+            return
 
 
 class StnMetaResult(_Result):
+    """ A StnMeta result for one or more sites.
 
-    def __init__(self, request):
-        _Result.__init__(self, request)
-        meta = request['result']['meta']
+    The 'meta' attribute is a dict keyed to ACIS site uid(s).
+
+    """
+    def __init__(self, response):
+        """ Initialize a StnMetaResult object.
+
+        The 'response' parameter is the return value from Request.submit() and
+        must contain the 'uid' metadata element.
+
+        """
+        _Result.__init__(self, response)
+        meta = response["result"]["meta"]
         try:
-            self.meta = { site.pop('uid'): site for site in meta }
+            self.meta = {site.pop("uid"): site for site in meta}
         except KeyError:
-            raise ValueError('uid is a required meta element')
+            raise ValueError("uid is a required meta element")
         return
 
 
 class _DataResult(_Result):
+    """ Base class for a station data result.
 
+    _DataResult objects have a 'data' and 'meta' attribute corresponding to
+    the data and metadata in the ACIS result object. Each attribute is a dict
+    keyed to ACIS site uid(s) so the ACIS result must contain the 'uid'
+    metadata element.
+
+    """
     def __len__(self):
+        """ Return the number of data records in this result.
+
+        """
         count = 0
         for uid in self.data:
             count += len(self.data[uid])
@@ -58,22 +88,32 @@ class _DataResult(_Result):
 
 
 class StnDataResult(_DataResult):
-    """
-    A StnData request result.
+    """ A StnData result for a single site.
 
     """
-    def __init__(self, request):
-        _DataResult.__init__(self, request)
-        meta = request['result']['meta']
+    def __init__(self, response):
+        """ Initialize a StnDataResult object.
+
+        The 'response' parameter is the return value from Request.submit() and
+        must contain the 'uid' metadata element.
+
+        """
+        _DataResult.__init__(self, response)
+        meta = response["result"]["meta"]
         try:
-            uid = meta.pop('uid')
+            uid = meta.pop("uid")
         except KeyError:
-            raise ValueError('uid is a required meta element')
+            raise ValueError("uid is a required meta element")
         self.meta = { uid: meta }
-        self.data = { uid: request['result']['data'] }
+        self.data = { uid: response["result"]["data"] }
         return
 
     def __iter__(self):
+        """ Iterate over each data record in the result.
+
+        Each record is a tuple: (uid, date, elem1, ...).
+
+        """
         for uid, data in self.data.items():
             for record in data:
                 record[0] = _parse_date(record[0])
@@ -83,30 +123,44 @@ class StnDataResult(_DataResult):
 
 
 class MultiStnDataResult(_DataResult):
+    """ A MultiStnData result for one more sites.
 
-    def __init__(self, request):
-        _DataResult.__init__(self, request)
+    """
+    def __init__(self, response):
+        """ Initialize a MultiStnDataResult object.
+
+        The 'response' parameter is the return value from Request.submit() and
+        must contain the 'uid' metadata element.
+
+        """
+        _DataResult.__init__(self, response)
         try:
-            sdate = request['params']['sdate']
+            sdate = response["params"]["sdate"]
         except KeyError:
-            sdate = request['params']['date']
+            sdate = response["params"]["date"]
         try:
-            interval = request['params']['elems'][0]['interval']
+            interval = response["params"]["elems"][0]["interval"]
         except (TypeError, KeyError):
-            interval = 'dly'
+            interval = "dly"
         self._date_iter = _DateIterator(_parse_date(sdate), interval)
         self.meta = {}
         self.data = {}
-        for site in request['result']['data']:
+        for site in response["result"]["data"]:
             try:
-                uid = site['meta'].pop('uid')
+                uid = site["meta"].pop("uid")
             except KeyError:
-                raise ValueError('uid is a required meta element')
-            self.meta[uid] = site['meta']
-            self.data[uid] = site['data']
+                raise ValueError("uid is a required meta element")
+            self.meta[uid] = site["meta"]
+            self.data[uid] = site["data"]
         return
 
     def __iter__(self):
+        """ Iterate over each data record in the result.
+
+        Each record is a tuple: (uid, date, elem1, ...).  This currently does
+        not work for elements with a 'groupby' specification.
+
+        """
         for uid, data in self.data.items():
             self._date_iter.reset()
             for record in data:
@@ -117,39 +171,47 @@ class MultiStnDataResult(_DataResult):
 
 
 class ResultError(Exception):
-    """
-    The returned result object is reporting an error.
+    """ An error reported by the ACIS result object.
 
-    This is reported as an 'error' attribute in the result object. The server
-    was able to parse the request, but the result is invalid in some way.
+    The server returned an object, but it is invalid. The object will contain
+    an 'error' key with a string describing the error.
+
     """
     pass
 
 
 class _DateIterator(object):
-    """
-    An endless date iterator.
+    """ An endless date iterator.
 
-    Call reset() to reset the iterator to the beginning.
+    Iteration will continue indefinitely from the start date unless reset() is
+    called.
+
     """
     _deltas = {
-        'dly': datetime.timedelta(days=1),
-        'mly': relativedelta.relativedelta(months=1),
-        'yly': relativedelta.relativedelta(years=1),
+        "dly": datetime.timedelta(days=1),
+        "mly": relativedelta.relativedelta(months=1),
+        "yly": relativedelta.relativedelta(years=1),
     }
 
     def __init__(self, start, interval):
+        """ Initialize a _DateIterator object.
+
+        The 'interval' is valid ACIS interval specifier, e.g. 'dly', 'mly',
+        or 'yly'.
+        """
         self._start = self._now = start
         try:
             self._delta = _DateIterator._deltas[interval]
         except KeyError:
-            raise ValueError('uknown interval %s' % interval)
+            raise ValueError("uknown interval %s" % interval)
         return
 
     def reset(self):
+        """ Reset the iterator to its start date. """
         self._now = self._start
 
     def next(self):
+        """ Return the next date in the sequence. """
         next = self._now
         self._now += self._delta
-        return next
+        return next  # there is no StopIteration like a normal iterator

@@ -15,7 +15,7 @@ class TestRequest(unittest.TestCase):
     def test_init(self):
         """ Test normal init. """
         url = "http://data.rcc-acis.org/StnData"
-        self.assertEqual(self.request._url, url)
+        self.assertEqual(self.request.url, url)
         return
 
     def test_submit(self):
