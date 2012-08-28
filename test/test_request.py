@@ -1,3 +1,4 @@
+import sys
 import unittest
 
 import local
@@ -7,7 +8,7 @@ class TestRequest(unittest.TestCase):
 
     def setUp(self):
         self.request = Request("StnData")
-        self.params = { "sid": "346661", "elems": "maxt", "date": "20090101",
+        self.params = { "sid": "OKC", "elems": "maxt", "date": "20090101",
             "meta": "uid" }
         self.result = { "meta": { "uid": 92 }, "data": [["2009-01-01","57"]] }
         return
@@ -24,7 +25,7 @@ class TestRequest(unittest.TestCase):
         self.assertEqual(self.request.submit(self.params), response)
         return
 
-    def test_submit_fail(self):
+    def test_submit_bad_request(self):
         """ Test submit failure. """
         self.params.pop("sid")
         self.assertRaises(RequestError, self.request.submit, self.params)
@@ -33,29 +34,13 @@ class TestRequest(unittest.TestCase):
 
 class TestRequestError(unittest.TestCase):
 
-    def setUp(self):
-        self.code = 400
-        self.text = "An error occurred"
+    def test_init(self):
+        """ Test error message. """
+        message = "an error occurred"
+        error = RequestError(message)
+        self.assertEqual(error.message, message)
         return
-
-    def test_text(self):
-        """ Test a plain text error message. """
-        error = RequestError(self.text, self.code)
-        self.assertEqual(error.message, self.text)
-        return
-
-    def test_html(self):
-        """ Test an HTML error message. """
-        html = "<html>\n<body>\n<p>%s</p>\n</body\n</html>" % self.text
-        error = RequestError(html, self.code)
-        self.assertEqual(error.message, self.text)
-        return
-
-    def test_code(self):
-        """ Test the status code. """
-        error = RequestError(self.text, self.code)
-        self.assertEqual(error.code, self.code)
 
 
 if __name__ == "__main__":
-    unittest.main()
+    sys.exit(unittest.main())
