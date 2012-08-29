@@ -126,8 +126,12 @@ class StnDataResult(_DataResult):
             uid = meta.pop("uid")
         except KeyError:
             raise ValueError("uid is a required meta element")
-        self.meta = { uid: meta }
-        self.data = { uid: response["result"]["data"] }
+        self.meta = {uid: meta}
+        self.data = {uid: response["result"]["data"]}
+        try:
+        	self.smry = {uid: response["result"]["smry"]} 
+        except KeyError:  # no "smry"
+        	self.smry = {}
         return
 
     def __iter__(self):
@@ -167,6 +171,7 @@ class MultiStnDataResult(_DataResult):
         self._date_iter = _DateIterator(_parse_date(sdate), interval)
         self.meta = {}
         self.data = {}
+        self.smry = {}
         for site in response["result"]["data"]:
             try:
                 uid = site["meta"].pop("uid")
@@ -174,6 +179,10 @@ class MultiStnDataResult(_DataResult):
                 raise ValueError("uid is a required meta element")
             self.meta[uid] = site["meta"]
             self.data[uid] = site["data"]
+            try:
+            	self.smry[uid] = site["smry"]
+            except KeyError:  # no "smry"
+            	pass
         return
 
     def __iter__(self):

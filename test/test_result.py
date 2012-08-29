@@ -28,8 +28,8 @@ class TestStnMetaResult(unittest.TestCase):
 class TestStnDataResult(unittest.TestCase):
 
     def setUp(self):
-        params = { "sid": "OKC", "sdate": "20090101", "edate": "20090103",
-            "elems": "maxt", "meta": ("uid", "county") }
+        params = {"sid": "OKC", "sdate": "20090101", "edate": "20090103",
+            "elems": [{"name": "maxt", "smry": "max"}], "meta": "uid,county"}
         self.result = StnDataResult(Request("StnData").submit(params))
         return
 
@@ -55,9 +55,14 @@ class TestStnDataResult(unittest.TestCase):
         return
 
     def test_data(self):
-        data = { 92: [["2009-01-01","57"], ["2009-01-02","49"],
-            ["2009-01-03","73"]] }
+        data = {92: [["2009-01-01","57"], ["2009-01-02","49"],
+            ["2009-01-03","73"]]}
         self.assertEqual(self.result.data, data)
+        return
+        
+    def test_smry(self):
+        smry = {92: ["73"]}
+        self.assertEqual(self.result.smry, smry)
         return
 
     def test_no_uid(self):
@@ -72,20 +77,21 @@ class TestStnDataResult(unittest.TestCase):
         response = { "result": { "error": "error message" } }
         self.assertRaises(ResultError, StnDataResult, response)
         return
+        
 
 
 class TestMultiStnDataResult(unittest.TestCase):
 
     def setUp(self):
         params = { "sids": "OKC,TUL", "sdate": "20090101", "edate": "20090103",
-            "elems": "maxt", "meta": ("uid", "county") }
+            "elems": [{"name":"maxt", "smry":"max"}], "meta": "uid,county"}
         request = Request("MultiStnData")
         self.result = MultiStnDataResult(request.submit(params))
         return
 
     def test_meta(self):
         """ Test init. """
-        meta = { 92: { "county": "40109" }, 14134: { "county": "40143" } }
+        meta = {92: {"county": "40109"}, 14134: {"county": "40143"} }
         self.assertEqual(self.result.meta, meta)
         return
 
@@ -111,6 +117,11 @@ class TestMultiStnDataResult(unittest.TestCase):
     def test_data(self):
         data = { 92: [["57"],["49"],["73"]], 14134: [["53"],["58"],["78"]] }
         self.assertEqual(self.result.data, data)
+        return
+
+    def test_smry(self):
+        smry = {92: ["73"], 14134: ["78"]}
+        self.assertEqual(self.result.smry, smry)
         return
 
     def test_no_uid(self):
