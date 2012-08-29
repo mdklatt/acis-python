@@ -8,6 +8,7 @@ Requires the dateutil library: <http//:pypi.python.org/pypi/python-dateutil/>.
 """
 __version__ = "0.1.dev"
 
+import collections
 import datetime
 import re
 
@@ -77,9 +78,30 @@ class _DataResult(_Result):
     metadata element.
 
     """
+    _counter = 0  # for generating a unique type name
+        
+    def __init__(self, response):
+        """ Initialize a _DataResult object. 
+        
+        """
+        _Result.__init__(self, response)
+        _DataResult._counter += 1
+        
+        # Set up a namedtuple type for the data records in this result. 
+        elements = response['params']['elems']
+        try:
+            # Get each name from a list of {"name": "elem"} elements.
+            fields = [elem["name"] for elem in elements]
+        except TypeError:  # not a dict
+            # Should be a comma-delimited string instead.
+            fields = [s.strip() for s in elements.split(",")]
+        name = "_RecordDataType%d" % _DataResult._counter
+        self.dtype = collections.namedtuple(name, ["uid", "date"] + fields)
+        return
+        
     def __len__(self):
-        """ Return the number of data records in this result.
-
+        """ Return the number of data records in this result. 
+        
         """
         count = 0
         for uid in self.data:
@@ -88,8 +110,8 @@ class _DataResult(_Result):
 
 
 class StnDataResult(_DataResult):
-    """ A StnData result for a single site.
-
+    """ A StnData result for a single site. 
+    
     """
     def __init__(self, response):
         """ Initialize a StnDataResult object.
@@ -118,7 +140,7 @@ class StnDataResult(_DataResult):
             for record in data:
                 record[0] = _parse_date(record[0])
                 record.insert(0, uid)
-                yield tuple(record)
+                yield self.dtype._make(record)
         return
 
 
@@ -166,7 +188,7 @@ class MultiStnDataResult(_DataResult):
             for record in data:
                 record.insert(0, uid)
                 record.insert(1, self._date_iter.next())
-                yield tuple(record)
+                yield self.dtype._make(record)
         return
 
 

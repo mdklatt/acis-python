@@ -43,12 +43,15 @@ class TestStnDataResult(unittest.TestCase):
         return
 
     def test_iter(self):
-        records = [
+        records = (
             (92, datetime.date(2009, 1, 1), "57"),
             (92, datetime.date(2009, 1, 2), "49"),
             (92, datetime.date(2009, 1, 3), "73"),
-        ]
-        self.assertEqual([rec for rec in self.result], records)
+        )
+        for i, record in enumerate(self.result):
+            self.assertEqual(record.uid, records[i][0])
+            self.assertEqual(record.date, records[i][1])
+            self.assertEqual(record.maxt, records[i][2])
         return
 
     def test_data(self):
@@ -99,7 +102,10 @@ class TestMultiStnDataResult(unittest.TestCase):
             (14134, datetime.date(2009, 1, 2), "58"),
             (14134, datetime.date(2009, 1, 3), "78"),
         ]
-        self.assertEqual([rec for rec in self.result], records)
+        for i, record in enumerate(self.result):
+            self.assertEqual(record.uid, records[i][0])
+            self.assertEqual(record.date, records[i][1])
+            self.assertEqual(record.maxt, records[i][2])
         return
 
     def test_data(self):
