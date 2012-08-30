@@ -1,10 +1,11 @@
+import datetime
 import sys
 import unittest
 
 import local
 from acis import *
 
-class TestRequest(unittest.TestCase):
+class RequestTest(unittest.TestCase):
 
     def setUp(self):
         self.request = Request("StnData")
@@ -32,11 +33,170 @@ class TestRequest(unittest.TestCase):
         return
 
 
-class TestRequestError(unittest.TestCase):
+class StnMetaRequestTest(unittest.TestCase):
+
+    def setUp(self):
+        self.request = StnMetaRequest()
+        return
+
+    def test_url(self):
+        url = "http://data.rcc-acis.org/StnMeta"
+        self.assertEqual(self.request.url, url)
+        return
+
+    def test_default_meta(self):
+        self.assertEqual(self.request.params["meta"], ["uid"])
+        return
+
+    def test_meta(self):
+        params = {"meta": ["uid", "county", "name"]}
+        self.request.meta(*params["meta"])
+        self.assertEqual(self.request.params, params)
+        return
+
+    def test_location(self):
+        location = {"sids": "OKC,TUL", "state": "OK"}
+        self.request.location(**location)
+        for key, value in location.items():
+            self.assertEqual(self.request.params[key], value)
+        return
+
+class StnDataRequestTest(unittest.TestCase):
+
+    def setUp(self):
+        self.request = StnDataRequest()
+        return
+
+    def test_url(self):
+        url = "http://data.rcc-acis.org/StnData"
+        self.assertEqual(self.request.url, url)
+        return
+
+    def test_default_meta(self):
+        self.assertEqual(self.request.params["meta"], ["uid"])
+        return
+
+    def test_meta(self):
+        meta = ["uid", "county", "name"]
+        self.request.meta(*meta)
+        self.assertEqual(self.request.params["meta"], meta)
+        return
+
+    def test_location_uid(self):
+        uid = 92
+        self.request.location(uid=uid)
+        self.assertEqual(self.request.params["uid"], uid)
+        return
+
+    def test_location_sid(self):
+        sid = "OKC"
+        self.request.location(sid=sid)
+        self.assertEqual(self.request.params["sid"], sid)
+        return
+
+    def test_location_none(self):
+        self.assertRaises(ParameterError, self.request.location)
+        return
+
+    def test_dates_objects(self):
+        sdate, edate = datetime.date(2009, 1, 1), datetime.date(2009, 1, 3)
+        self.request.dates(sdate, edate)
+        dates = [self.request.params[date] for date in ("sdate", "edate")]
+        self.assertEqual(dates, ["20090101", "20090103"])
+        return
+
+    def test_dates_string(self):
+        sdate, edate = "20090101", "20090103"
+        self.request.dates(sdate, edate)
+        dates = [self.request.params[date] for date in ("sdate", "edate")]
+        self.assertEqual(dates, [sdate, edate])
+        return
+
+    def test_basic_elem(self):
+        elems = [{"name": "maxt", "interval": "dly"}]
+        self.request.element("maxt")
+        self.assertEqual(self.request.params["elems"], elems)
+        return
+
+    def test_reduction_elem(self):
+        name, interval, reduce = "maxt", "mly", "max"
+        elems = [{"name": name, "interval": interval, "reduction": reduce}]
+        self.request.element(name, interval=interval, reduction=reduce)
+        self.assertEqual(self.request.params["elems"], elems)
+        return
+
+
+class MultiStnDataRequestTest(unittest.TestCase):
+
+    def setUp(self):
+        self.request = MultiStnDataRequest()
+        return
+
+    def test_url(self):
+        url = "http://data.rcc-acis.org/MultiStnData"
+        self.assertEqual(self.request.url, url)
+        return
+
+    def test_default_meta(self):
+        self.assertEqual(self.request.params["meta"], ["uid"])
+        return
+
+    def test_meta(self):
+        meta = ["uid", "county", "name"]
+        self.request.meta(*meta)
+        self.assertEqual(self.request.params["meta"], meta)
+        return
+
+    def test_location(self):
+        location = {"sids": "OKC,TUL", "state": "OK"}
+        self.request.location(**location)
+        for key, value in location.items():
+            self.assertEqual(self.request.params[key], value)
+        return
+
+    def test_dates_objects(self):
+        sdate, edate = datetime.date(2009, 1, 1), datetime.date(2009, 1, 3)
+        self.request.dates(sdate, edate)
+        dates = [self.request.params[date] for date in ("sdate", "edate")]
+        self.assertEqual(dates, ["20090101", "20090103"])
+        return
+
+    def test_dates_string(self):
+        sdate, edate = "20090101", "20090103"
+        self.request.dates(sdate, edate)
+        dates = [self.request.params[date] for date in ("sdate", "edate")]
+        self.assertEqual(dates, [sdate, edate])
+        return
+
+    def test_basic_elem(self):
+        elems = [{"name": "maxt", "interval": "dly"}]
+        self.request.element("maxt")
+        self.assertEqual(self.request.params["elems"], elems)
+        return
+
+    def test_reduction_elem(self):
+        name, interval, reduce = "maxt", "mly", "max"
+        elems = [{"name": name, "interval": interval, "reduction": reduce}]
+        self.request.element(name, interval=interval, reduction=reduce)
+        self.assertEqual(self.request.params["elems"], elems)
+        return
+
+
+class RequestErrorTest(unittest.TestCase):
 
     def test_init(self):
         """ Test error message. """
         message = "an error occurred"
+        error = RequestError(message)
+        self.assertEqual(error.message, message)
+        return
+
+
+class ParameterErrorTEst(unittest.TestCase):
+
+    def test_init(self):
+        """ Test error message. """
+        message = "bad parameters"
         error = RequestError(message)
         self.assertEqual(error.message, message)
         return
