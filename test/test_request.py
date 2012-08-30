@@ -32,6 +32,18 @@ class RequestTest(unittest.TestCase):
         self.assertRaises(RequestError, self.request.submit, self.params)
         return
 
+    def test_submit_bad_request(self):
+        """ Test submit failure. """
+        self.params.pop("sid")
+        self.assertRaises(RequestError, self.request.submit, self.params)
+        return
+
+    def test_submit_bad_result(self):
+        """ Test submit failure. """
+        self.params["sid"] = ""
+        self.assertRaises(ResultError, self.request.submit, self.params)
+        return
+
 
 class StnMetaRequestTest(unittest.TestCase):
 
@@ -200,6 +212,17 @@ class ParameterErrorTEst(unittest.TestCase):
         error = RequestError(message)
         self.assertEqual(error.message, message)
         return
+
+
+class ResultErrorTest(unittest.TestCase):
+
+    def test_init(self):
+        """ Test aerror message. """
+        message = "An error occurred"
+        error = ResultError(message)
+        self.assertEqual(error.message, message)
+        return
+
 
 
 if __name__ == "__main__":

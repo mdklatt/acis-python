@@ -14,8 +14,7 @@ import re
 
 import dateutil.relativedelta as relativedelta
 
-__all__ = ("StnMetaResult", "StnDataResult", "MultiStnDataResult",
-           "ResultError")
+__all__ = ("StnMetaResult", "StnDataResult", "MultiStnDataResult")
 
 
 def _parse_date(date):
@@ -36,15 +35,7 @@ class _Result(object):
     """ Base class for all result objects.
 
     """
-    def __init__(self, response):
-        """ Initialize a _Result object.
-
-        """
-        result = response["result"]
-        try:
-            raise ResultError(result["error"])
-        except KeyError:  # no error
-            return
+    pass
 
 
 class StnMetaResult(_Result):
@@ -60,7 +51,6 @@ class StnMetaResult(_Result):
         must contain the 'uid' metadata element.
 
         """
-        _Result.__init__(self, response)
         meta = response["result"]["meta"]
         try:
             self.meta = {site.pop("uid"): site for site in meta}
@@ -82,8 +72,6 @@ class _DataResult(_Result):
         """ Initialize a _DataResult object.
 
         """
-        _Result.__init__(self, response)
-
         # Set up a namedtuple types for the data and smry records in this
         # result. The type names will be the same for each instance, but the
         # types are distinct.
@@ -201,16 +189,6 @@ class MultiStnDataResult(_DataResult):
                 record.insert(1, self._date_iter.next())
                 yield self._data_type._make(record)
         return
-
-
-class ResultError(Exception):
-    """ An error reported by the ACIS result object.
-
-    The server returned an object, but it is invalid. The object will contain
-    an 'error' key with a string describing the error.
-
-    """
-    pass
 
 
 class _DateIterator(object):

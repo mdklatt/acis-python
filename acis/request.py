@@ -12,7 +12,7 @@ import urllib
 import urlparse
 
 __all__ = ("Request", "StnMetaRequest", "StnDataRequest",
-    "MultiStnDataRequest", "RequestError", "ParameterError")
+    "MultiStnDataRequest", "RequestError", "ResultError", "ParameterError")
 
 
 def _date_string(date):
@@ -65,7 +65,11 @@ class Request(object):
                 raise RequestError(conn.read());
             else:  # not an ACIS request error
                 raise RuntimeError("HTTP error %d" % code)
-        return {"params": params, "result": json.loads(conn.read())}
+        result = json.loads(conn.read())
+        try:
+            raise ResultError(result["error"])
+        except KeyError:  # no error
+            return {"params": params, "result": result}
 
 
 class _MetaRequest(Request):
@@ -184,6 +188,16 @@ class MultiStnDataRequest(_DataRequest):
 
 class RequestError(Exception):
     """ The server reported that the request was invalid.
+
+    """
+    pass
+
+
+class ResultError(Exception):
+    """ An error reported by the ACIS result object.
+
+    The server returned an object, but it is invalid. The object will contain
+    an 'error' key with a string describing the error.
 
     """
     pass

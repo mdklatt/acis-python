@@ -72,13 +72,6 @@ class TestStnDataResult(unittest.TestCase):
         self.assertRaises(ValueError, StnDataResult, response)
         return
 
-    def test_result_error(self):
-        response = { "result": { "error": "error message" } }
-        self.assertRaises(ResultError, StnDataResult, response)
-        return
-
-
-
 class TestMultiStnDataResult(unittest.TestCase):
 
     def setUp(self):
@@ -130,21 +123,6 @@ class TestMultiStnDataResult(unittest.TestCase):
             "meta": "county" }
         response = Request("MultiStnData").submit(params)
         self.assertRaises(ValueError, MultiStnDataResult, response)
-        return
-
-    def test_result_error(self):
-        response = { "result": { "error": "error message" } }
-        self.assertRaises(ResultError, MultiStnDataResult, response)
-        return
-
-
-class TestResultError(unittest.TestCase):
-
-    def test_init(self):
-        """ Test aerror message. """
-        message = "An error occurred"
-        error = ResultError(message)
-        self.assertEqual(error.message, message)
         return
 
 
