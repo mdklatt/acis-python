@@ -1,8 +1,8 @@
-"""
-ACIS Web Services tools.
+""" Initialize the acis package.
 
 """
-__version__ = '0.1.dev'
-from request import *
+__version__ = "0.1.dev"
+
+from error import *
 from result import *
-from util import *
+from request import *

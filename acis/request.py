@@ -11,8 +11,10 @@ import re
 import urllib
 import urlparse
 
+from error import *
+
 __all__ = ("Request", "StnMetaRequest", "StnDataRequest",
-    "MultiStnDataRequest", "RequestError", "ResultError", "ParameterError")
+    "MultiStnDataRequest")
 
 
 def _date_string(date):
@@ -184,27 +186,3 @@ class MultiStnDataRequest(_DataRequest):
     def __init__(self):
         _DataRequest.__init__(self, "MultiStnData")
         return
-
-
-class RequestError(Exception):
-    """ The server reported that the request was invalid.
-
-    """
-    pass
-
-
-class ResultError(Exception):
-    """ An error reported by the ACIS result object.
-
-    The server returned an object, but it is invalid. The object will contain
-    an 'error' key with a string describing the error.
-
-    """
-    pass
-
-
-class ParameterError(Exception):
-    """ The request parameters are not correct.
-
-    """
-    pass
