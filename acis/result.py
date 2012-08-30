@@ -78,16 +78,15 @@ class _DataResult(_Result):
     metadata element.
 
     """
-    _counter = 0  # for generating a unique type name
-        
     def __init__(self, response):
-        """ Initialize a _DataResult object. 
-        
+        """ Initialize a _DataResult object.
+
         """
         _Result.__init__(self, response)
-        _DataResult._counter += 1
-        
-        # Set up a namedtuple type for the data records in this result. 
+
+        # Set up a namedtuple types for the data and smry records in this
+        # result. The type names will be the same for each instance, but the
+        # types are distinct.
         elements = response['params']['elems']
         try:
             # Get each name from a list of {"name": "elem"} elements.
@@ -95,13 +94,15 @@ class _DataResult(_Result):
         except TypeError:  # not a dict
             # Should be a comma-delimited string instead.
             fields = [s.strip() for s in elements.split(",")]
-        name = "_RecordDataType%d" % _DataResult._counter
-        self.dtype = collections.namedtuple(name, ["uid", "date"] + fields)
+        self._data_type = collections.namedtuple("_DataResultDataRecord",
+            ["uid", "date"] + fields)
+        self._smry_type = collections.namedtuple("_DataResultSmryRecord",
+            fields)
         return
-        
+
     def __len__(self):
-        """ Return the number of data records in this result. 
-        
+        """ Return the number of data records in this result.
+
         """
         count = 0
         for uid in self.data:
@@ -110,8 +111,8 @@ class _DataResult(_Result):
 
 
 class StnDataResult(_DataResult):
-    """ A StnData result for a single site. 
-    
+    """ A StnData result for a single site.
+
     """
     def __init__(self, response):
         """ Initialize a StnDataResult object.
@@ -129,9 +130,10 @@ class StnDataResult(_DataResult):
         self.meta = {uid: meta}
         self.data = {uid: response["result"]["data"]}
         try:
-        	self.smry = {uid: response["result"]["smry"]} 
+            smry = response["result"]["smry"]
+            self.smry = {uid: self._smry_type._make(smry)}
         except KeyError:  # no "smry"
-        	self.smry = {}
+            self.smry = {}
         return
 
     def __iter__(self):
@@ -144,7 +146,7 @@ class StnDataResult(_DataResult):
             for record in data:
                 record[0] = _parse_date(record[0])
                 record.insert(0, uid)
-                yield self.dtype._make(record)
+                yield self._data_type._make(record)
         return
 
 
@@ -180,9 +182,9 @@ class MultiStnDataResult(_DataResult):
             self.meta[uid] = site["meta"]
             self.data[uid] = site["data"]
             try:
-            	self.smry[uid] = site["smry"]
+                self.smry[uid] = self._smry_type._make(site["smry"])
             except KeyError:  # no "smry"
-            	pass
+                pass
         return
 
     def __iter__(self):
@@ -197,7 +199,7 @@ class MultiStnDataResult(_DataResult):
             for record in data:
                 record.insert(0, uid)
                 record.insert(1, self._date_iter.next())
-                yield self.dtype._make(record)
+                yield self._data_type._make(record)
         return
 
 

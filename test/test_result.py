@@ -59,10 +59,9 @@ class TestStnDataResult(unittest.TestCase):
             ["2009-01-03","73"]]}
         self.assertEqual(self.result.data, data)
         return
-        
+
     def test_smry(self):
-        smry = {92: ["73"]}
-        self.assertEqual(self.result.smry, smry)
+        self.assertEqual(self.result.smry[92].maxt, "73")
         return
 
     def test_no_uid(self):
@@ -77,7 +76,7 @@ class TestStnDataResult(unittest.TestCase):
         response = { "result": { "error": "error message" } }
         self.assertRaises(ResultError, StnDataResult, response)
         return
-        
+
 
 
 class TestMultiStnDataResult(unittest.TestCase):
@@ -120,8 +119,9 @@ class TestMultiStnDataResult(unittest.TestCase):
         return
 
     def test_smry(self):
-        smry = {92: ["73"], 14134: ["78"]}
-        self.assertEqual(self.result.smry, smry)
+        smry = {92: "73", 14134: "78"}
+        for uid, record in self.result.smry.items():
+            self.assertEqual(record.maxt, smry[uid])
         return
 
     def test_no_uid(self):
