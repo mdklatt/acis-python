@@ -22,8 +22,7 @@ class RequestTest(unittest.TestCase):
 
     def test_submit(self):
         """ Test normal submit. """
-        response = { "params": self.params, "result": self.result }
-        self.assertEqual(self.request.submit(self.params), response)
+        self.assertEqual(self.request.submit(self.params), self.result)
         return
 
     def test_submit_bad_request(self):
@@ -57,13 +56,13 @@ class StnMetaRequestTest(unittest.TestCase):
         return
 
     def test_default_meta(self):
-        self.assertEqual(self.request.params["meta"], ["uid"])
+        self.assertItemsEqual(self.request.params["meta"], ("uid",))
         return
 
     def test_meta(self):
-        params = {"meta": ["uid", "county", "name"]}
-        self.request.meta(*params["meta"])
-        self.assertEqual(self.request.params, params)
+        meta = ("uid", "county", "name")
+        self.request.meta(*meta)
+        self.assertItemsEqual(self.request.params["meta"], meta)
         return
 
     def test_location(self):
@@ -85,13 +84,13 @@ class StnDataRequestTest(unittest.TestCase):
         return
 
     def test_default_meta(self):
-        self.assertEqual(self.request.params["meta"], ["uid"])
+        self.assertItemsEqual(self.request.params["meta"], ("uid",))
         return
 
     def test_meta(self):
-        meta = ["uid", "county", "name"]
+        meta = ("uid", "county", "name")
         self.request.meta(*meta)
-        self.assertEqual(self.request.params["meta"], meta)
+        self.assertItemsEqual(self.request.params["meta"], meta)
         return
 
     def test_location_uid(self):
@@ -126,14 +125,14 @@ class StnDataRequestTest(unittest.TestCase):
 
     def test_basic_elem(self):
         elems = [{"name": "maxt", "interval": "dly"}]
-        self.request.element("maxt")
+        self.request.add_element("maxt")
         self.assertEqual(self.request.params["elems"], elems)
         return
 
     def test_reduction_elem(self):
         name, interval, reduce = "maxt", "mly", "max"
         elems = [{"name": name, "interval": interval, "reduction": reduce}]
-        self.request.element(name, interval=interval, reduction=reduce)
+        self.request.add_element(name, interval=interval, reduction=reduce)
         self.assertEqual(self.request.params["elems"], elems)
         return
 
@@ -150,13 +149,13 @@ class MultiStnDataRequestTest(unittest.TestCase):
         return
 
     def test_default_meta(self):
-        self.assertEqual(self.request.params["meta"], ["uid"])
+        self.assertItemsEqual(self.request.params["meta"], ("uid",))
         return
 
     def test_meta(self):
-        meta = ["uid", "county", "name"]
+        meta = ("uid", "county", "name")
         self.request.meta(*meta)
-        self.assertEqual(self.request.params["meta"], meta)
+        self.assertItemsEqual(self.request.params["meta"], meta)
         return
 
     def test_location(self):
@@ -182,14 +181,14 @@ class MultiStnDataRequestTest(unittest.TestCase):
 
     def test_basic_elem(self):
         elems = [{"name": "maxt", "interval": "dly"}]
-        self.request.element("maxt")
+        self.request.add_element("maxt")
         self.assertEqual(self.request.params["elems"], elems)
         return
 
     def test_reduction_elem(self):
         name, interval, reduce = "maxt", "mly", "max"
         elems = [{"name": name, "interval": interval, "reduction": reduce}]
-        self.request.element(name, interval=interval, reduction=reduce)
+        self.request.add_element(name, interval=interval, reduction=reduce)
         self.assertEqual(self.request.params["elems"], elems)
         return
 

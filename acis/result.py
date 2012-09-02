@@ -44,16 +44,16 @@ class StnMetaResult(_Result):
     The 'meta' attribute is a dict keyed to ACIS site uid(s).
 
     """
-    def __init__(self, response):
+    def __init__(self, params, result):
         """ Initialize a StnMetaResult object.
 
-        The 'response' parameter is the return value from Request.submit() and
-        must contain the 'uid' metadata element.
+        The 'result' parameter is the result object returned from the ACIS
+        server and must contain the 'uid' metadata element. The 'params'
+        parameter is ignored.
 
         """
-        meta = response["result"]["meta"]
         try:
-            self.meta = {site.pop("uid"): site for site in meta}
+            self.meta = {site.pop("uid"): site for site in result["meta"]}
         except KeyError:
             raise ValueError("uid is a required meta element")
         return
@@ -68,24 +68,16 @@ class _DataResult(_Result):
     metadata element.
 
     """
-    def __init__(self, response):
+    def __init__(self, params):
         """ Initialize a _DataResult object.
 
         """
-        # Set up a namedtuple types for the data and smry records in this
-        # result. The type names will be the same for each instance, but the
-        # types are distinct.
-        elements = response['params']['elems']
         try:
             # Get each name from a list of {"name": "elem"} elements.
-            fields = [elem["name"] for elem in elements]
+            self.fields = [elem["name"] for elem in params['elems']]
         except TypeError:  # not a dict
             # Should be a comma-delimited string instead.
-            fields = [s.strip() for s in elements.split(",")]
-        self._data_type = collections.namedtuple("_DataResultDataRecord",
-            ["uid", "date"] + fields)
-        self._smry_type = collections.namedtuple("_DataResultSmryRecord",
-            fields)
+            self.fields = [elem.strip() for elem in params['elems'].split(",")]
         return
 
     def __len__(self):
@@ -102,26 +94,22 @@ class StnDataResult(_DataResult):
     """ A StnData result for a single site.
 
     """
-    def __init__(self, response):
+    def __init__(self, params, result):
         """ Initialize a StnDataResult object.
 
-        The 'response' parameter is the return value from Request.submit() and
-        must contain the 'uid' metadata element.
+        The 'result' parameter is the result object returned from the ACIS
+        server and must contain the 'uid' metadata element.
 
         """
-        _DataResult.__init__(self, response)
-        meta = response["result"]["meta"]
+        super(StnDataResult, self).__init__(params)
         try:
-            uid = meta.pop("uid")
+            uid = result["meta"].pop("uid")
         except KeyError:
             raise ValueError("uid is a required meta element")
-        self.meta = {uid: meta}
-        self.data = {uid: response["result"]["data"]}
-        try:
-            smry = response["result"]["smry"]
-            self.smry = {uid: self._smry_type._make(smry)}
-        except KeyError:  # no "smry"
-            self.smry = {}
+        self.meta = {uid: result["meta"]}
+        self.data = {uid: result["data"]}
+        smry = result.get("smry", [])
+        self.smry = {uid: collections.OrderedDict(zip(self.fields, smry))}
         return
 
     def __iter__(self):
@@ -130,11 +118,12 @@ class StnDataResult(_DataResult):
         Each record is a tuple: (uid, date, elem1, ...).
 
         """
+        fields = ["uid", "date"] + self.fields
         for uid, data in self.data.items():
             for record in data:
                 record[0] = _parse_date(record[0])
                 record.insert(0, uid)
-                yield self._data_type._make(record)
+                yield collections.OrderedDict(zip(fields, record))
         return
 
 
@@ -142,27 +131,27 @@ class MultiStnDataResult(_DataResult):
     """ A MultiStnData result for one more sites.
 
     """
-    def __init__(self, response):
+    def __init__(self, params, result):
         """ Initialize a MultiStnDataResult object.
 
-        The 'response' parameter is the return value from Request.submit() and
+        The 'result' parameter is the return value from Request.submit() and
         must contain the 'uid' metadata element.
 
         """
-        _DataResult.__init__(self, response)
+        super(MultiStnDataResult, self).__init__(params)
         try:
-            sdate = response["params"]["sdate"]
+            sdate = params["sdate"]
         except KeyError:
-            sdate = response["params"]["date"]
+            sdate = params["date"]
         try:
-            interval = response["params"]["elems"][0]["interval"]
+            interval = params["elems"][0]["interval"]
         except (TypeError, KeyError):
             interval = "dly"
         self._date_iter = _DateIterator(_parse_date(sdate), interval)
         self.meta = {}
         self.data = {}
         self.smry = {}
-        for site in response["result"]["data"]:
+        for site in result["data"]:
             try:
                 uid = site["meta"].pop("uid")
             except KeyError:
@@ -170,9 +159,10 @@ class MultiStnDataResult(_DataResult):
             self.meta[uid] = site["meta"]
             self.data[uid] = site["data"]
             try:
-                self.smry[uid] = self._smry_type._make(site["smry"])
+                smry = site["smry"]
             except KeyError:  # no "smry"
-                pass
+                continue
+            self.smry[uid] = collections.OrderedDict(zip(self.fields, smry))
         return
 
     def __iter__(self):
@@ -182,12 +172,13 @@ class MultiStnDataResult(_DataResult):
         not work for elements with a 'groupby' specification.
 
         """
+        fields = ["uid", "date"] + self.fields
         for uid, data in self.data.items():
             self._date_iter.reset()
             for record in data:
                 record.insert(0, uid)
                 record.insert(1, self._date_iter.next())
-                yield self._data_type._make(record)
+                yield collections.OrderedDict(zip(fields, record))
         return
 
 
