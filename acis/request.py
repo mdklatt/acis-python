@@ -11,8 +11,7 @@ import re
 import urllib
 import urlparse
 
-from error import *
-from result import *
+from . error import *
 
 
 __all__ = ("Request", "StnMetaRequest", "StnDataRequest",
@@ -38,14 +37,14 @@ class Request(object):
     """
     SERVER = "http://data.rcc-acis.org"
 
-    def __init__(self, query_type):
+    def __init__(self, query):
         """ Initialize a request.
 
-        The 'query_type' parameter is the type of ACIS query, e.g. 'StnMeta',
+        The 'query' parameter is the type of ACIS query, e.g. 'StnMeta',
         'StnData', etc.
 
         """
-        self.url = urlparse.urljoin(Request.SERVER, query_type)
+        self.url = urlparse.urljoin(Request.SERVER, query)
         return
 
     def submit(self, params):
@@ -73,7 +72,7 @@ class Request(object):
         try:
             raise ResultError(result["error"])
         except KeyError:  # no error
-            return result
+            return params, result
 
 
 class _ParamRequest(Request):
@@ -83,38 +82,37 @@ class _ParamRequest(Request):
     object.
 
     """
-    def __init__(self, query_type, result_cls):
+    def __init__(self, query):
         """ Initialize a _ParamRequest object.
 
-        The 'query_type' parameter is the type of ACIS query, e.g. 'StnMeta',
-        'StnData', etc. The 'reslt_cls' parameter is the type of result
-        (StnMetaResult, StnDataResult, etc.) returned by this request.
+        The 'query' parameter is the type of ACIS query, e.g. 'StnMeta',
+        'StnData', etc.
 
         """
-        super(_ParamRequest, self).__init__(query_type)
-        self._result_cls = result_cls
-        self.params = {}
+        super(_ParamRequest, self).__init__(query)
+        self._params = {}
         return
 
     def submit(self):
         """ Return the result of this request.
 
-        The return value is a result object appropriate to the request type.
+        The return value is the params object submitted to the server and the
+        result object it returned.
+
         """
-        result = Request.submit(self, self.params)
-        return self._result_cls(self.params, result)
+        return super(_ParamRequest, self).submit(self._params)
 
 
 class _MetaRequest(_ParamRequest):
     """ Private base class for retrieving metadata.
 
     """
-    def __init__(self, query_type, result_cls):
+    def __init__(self, query):
         """
 
         """
-        super(_MetaRequest, self).__init__(query_type, result_cls)
-        self.params["meta"] = ("uid",)
+        super(_MetaRequest, self).__init__(query)
+        self._params["meta"] = ["uid"]
         return
 
     def meta(self, *args):
@@ -125,14 +123,14 @@ class _MetaRequest(_ParamRequest):
         """
         args = set(args)
         args.add("uid")
-        self.params["meta"] = list(args)
+        self._params["meta"] = list(args)
         return
 
     def location(self, **kwargs):
         """ Define the location for this request.
 
         """
-        self.params.update(kwargs)
+        self._params.update(kwargs)
         return
 
 
@@ -140,12 +138,12 @@ class _DataRequest(_ParamRequest):
     """ Private base class for retrieving data.
 
     """
-    def __init__(self, query_type, result_cls):
+    def __init__(self, query):
         """ Initialize a _DataRequest object.
 
         """
-        super(_DataRequest, self).__init__(query_type, result_cls)
-        self.params["elems"] = []
+        super(_DataRequest, self).__init__(query)
+        self._params["elems"] = []
         self._interval = "dly"
         return
 
@@ -164,14 +162,14 @@ class _DataRequest(_ParamRequest):
         """
         elem = {"name": name, "interval": self._interval}
         elem.update(kwargs)
-        self.params["elems"].append(elem)
+        self._params["elems"].append(elem)
         return
 
     def clear_elements(self):
         """ Clear all elements from this request.
 
         """
-        self.params["elems"] = []
+        self._params["elems"] = []
         return
 
     def dates(self, sdate, edate=None):
@@ -181,10 +179,10 @@ class _DataRequest(_ParamRequest):
         an ACIS-acceptable format (YYYY[-MM[-DD]
         """
         if edate is None:  # single date
-            self.params["date"] = _date_string(sdate)
+            self._params["date"] = _date_string(sdate)
         else:
-            self.params["sdate"] = _date_string(sdate)
-            self.params["edate"] = _date_string(edate)
+            self._params["sdate"] = _date_string(sdate)
+            self._params["edate"] = _date_string(edate)
         return
 
 
@@ -196,7 +194,7 @@ class StnMetaRequest(_MetaRequest):
         """ Initialize a StnMetaRequest object.
 
         """
-        super(StnMetaRequest, self).__init__("StnMeta", StnMetaResult)
+        super(StnMetaRequest, self).__init__("StnMeta")
         return
 
 
@@ -208,7 +206,7 @@ class StnDataRequest(_MetaRequest, _DataRequest):
         """ Initialize a StnDataRequest object.
 
         """
-        super(StnDataRequest, self).__init__("StnData", StnDataResult)
+        super(StnDataRequest, self).__init__("StnData")
         return
 
     def location(self, uid=None, sid=None):
@@ -216,9 +214,9 @@ class StnDataRequest(_MetaRequest, _DataRequest):
 
         """
         if uid is not None:
-            self.params["uid"] = int(uid)
+            self._params["uid"] = int(uid)
         elif sid is not None:
-            self.params["sid"] = str(sid)
+            self._params["sid"] = str(sid)
         else:
             raise ParameterError("must specify uid or sid")
         return
@@ -232,6 +230,5 @@ class MultiStnDataRequest(_MetaRequest, _DataRequest):
         """ Initialize a MultiStnDataRequest object.
 
         """
-        super(MultiStnDataRequest, self).__init__("MultiStnData",
-            MultiStnDataResult)
+        super(MultiStnDataRequest, self).__init__("MultiStnData")
         return

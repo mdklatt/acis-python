@@ -49,7 +49,8 @@ class TestRequest(unittest.TestCase):
         the decoded result object from the server.
 
         """
-        result = self.request.submit(self.params)
+        params, result = self.request.submit(self.params)
+        self.assertDictEqual(params, self.params)
         self.assertDictEqual(result, self.result)
         return
 
@@ -99,17 +100,16 @@ class TestStnMetaRequest(_TestParamRequest):
     JSON_FILE = "StnMeta.json"
     REQUEST_TYPE = StnMetaRequest
 
-    @unittest.expectedFailure  # until request and result are decoupled
     def test_submit(self):
         """ Test the 'submit()' method.
 
-        When passed a dict of request parameters, the function should return
-        the decoded result object from the server.
+        The function should return the parameters submitted to and the decoded
+        object received from the server.
 
         """
-        self.request.location(uid=("okc", "tul"))
+        self.request.location(sids=("okc", "tul"))
         self.request.meta("county", "name")  # uid should be automatic
-        result = self.request.submit()
+        params, result = self.request.submit()
         self.assertDictEqual(result, self.result)
         return
 
@@ -143,12 +143,11 @@ class TestStnDataRequest(_TestParamRequest):
     JSON_FILE = "StnData.json"
     REQUEST_TYPE = StnDataRequest
 
-    @unittest.expectedFailure  # until request and result are decoupled
     def test_submit(self):
         """ Test the 'submit()' method.
 
-        When passed a dict of request parameters, the function should return
-        the decoded result object from the server.
+        The function should return the parameters submitted to and the decoded
+        object received from the server.
 
         """
         self.request.location(sid="okc")
@@ -156,7 +155,7 @@ class TestStnDataRequest(_TestParamRequest):
         self.request.add_element("mint", smry="min")
         self.request.add_element("maxt", smry="max")
         self.request.meta("county", "name")  # uid should be automatic
-        result = self.request.submit()
+        params, result = self.request.submit()
         self.assertDictEqual(result, self.result)
         return
 
@@ -190,20 +189,19 @@ class TestMultiStnDataRequest(_TestParamRequest):
     JSON_FILE = "MultiStnData.json"
     REQUEST_TYPE = MultiStnDataRequest
 
-    @unittest.expectedFailure  # until request and result are decoupled
     def test_submit(self):
         """ Test the 'submit()' method.
 
-        When passed a dict of request parameters, the function should return
-        the decoded result object from the server.
+        The function should return the parameters submitted to and the decoded
+        object received from the server.
 
         """
-        self.request.location(sid="okc")
+        self.request.location(sids=("okc","tul"))
         self.request.dates("2011-12-31", "2012-01-01")
         self.request.add_element("mint", smry="min")
         self.request.add_element("maxt", smry="max")
         self.request.meta("county", "name")  # uid should be automatic
-        result = self.request.submit()
+        params, result = self.request.submit()
         self.assertDictEqual(result, self.result)
         return
 
