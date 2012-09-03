@@ -1,0 +1,6 @@
+This directory contains all the test code for this package and mirrors the
+package directory. There a test script for each module in the package, named
+'test_modname.py'. Each class in a module has its own TestCase class in the 
+script named ClassNameTest that contains all the unit tests for ClassName. 
+
+The 'test_acis.py' script runs all test scripts collectively.

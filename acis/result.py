@@ -14,6 +14,9 @@ import re
 
 import dateutil.relativedelta as relativedelta
 
+from . error import *
+
+
 __all__ = ("StnMetaResult", "StnDataResult", "MultiStnDataResult")
 
 
@@ -55,7 +58,7 @@ class StnMetaResult(_Result):
         try:
             self.meta = {site.pop("uid"): site for site in result["meta"]}
         except KeyError:
-            raise ValueError("uid is a required meta element")
+            raise ParameterError("uid is a required meta element")
         return
 
 
@@ -105,7 +108,7 @@ class StnDataResult(_DataResult):
         try:
             uid = result["meta"].pop("uid")
         except KeyError:
-            raise ValueError("uid is a required meta element")
+            raise ParameterError("uid is a required meta element")
         self.meta = {uid: result["meta"]}
         self.data = {uid: result["data"]}
         smry = result.get("smry", [])
@@ -155,7 +158,7 @@ class MultiStnDataResult(_DataResult):
             try:
                 uid = site["meta"].pop("uid")
             except KeyError:
-                raise ValueError("uid is a required meta element")
+                raise ParameterError("uid is a required meta element")
             self.meta[uid] = site["meta"]
             self.data[uid] = site["data"]
             try:

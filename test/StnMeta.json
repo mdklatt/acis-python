@@ -1,0 +1,6 @@
+{
+	"query":"StnMeta",
+	"params":{"sids":"okc,tul","meta":"uid,name,county"},
+	"result":{"meta":[{"county":"40109","uid":92,"name":"OKLAHOMA CITY WILL ROGERS AP"},{"county":"40143","uid":14134,"name":"TULSA INTL AP"}]},
+	"meta":{"92":{"county":"40109","name":"OKLAHOMA CITY WILL ROGERS AP"},"14134":{"county":"40143","name":"TULSA INTL AP"}}
+}

@@ -1,197 +1,253 @@
-import datetime
+""" Testing for the the request.py module
+
+The module can be executed on its own or incorporated into a larger test suite.
+
+"""
+import json
 import sys
 import unittest
+import urlparse
 
-import local
+import localpath
 from acis import *
 
-class RequestTest(unittest.TestCase):
+
+# Define the TestCase classes for this module. Each public component of the
+# module being tested has its own TestCase.
+
+class TestRequest(unittest.TestCase):
+    """ Unit testing for the Request class.
+
+    """
+    JSON_FILE = "StnData.json"
+    REQUEST_TYPE = Request
+
+    @classmethod
+    def load_json(cls):
+        """ Load the JSON test data.
+
+        """
+        return json.load(open(cls.JSON_FILE, "r"))
 
     def setUp(self):
-        self.request = Request("StnData")
-        self.params = { "sid": "OKC", "elems": "maxt", "date": "20090101",
-            "meta": "uid" }
-        self.result = { "meta": { "uid": 92 }, "data": [["2009-01-01","57"]] }
+        test_data = self.load_json()
+        self.query = test_data["query"]
+        self.params = test_data["params"]
+        self.result = test_data["result"]
+        self.request = self.REQUEST_TYPE(self.query)
         return
 
-    def test_init(self):
-        """ Test normal init. """
-        url = "http://data.rcc-acis.org/StnData"
+    def test_url(self):
+        url = urlparse.urljoin(self.request.SERVER, self.query)
         self.assertEqual(self.request.url, url)
         return
 
     def test_submit(self):
-        """ Test normal submit. """
-        self.assertEqual(self.request.submit(self.params), self.result)
+        """ Test the 'submit()' method.
+
+        When passed a dict of request parameters, the function should return
+        the decoded result object from the server.
+
+        """
+        result = self.request.submit(self.params)
+        self.assertDictEqual(result, self.result)
         return
 
-    def test_submit_bad_request(self):
-        """ Test submit failure. """
+    def test_request_error(self):
+        """ Test the 'submit' method for an invalid request.
+
+        A RequestError should be raised if an invalid request is submitted to
+        the server.
+        """
         self.params.pop("sid")
         self.assertRaises(RequestError, self.request.submit, self.params)
         return
 
-    def test_submit_bad_request(self):
-        """ Test submit failure. """
-        self.params.pop("sid")
-        self.assertRaises(RequestError, self.request.submit, self.params)
-        return
+    def test_result_error(self):
+        """ The 'submit' method for an error result.
 
-    def test_submit_bad_result(self):
-        """ Test submit failure. """
+        A ResultError should be raised if the result object from the server
+        has an error message.
+        """
         self.params["sid"] = ""
         self.assertRaises(ResultError, self.request.submit, self.params)
         return
 
 
-class StnMetaRequestTest(unittest.TestCase):
+class _TestParamRequest(TestRequest):
+    """ Private base class for testing advanced request classes.
 
+    This class should be excluded from test discovery and execution. Child
+    classes must define JSON_FILE and REQUEST_TYPE class attributes. The
+    'test_request_error' and 'test_result_error' methods need to be overridden
+    to produce the desired errors for the query type.
+
+    """
     def setUp(self):
-        self.request = StnMetaRequest()
-        return
-
-    def test_url(self):
-        url = "http://data.rcc-acis.org/StnMeta"
-        self.assertEqual(self.request.url, url)
-        return
-
-    def test_default_meta(self):
-        self.assertItemsEqual(self.request.params["meta"], ("uid",))
-        return
-
-    def test_meta(self):
-        meta = ("uid", "county", "name")
-        self.request.meta(*meta)
-        self.assertItemsEqual(self.request.params["meta"], meta)
-        return
-
-    def test_location(self):
-        location = {"sids": "OKC,TUL", "state": "OK"}
-        self.request.location(**location)
-        for key, value in location.items():
-            self.assertEqual(self.request.params[key], value)
-        return
-
-class StnDataRequestTest(unittest.TestCase):
-
-    def setUp(self):
-        self.request = StnDataRequest()
-        return
-
-    def test_url(self):
-        url = "http://data.rcc-acis.org/StnData"
-        self.assertEqual(self.request.url, url)
-        return
-
-    def test_default_meta(self):
-        self.assertItemsEqual(self.request.params["meta"], ("uid",))
-        return
-
-    def test_meta(self):
-        meta = ("uid", "county", "name")
-        self.request.meta(*meta)
-        self.assertItemsEqual(self.request.params["meta"], meta)
-        return
-
-    def test_location_uid(self):
-        uid = 92
-        self.request.location(uid=uid)
-        self.assertEqual(self.request.params["uid"], uid)
-        return
-
-    def test_location_sid(self):
-        sid = "OKC"
-        self.request.location(sid=sid)
-        self.assertEqual(self.request.params["sid"], sid)
-        return
-
-    def test_location_none(self):
-        self.assertRaises(ParameterError, self.request.location)
-        return
-
-    def test_dates_objects(self):
-        sdate, edate = datetime.date(2009, 1, 1), datetime.date(2009, 1, 3)
-        self.request.dates(sdate, edate)
-        dates = [self.request.params[date] for date in ("sdate", "edate")]
-        self.assertEqual(dates, ["20090101", "20090103"])
-        return
-
-    def test_dates_string(self):
-        sdate, edate = "20090101", "20090103"
-        self.request.dates(sdate, edate)
-        dates = [self.request.params[date] for date in ("sdate", "edate")]
-        self.assertEqual(dates, [sdate, edate])
-        return
-
-    def test_basic_elem(self):
-        elems = [{"name": "maxt", "interval": "dly"}]
-        self.request.add_element("maxt")
-        self.assertEqual(self.request.params["elems"], elems)
-        return
-
-    def test_reduction_elem(self):
-        name, interval, reduce = "maxt", "mly", "max"
-        elems = [{"name": name, "interval": interval, "reduction": reduce}]
-        self.request.add_element(name, interval=interval, reduction=reduce)
-        self.assertEqual(self.request.params["elems"], elems)
+        test_data = self.load_json()
+        self.query = test_data["query"]
+        self.params = test_data["params"]
+        self.result = test_data["result"]
+        self.request = self.REQUEST_TYPE()
         return
 
 
-class MultiStnDataRequestTest(unittest.TestCase):
+class TestStnMetaRequest(_TestParamRequest):
+    """ Unit testing for the StnMetaRequest class.
 
-    def setUp(self):
-        self.request = MultiStnDataRequest()
+    """
+    JSON_FILE = "StnMeta.json"
+    REQUEST_TYPE = StnMetaRequest
+
+    @unittest.expectedFailure  # until request and result are decoupled
+    def test_submit(self):
+        """ Test the 'submit()' method.
+
+        When passed a dict of request parameters, the function should return
+        the decoded result object from the server.
+
+        """
+        self.request.location(uid=("okc", "tul"))
+        self.request.meta("county", "name")  # uid should be automatic
+        result = self.request.submit()
+        self.assertDictEqual(result, self.result)
         return
 
-    def test_url(self):
-        url = "http://data.rcc-acis.org/MultiStnData"
-        self.assertEqual(self.request.url, url)
+    def test_request_error(self):
+        """ Test the 'submit' method for an invalid request.
+
+        A RequestError should be raised if an invalid request is submitted to
+        the server.
+
+        """
+        self.request.location(bbox="")
+        self.assertRaises(RequestError, self.request.submit)
         return
 
-    def test_default_meta(self):
-        self.assertItemsEqual(self.request.params["meta"], ("uid",))
+    @unittest.expectedFailure  # how do you get an error result from StnMeta??
+    def test_result_error(self):
+        """ The 'submit' method for an error result.
+
+        A ResultError should be raised if the result object from the server
+        has an error message.
+
+        """
+        raise NotImplementedError
         return
 
-    def test_meta(self):
-        meta = ("uid", "county", "name")
-        self.request.meta(*meta)
-        self.assertItemsEqual(self.request.params["meta"], meta)
+
+class TestStnDataRequest(_TestParamRequest):
+    """ Unit testing for the StnDataRequest class.
+
+    """
+    JSON_FILE = "StnData.json"
+    REQUEST_TYPE = StnDataRequest
+
+    @unittest.expectedFailure  # until request and result are decoupled
+    def test_submit(self):
+        """ Test the 'submit()' method.
+
+        When passed a dict of request parameters, the function should return
+        the decoded result object from the server.
+
+        """
+        self.request.location(sid="okc")
+        self.request.dates("2011-12-31", "2012-01-01")
+        self.request.add_element("mint", smry="min")
+        self.request.add_element("maxt", smry="max")
+        self.request.meta("county", "name")  # uid should be automatic
+        result = self.request.submit()
+        self.assertDictEqual(result, self.result)
         return
 
-    def test_location(self):
-        location = {"sids": "OKC,TUL", "state": "OK"}
-        self.request.location(**location)
-        for key, value in location.items():
-            self.assertEqual(self.request.params[key], value)
+    def test_request_error(self):
+        """ Test the 'submit' method for an invalid request.
+
+        A RequestError should be raised if an invalid request is submitted to
+        the server.
+
+        """
+        self.assertRaises(RequestError, self.request.submit)  # empty params
         return
 
-    def test_dates_objects(self):
-        sdate, edate = datetime.date(2009, 1, 1), datetime.date(2009, 1, 3)
-        self.request.dates(sdate, edate)
-        dates = [self.request.params[date] for date in ("sdate", "edate")]
-        self.assertEqual(dates, ["20090101", "20090103"])
+    def test_result_error(self):
+        """ The 'submit' method for an error result.
+
+        A ResultError should be raised if the result object from the server
+        has an error message.
+
+        """
+        self.request.dates("2011-12-31", "2012-01-01")
+        self.request.location(sid="")
+        self.assertRaises(ResultError, self.request.submit)
         return
 
-    def test_dates_string(self):
-        sdate, edate = "20090101", "20090103"
-        self.request.dates(sdate, edate)
-        dates = [self.request.params[date] for date in ("sdate", "edate")]
-        self.assertEqual(dates, [sdate, edate])
+
+class TestMultiStnDataRequest(_TestParamRequest):
+    """ Unit testing for the MultiStnDataRequest class.
+
+    """
+    JSON_FILE = "MultiStnData.json"
+    REQUEST_TYPE = MultiStnDataRequest
+
+    @unittest.expectedFailure  # until request and result are decoupled
+    def test_submit(self):
+        """ Test the 'submit()' method.
+
+        When passed a dict of request parameters, the function should return
+        the decoded result object from the server.
+
+        """
+        self.request.location(sid="okc")
+        self.request.dates("2011-12-31", "2012-01-01")
+        self.request.add_element("mint", smry="min")
+        self.request.add_element("maxt", smry="max")
+        self.request.meta("county", "name")  # uid should be automatic
+        result = self.request.submit()
+        self.assertDictEqual(result, self.result)
         return
 
-    def test_basic_elem(self):
-        elems = [{"name": "maxt", "interval": "dly"}]
-        self.request.add_element("maxt")
-        self.assertEqual(self.request.params["elems"], elems)
+    def test_request_error(self):
+        """ Test the 'submit' method for an invalid request.
+
+        A RequestError should be raised if an invalid request is submitted to
+        the server.
+
+        """
+        self.assertRaises(RequestError, self.request.submit)  # empty params
         return
 
-    def test_reduction_elem(self):
-        name, interval, reduce = "maxt", "mly", "max"
-        elems = [{"name": name, "interval": interval, "reduction": reduce}]
-        self.request.add_element(name, interval=interval, reduction=reduce)
-        self.assertEqual(self.request.params["elems"], elems)
-        return
+    @unittest.expectedFailure
+    def test_result_error(self):
+        """ The 'submit' method for an error result.
 
+        A ResultError should be raised if the result object from the server
+        has an error message.
+
+        """
+        raise NotImplementedError
+
+
+# Specify the test cases to run for this module. Private bases classes need
+# to be explicitly excluded from automatic discovery.
+
+TEST_CASES = (TestRequest, TestStnMetaRequest, TestStnDataRequest,
+    TestMultiStnDataRequest)
+
+def load_tests(loader, tests, pattern):
+    """ Define a TestSuite for this module.
+
+    This is part of the unittest API. The last two arguments are ignored.
+
+    """
+    suite = unittest.TestSuite()
+    for test_case in TEST_CASES:
+        tests = loader.loadTestsFromTestCase(test_case)
+        suite.addTests(tests)
+    return suite
+
+
+# Make the module executable.
 
 if __name__ == "__main__":
     sys.exit(unittest.main())

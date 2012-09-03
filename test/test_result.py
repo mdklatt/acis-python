@@ -1,130 +1,231 @@
+""" Testing for the the result.py module
+
+The module can be executed on its own or incorporated into a larger test suite.
+
+"""
 import datetime
+import json
+import sys
 import unittest
 
-import local
+import localpath
 from acis import *
 
-class TestStnMetaResult(unittest.TestCase):
 
+# Define the TestCase classes for this module. Each public component of the
+# module being tested has its own TestCase.
+
+class _TestResult(unittest.TestCase):
+    """ Private base class for testing result classes.
+
+    This class should be excluded from test discovery and execution. Child
+    classes must define JSON_FILE and RESULT_TYPE class attributes
+
+    """
+    @classmethod
+    def load_json(cls):
+        """ Load the JSON test data.
+
+        """
+        return json.load(open(cls.JSON_FILE, "r"))
+
+
+class _TestMetaResult(_TestResult):
+    """ Private base class for testing result classes with metadata.
+
+    All results with metadata are expected to share the same interface for that
+    metadata. This class should be excluded from test discovery and execution.
+
+    """
     def setUp(self):
-        self.request = Request("StnMeta")
-        return
+        """ Set up the test fixture.
 
-    def test_init(self):
-        """ Test init. """
-        params = { "sids": "OKC", "meta": ( "uid", "county" ) }
-        result = StnMetaResult(params, self.request.submit(params))
-        self.assertEqual(result.meta, {  92: { "county": "40109" } })
-        return
+        This is called before each test is run so that they are isolated from
+        any side effects. This is part of the unittest API.
 
-    def test_init_fail(self):
-        """ Test init failure (no uid). """
-        params = { "sids": "OKC", "meta": "county" }
-        result = self.request.submit(params)
-        self.assertRaises(ValueError, StnMetaResult, params, result)
-        return
-
-
-class TestStnDataResult(unittest.TestCase):
-
-    def setUp(self):
-        params = {"sid": "OKC", "sdate": "20090101", "edate": "20090103",
-            "elems": [{"name": "maxt", "smry": "max"}], "meta": "uid,county"}
-        self.result = StnDataResult(params, Request("StnData").submit(params))
+        """
+        test_data = self.load_json()
+        self.params = test_data["params"]
+        self.result = test_data["result"]
+        self.meta = test_data["meta"]
         return
 
     def test_meta(self):
-        """ Test init. """
-        self.assertEqual(self.result.meta, {  92: { "county": "40109" } })
+        """ Test the 'meta' attribute.
+
+        Metadata should be stored grouped by site and stored as a dict keyed
+        to the site UID.
+
+        """
+        result = self.RESULT_TYPE(self.params, self.result)
+        for uid, site in result.meta.items():
+            self.assertDictEqual(site, self.meta[str(uid)])
         return
 
-    def test_len(self):
-        self.assertEqual(len(self.result), 3)
-        return
 
-    def test_iter(self):
-        records = (
-            (92, datetime.date(2009, 1, 1), "57"),
-            (92, datetime.date(2009, 1, 2), "49"),
-            (92, datetime.date(2009, 1, 3), "73"),
-        )
-        for i, record in enumerate(self.result):
-            self.assertEqual(record["uid"], records[i][0])
-            self.assertEqual(record["date"], records[i][1])
-            self.assertEqual(record["maxt"], records[i][2])
-        return
+class _TestDataResult(_TestResult):
+    """ Private base class for testing result classes with data.
 
-    def test_data(self):
-        data = {92: [["2009-01-01","57"], ["2009-01-02","49"],
-            ["2009-01-03","73"]]}
-        self.assertEqual(self.result.data, data)
-        return
+    All results with data are expected to share the same interface for that
+    data. This class should be excluded from test discovery and execution.
 
-    def test_smry(self):
-        self.assertEqual(self.result.smry[92]["maxt"], "73")
-        return
-
-    def test_no_uid(self):
-        """ Test init failure (no uid). """
-        params = { "sid": "OKC", "date": "20090101", "elems": "maxt",
-            "meta": "county" }
-        result = Request("StnData").submit(params)
-        self.assertRaises(ValueError, StnDataResult, params, result)
-        return
-
-class TestMultiStnDataResult(unittest.TestCase):
-
+    """
     def setUp(self):
-        params = { "sids": "OKC,TUL", "sdate": "20090101", "edate": "20090103",
-            "elems": [{"name":"maxt", "smry":"max"}], "meta": "uid,county"}
-        request = Request("MultiStnData")
-        self.result = MultiStnDataResult(params, request.submit(params))
-        return
+        """ Set up the test fixture.
 
-    def test_meta(self):
-        """ Test init. """
-        meta = {92: {"county": "40109"}, 14134: {"county": "40143"} }
-        self.assertEqual(self.result.meta, meta)
-        return
+        This is called before each test is run so that they are isolated from
+        any side effects. This is part of the unittest API.
 
-    def test_len(self):
-        self.assertEqual(len(self.result), 6)
-        return
-
-    def test_iter(self):
-        records = [
-            (92, datetime.date(2009, 1, 1), "57"),
-            (92, datetime.date(2009, 1, 2), "49"),
-            (92, datetime.date(2009, 1, 3), "73"),
-            (14134, datetime.date(2009, 1, 1), "53"),
-            (14134, datetime.date(2009, 1, 2), "58"),
-            (14134, datetime.date(2009, 1, 3), "78"),
-        ]
-        for i, record in enumerate(self.result):
-            self.assertEqual(record["uid"], records[i][0])
-            self.assertEqual(record["date"], records[i][1])
-            self.assertEqual(record["maxt"], records[i][2])
+        """
+        test_data = self.load_json()
+        self.params = test_data["params"]
+        self.fields = [elem["name"] for elem in self.params["elems"]]
+        self.result = test_data["result"]
+        self.meta = test_data["meta"]
+        self.data = test_data["data"]
+        self.smry = test_data["smry"]
+        self.records = test_data["records"]
         return
 
     def test_data(self):
-        data = { 92: [["57"],["49"],["73"]], 14134: [["53"],["58"],["78"]] }
-        self.assertEqual(self.result.data, data)
+        """ Test the 'data' attribute.
+
+        Data should be grouped by site and stored as a dict keyed to the site
+        UID.
+
+        """
+        result = self.RESULT_TYPE(self.params, self.result)
+        for uid, data in result.data.items():
+            self.assertSequenceEqual(data, self.data[str(uid)])
         return
 
     def test_smry(self):
-        smry = {92: "73", 14134: "78"}
-        for uid, record in self.result.smry.items():
-            self.assertEqual(record["maxt"], smry[uid])
+        """ Test the 'smry' attribute.
+
+        Summary records should be grouped by site and stored as a dict keyed to
+        the site UID. Each summary record should be an OrderedDict containing
+        the value of each element in the order specified in the request
+        parameters.
+
+        """
+        result = self.RESULT_TYPE(self.params, self.result)
+        for uid, smry in result.smry.items():
+            self.assertSequenceEqual(smry.values(), self.smry[str(uid)])
+            self.assertSequenceEqual(smry.keys(), self.fields)
         return
+
+    def test_fields(self):
+        """ Test the 'fields' attribute.
+
+        This attribute should be a list of the element names, in order, in the
+        request parameters.
+
+        """
+        result = self.RESULT_TYPE(self.params, self.result)
+        self.assertSequenceEqual(result.fields, self.fields)
+        return
+
+    def test_len(self):
+        """ Test the '__len__' method.
+
+        The length of a result should be equal to the number of records to be
+        iterated over.
+
+        """
+        result = self.RESULT_TYPE(self.params, self.result)
+        self.assertEqual(len(result), len(self.records))
+        return
+
+    def test_iter(self):
+        """ Test the '__iter__' method.
+
+        Iterating over a result should produce each record in the 'data'
+        attribute. The record should be an OrderedDict containing the the UID,
+        the date, and the value of each element in the order specified in the
+        request parameters.
+
+        """
+        date = lambda s: datetime.datetime.strptime(s, "%Y-%m-%d").date()
+        result = self.RESULT_TYPE(self.params, self.result)
+        fields = ["uid", "date"] + self.fields
+        for i, record in enumerate(result):
+            self.records[i][1] = date(self.records[i][1])
+            self.assertSequenceEqual(record.values(), self.records[i])
+            self.assertSequenceEqual(record.keys(), fields)
+        return
+
+
+class TestStnMetaResult(_TestMetaResult):
+    """ Unit testing for the StnMetaResult class.
+
+    """
+    JSON_FILE = "StnMeta.json"
+    RESULT_TYPE = StnMetaResult
 
     def test_no_uid(self):
-        """ Test init failure (no uid). """
-        params = { "sids": "OKC", "date": "20090101", "elems": "maxt",
-            "meta": "county" }
-        result = Request("MultiStnData").submit(params)
-        self.assertRaises(ValueError, MultiStnDataResult, params, result)
+        """ Test failure for missing 'uid'.
+
+        """
+        self.result["meta"][0].pop("uid")
+        self.assertRaises(ParameterError, StnMetaResult, self.params,
+            self.result)
         return
 
+
+class TestStnDataResult(_TestDataResult, _TestMetaResult):
+    """ Unit testing for the StnDataResult class.
+
+    """
+    JSON_FILE = "StnData.json"
+    RESULT_TYPE = StnDataResult
+
+    def test_no_uid(self):
+        """ Test failure for missing 'uid'.
+
+        """
+        self.result["meta"].pop("uid")
+        self.assertRaises(ParameterError, self.RESULT_TYPE, self.params,
+            self.result)
+        return
+
+
+class TestMultiStnDataResult(_TestDataResult, _TestMetaResult):
+    """ Unit testing for the MultiStnDataResult class.
+
+    """
+    JSON_FILE = "MultiStnData.json"
+    RESULT_TYPE = MultiStnDataResult
+
+    def test_no_uid(self):
+        """ Test failure for missing 'uid'.
+
+        """
+        self.result["data"][0]["meta"].pop("uid")
+        self.assertRaises(ParameterError, StnMetaResult, self.params,
+            self.result)
+        return
+
+
+
+# Specify the test cases to run for this module. Private bases classes need
+# to be explicitly excluded from automatic discovery.
+
+TEST_CASES = (TestStnMetaResult, TestStnDataResult, TestMultiStnDataResult)
+
+def load_tests(loader, tests, pattern):
+    """ Define a TestSuite for this module.
+
+    This is part of the unittest API. The last two arguments are ignored.
+
+    """
+    suite = unittest.TestSuite()
+    for test_case in TEST_CASES:
+        tests = loader.loadTestsFromTestCase(test_case)
+        suite.addTests(tests)
+    return suite
+
+
+# Make the module executable.
 
 if __name__ == "__main__":
-    unittest.main()
+    sys.exit(unittest.main())

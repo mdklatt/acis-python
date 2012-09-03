@@ -1,0 +1,9 @@
+{
+	"query":"StnData",
+	"params":{"sid":"okc","sdate":"2011-12-31","edate":"2012-01-01","meta":"uid,name,county","elems":[{"name":"mint","smry":"min"},{"name":"maxt","smry":"max"}]},
+	"result":{"meta":{"county":"40109","uid":92,"name":"OKLAHOMA CITY WILL ROGERS AP"},"data":[["2011-12-31","35","71"],["2012-01-01","34","50"]],"smry":["34","71"]},
+	"meta":{"92":{"county":"40109","name":"OKLAHOMA CITY WILL ROGERS AP"}},
+	"data":{"92":[["2011-12-31","35","71"],["2012-01-01","34","50"]]},
+	"smry":{"92":["34","71"]},
+	"records":[[92,"2011-12-31","35","71"],[92,"2012-01-01","34","50"]]
+}

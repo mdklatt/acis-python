@@ -1,0 +1,9 @@
+{
+	"query":"MultiStnData",
+	"params":{"sids":"okc,tul","sdate":"20111231","edate":"20120101","meta":"uid,county,name","elems":[{"name":"mint","smry":"min"},{"name":"maxt","smry":"max"}]},
+	"result":{"data":[{"meta":{"county":"40109","uid":92,"name":"OKLAHOMA CITY WILL ROGERS AP"},"data":[["35","71"],["34","50"]],"smry":["34","71"]},{"meta":{"county":"40143","uid":14134,"name":"TULSA INTL AP"},"data":[["36","70"],["34","55"]],"smry":["34","70"]}]},
+	"meta":{"92":{"county":"40109","name":"OKLAHOMA CITY WILL ROGERS AP"},"14134":{"county":"40143","name":"TULSA INTL AP"}},
+	"data":{"92":[["35","71"],["34","50"]],"14134":[["36","70"],["34","55"]]},
+	"smry":{"92":["34","71"],"14134":["34","70"]},
+	"records":[[92,"2011-12-31","35","71"],[92,"2012-01-01","34","50"],[14134,"2011-12-31","36","70"],[14134,"2012-01-01","34","55"]]
+}
