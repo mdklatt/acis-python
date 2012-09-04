@@ -75,12 +75,17 @@ class _DataResult(_Result):
         """ Initialize a _DataResult object.
 
         """
+        elems = params["elems"]
         try:
-            # Get each name from a list of {"name": "elem"} elements.
-            self.fields = [elem["name"] for elem in params['elems']]
-        except TypeError:  # not a dict
-            # Should be a comma-delimited string instead.
-            self.fields = [elem.strip() for elem in params['elems'].split(",")]
+            # a comma-delimited string
+            self.fields = [elem.strip() for elem in elems.split(",")]
+        except AttributeError:  # no split(), not a string
+            try:
+                # a sequence of dicts
+                self.fields = [elem["name"] for elem in params["elems"]]
+            except TypeError:  # no string indices, not a dict
+                # a sequence of strings
+                self.fields = elems
         return
 
     def __len__(self):
