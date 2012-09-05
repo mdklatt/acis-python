@@ -129,7 +129,6 @@ class StnDataResult(_DataResult):
         fields = ["uid", "date"] + self.fields
         for uid, data in self.data.items():
             for record in data:
-                record[0] = _parse_date(record[0])
                 record.insert(0, uid)
                 yield collections.OrderedDict(zip(fields, record))
         return
@@ -224,4 +223,4 @@ class _DateIterator(object):
         """ Return the next date in the sequence. """
         next = self._now
         self._now += self._delta
-        return next  # there is no StopIteration like a normal iterator
+        return next.strftime("%Y-%m-%d");  # no StopIteration
