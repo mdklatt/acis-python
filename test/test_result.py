@@ -145,13 +145,12 @@ class _TestDataResult(_TestResult):
         request parameters.
 
         """
-        #date = lambda s: datetime.datetime.strptime(s, "%Y-%m-%d").date()
         result = self.RESULT_TYPE(self.params, self.result)
         fields = ["uid", "date"] + self.fields
         for i, record in enumerate(result):
-            #self.records[i][1] = date(self.records[i][1])
             self.assertSequenceEqual(record.values(), self.records[i])
             self.assertSequenceEqual(record.keys(), fields)
+        self.assertEqual(i + 1, len(result))
         return
 
 

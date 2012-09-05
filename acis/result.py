@@ -3,35 +3,16 @@
 This implementation is based on ACIS Web Services Version 2:
 <http://data.rcc-acis.org/doc/>.
 
-Requires the dateutil library: <http//:pypi.python.org/pypi/python-dateutil/>.
-
 """
 __version__ = "0.1.dev"
 
 import collections
-import datetime
-import re
-
-import dateutil.relativedelta as relativedelta
+import itertools
 
 from . error import *
-
+from . date import *
 
 __all__ = ("StnMetaResult", "StnDataResult", "MultiStnDataResult")
-
-
-def _parse_date(date):
-    """ Parse a date string into a datetime.date object.
-
-    Valid date formats are YYYY[-MM[-DD]] and hyphens are optional.
-    """
-    date_regex = re.compile(r"^(\d{4})(?:-?(\d{2}))?(?:-?(\d{2}))?$")
-    match = date_regex.search(date)
-    try:
-        y, m, d = (int(s) if s is not None else 1 for s in match.groups())
-    except AttributeError:  # match is None
-        raise ValueError("invalid date format")
-    return datetime.date(y, m, d)
 
 
 class _Result(object):
@@ -146,15 +127,6 @@ class MultiStnDataResult(_DataResult):
 
         """
         super(MultiStnDataResult, self).__init__(params)
-        try:
-            sdate = params["sdate"]
-        except KeyError:
-            sdate = params["date"]
-        try:
-            interval = params["elems"][0]["interval"]
-        except (TypeError, KeyError):
-            interval = "dly"
-        self._date_iter = _DateIterator(_parse_date(sdate), interval)
         self.meta = {}
         self.data = {}
         self.smry = {}
@@ -170,6 +142,7 @@ class MultiStnDataResult(_DataResult):
             except KeyError:  # no "smry"
                 continue
             self.smry[uid] = collections.OrderedDict(zip(self.fields, smry))
+        self._dates = date_range(params)
         return
 
     def __iter__(self):
@@ -180,47 +153,10 @@ class MultiStnDataResult(_DataResult):
 
         """
         fields = ["uid", "date"] + self.fields
+        date_iter = itertools.cycle(self._dates)
         for uid, data in self.data.items():
-            self._date_iter.reset()
             for record in data:
                 record.insert(0, uid)
-                record.insert(1, self._date_iter.next())
+                record.insert(1, date_iter.next())
                 yield collections.OrderedDict(zip(fields, record))
         return
-
-
-class _DateIterator(object):
-    """ An endless date iterator.
-
-    Iteration will continue indefinitely from the start date unless reset() is
-    called.
-
-    """
-    _deltas = {
-        "dly": datetime.timedelta(days=1),
-        "mly": relativedelta.relativedelta(months=1),
-        "yly": relativedelta.relativedelta(years=1),
-    }
-
-    def __init__(self, start, interval):
-        """ Initialize a _DateIterator object.
-
-        The 'interval' is valid ACIS interval specifier, e.g. 'dly', 'mly',
-        or 'yly'.
-        """
-        self._start = self._now = start
-        try:
-            self._delta = _DateIterator._deltas[interval]
-        except KeyError:
-            raise ValueError("uknown interval %s" % interval)
-        return
-
-    def reset(self):
-        """ Reset the iterator to its start date. """
-        self._now = self._start
-
-    def next(self):
-        """ Return the next date in the sequence. """
-        next = self._now
-        self._now += self._delta
-        return next.strftime("%Y-%m-%d");  # no StopIteration

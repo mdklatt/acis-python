@@ -1,4 +1,4 @@
-""" ACIS utility functions.
+""" Miscellaneous ACIS utility functions.
 
 """
 __version__ = "0.1.dev"
@@ -25,7 +25,7 @@ _SID_TYPES = {
 
 
 def decode_sids(sids):
-    """ Return a dict of site IDs keyed by their decoded ID type.
+    """ Return a dict of site IDs keyed by their decoded ID types.
 
     The 'sids' parameter is a list of SIDs from ACIS metadata where each SID is
     a single string containing an identifier and its integer type code

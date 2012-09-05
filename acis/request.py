@@ -18,19 +18,6 @@ __all__ = ("Request", "StnMetaRequest", "StnDataRequest",
     "MultiStnDataRequest")
 
 
-def _date_string(date):
-    """ Return an ACIS-format date string.
-
-    Call strftime() or return a string as-is.
-    """
-    # Use dateutil.parser to validate date strings?
-    try:  # c.f. datetime.date and datetime.datetime
-        date = date.strftime("%Y%m%d")
-    except AttributeError:  # no strftime
-        pass
-    return str(date)
-
-
 class Request(object):
     """ A generic ACIS request.
 
@@ -175,14 +162,15 @@ class _DataRequest(_ParamRequest):
     def dates(self, sdate, edate=None):
         """ Set the date range for this request.
 
-        Dates can be specified as datetime objects or strings that are in
-        an ACIS-acceptable format (YYYY[-MM[-DD]
+        Dates must be specified in an ACIS-acceptable string format, i.e.
+        YYYY[-MM[-DD] (hyphens are optional).
+
         """
         if edate is None:  # single date
-            self._params["date"] = _date_string(sdate)
+            self._params["date"] = sdate
         else:
-            self._params["sdate"] = _date_string(sdate)
-            self._params["edate"] = _date_string(edate)
+            self._params["sdate"] = sdate
+            self._params["edate"] = edate
         return
 
 
