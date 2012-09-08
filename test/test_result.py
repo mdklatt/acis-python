@@ -8,7 +8,7 @@ import json
 import sys
 import unittest
 
-import localpath
+import env
 from acis import *
 
 
@@ -158,7 +158,7 @@ class TestStnMetaResult(_TestMetaResult):
     """ Unit testing for the StnMetaResult class.
 
     """
-    JSON_FILE = "StnMeta.json"
+    JSON_FILE = "data/StnMeta.json"
     RESULT_TYPE = StnMetaResult
 
     def test_no_uid(self):
@@ -175,7 +175,7 @@ class TestStnDataResult(_TestDataResult, _TestMetaResult):
     """ Unit testing for the StnDataResult class.
 
     """
-    JSON_FILE = "StnData.json"
+    JSON_FILE = "data/StnData.json"
     RESULT_TYPE = StnDataResult
 
     def test_no_uid(self):
@@ -192,7 +192,7 @@ class TestMultiStnDataResult(_TestDataResult, _TestMetaResult):
     """ Unit testing for the MultiStnDataResult class.
 
     """
-    JSON_FILE = "MultiStnData.json"
+    JSON_FILE = "data/MultiStnData.json"
     RESULT_TYPE = MultiStnDataResult
 
     def test_no_uid(self):
@@ -227,4 +227,4 @@ def load_tests(loader, tests, pattern):
 # Make the module executable.
 
 if __name__ == "__main__":
-    sys.exit(unittest.main())
+    unittest.main()  # main() calls sys.exit()

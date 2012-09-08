@@ -6,7 +6,7 @@ The module can be executed on its own or incorporated into a larger test suite.
 import sys
 import unittest
 
-import localpath
+import env
 from acis import *
 
 
@@ -71,4 +71,4 @@ def load_tests(loader, tests, pattern):
 # Make the module executable.
 
 if __name__ == "__main__":
-    sys.exit(unittest.main())
+    unittest.main()  # main() calls sys.exit()

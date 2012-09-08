@@ -8,7 +8,7 @@ import sys
 import unittest
 import urlparse
 
-import localpath
+import env
 from acis import *
 
 
@@ -19,7 +19,7 @@ class TestRequest(unittest.TestCase):
     """ Unit testing for the Request class.
 
     """
-    JSON_FILE = "StnData.json"
+    JSON_FILE = "data/StnData.json"
     REQUEST_TYPE = Request
 
     @classmethod
@@ -97,7 +97,7 @@ class TestStnMetaRequest(_TestParamRequest):
     """ Unit testing for the StnMetaRequest class.
 
     """
-    JSON_FILE = "StnMeta.json"
+    JSON_FILE = "data/StnMeta.json"
     REQUEST_TYPE = StnMetaRequest
 
     def test_submit(self):
@@ -140,7 +140,7 @@ class TestStnDataRequest(_TestParamRequest):
     """ Unit testing for the StnDataRequest class.
 
     """
-    JSON_FILE = "StnData.json"
+    JSON_FILE = "data/StnData.json"
     REQUEST_TYPE = StnDataRequest
 
     def test_submit(self):
@@ -186,7 +186,7 @@ class TestMultiStnDataRequest(_TestParamRequest):
     """ Unit testing for the MultiStnDataRequest class.
 
     """
-    JSON_FILE = "MultiStnData.json"
+    JSON_FILE = "data/MultiStnData.json"
     REQUEST_TYPE = MultiStnDataRequest
 
     def test_submit(self):
@@ -248,4 +248,5 @@ def load_tests(loader, tests, pattern):
 # Make the module executable.
 
 if __name__ == "__main__":
-    sys.exit(unittest.main())
+    print __file__
+    #unittest.main()  # main() calls sys.exit()
