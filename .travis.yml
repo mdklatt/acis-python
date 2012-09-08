@@ -1,0 +1,22 @@
+# Travis CI configuration for the acis library.
+#
+# The Travis CI service verifies each GitHub commit for correctness.
+# <http://travis-ci.org>
+
+
+# Language specifications
+
+language: python
+python:
+    - "2.7"
+
+
+# Dependencies
+
+install:
+    - pip install --use-mirrors -r requirements.txt
+
+
+# Test script
+
+script: python test/test_acis.py

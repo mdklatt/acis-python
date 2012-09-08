@@ -1,21 +1,23 @@
 """
-Distutils setup script for the utillib.chron module.
+Distutils setup script for the acis library.
 
 """
+import distutils.core
 import sys
-from distutils.core import setup
 
 def main():
     dist = {
-        'name': 'acis',
-        'version': '0.1.dev',
-        'author': 'Michael Klatt',
-        'author_email': 'mdklatt@ou.edu',
-        'packages': ['acis'],
+        "name":         "acis",
+        "version":      "0.1.dev",
+        "packages":     ("acis",),
+	"requires":     ("dateutil",),
+        "author":       "Michael Klatt",
+        "author_email": "mdklatt@ou.edu",
+	"url":          "https://github.com/mdklatt/acis-python",
     }
-    setup(**dist)
+    distutils.core.setup(**dist)
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())
