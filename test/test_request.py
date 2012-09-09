@@ -6,7 +6,6 @@ The module can be executed on its own or incorporated into a larger test suite.
 import json
 import sys
 import unittest
-import urlparse
 
 import env
 from acis import *
@@ -15,12 +14,12 @@ from acis import *
 # Define the TestCase classes for this module. Each public component of the
 # module being tested has its own TestCase.
 
-class TestRequest(unittest.TestCase):
-    """ Unit testing for the Request class.
+class _TestRequest(unittest.TestCase):
+    """ Private base class for testing request classes.
 
     """
-    JSON_FILE = "data/StnData.json"
-    REQUEST_TYPE = Request
+    JSON_FILE = None
+    REQUEST_TYPE = None
 
     @classmethod
     def load_json(cls):
@@ -31,69 +30,14 @@ class TestRequest(unittest.TestCase):
 
     def setUp(self):
         test_data = self.load_json()
-        self.query = test_data["query"]
-        self.params = test_data["params"]
-        self.result = test_data["result"]
-        self.request = self.REQUEST_TYPE(self.query)
-        return
-
-    def test_url(self):
-        url = urlparse.urljoin(self.request.SERVER, self.query)
-        self.assertEqual(self.request.url, url)
-        return
-
-    def test_submit(self):
-        """ Test the 'submit()' method.
-
-        When passed a dict of request parameters, the function should return
-        the decoded result object from the server.
-
-        """
-        params, result = self.request.submit(self.params)
-        self.assertDictEqual(params, self.params)
-        self.assertDictEqual(result, self.result)
-        return
-
-    def test_request_error(self):
-        """ Test the 'submit' method for an invalid request.
-
-        A RequestError should be raised if an invalid request is submitted to
-        the server.
-        """
-        self.params.pop("sid")
-        self.assertRaises(RequestError, self.request.submit, self.params)
-        return
-
-    def test_result_error(self):
-        """ The 'submit' method for an error result.
-
-        A ResultError should be raised if the result object from the server
-        has an error message.
-        """
-        self.params["sid"] = ""
-        self.assertRaises(ResultError, self.request.submit, self.params)
-        return
-
-
-class _TestParamRequest(TestRequest):
-    """ Private base class for testing advanced request classes.
-
-    This class should be excluded from test discovery and execution. Child
-    classes must define JSON_FILE and REQUEST_TYPE class attributes. The
-    'test_request_error' and 'test_result_error' methods need to be overridden
-    to produce the desired errors for the query type.
-
-    """
-    def setUp(self):
-        test_data = self.load_json()
-        self.query = test_data["query"]
-        self.params = test_data["params"]
-        self.result = test_data["result"]
+        params = test_data["params"]
+        result = test_data["result"]
+        self.query = {"params": params, "result": result}
         self.request = self.REQUEST_TYPE()
         return
 
 
-class TestStnMetaRequest(_TestParamRequest):
+class TestStnMetaRequest(_TestRequest):
     """ Unit testing for the StnMetaRequest class.
 
     """
@@ -104,39 +48,18 @@ class TestStnMetaRequest(_TestParamRequest):
         """ Test the 'submit()' method.
 
         The function should return the parameters submitted to and the decoded
-        object received from the server.
+        object received from the server as a dict.
 
         """
         self.request.location(sids=("okc", "tul"))
         self.request.meta("county", "name")  # uid should be automatic
-        params, result = self.request.submit()
-        self.assertDictEqual(result, self.result)
-        return
-
-    def test_request_error(self):
-        """ Test the 'submit' method for an invalid request.
-
-        A RequestError should be raised if an invalid request is submitted to
-        the server.
-
-        """
-        self.request.location(bbox="")
-        self.assertRaises(RequestError, self.request.submit)
-        return
-
-    @unittest.expectedFailure  # how do you get an error result from StnMeta??
-    def test_result_error(self):
-        """ The 'submit' method for an error result.
-
-        A ResultError should be raised if the result object from the server
-        has an error message.
-
-        """
-        raise NotImplementedError
+        query = self.request.submit()
+        self.assertDictEqual(query["result"], self.query["result"])
         return
 
 
-class TestStnDataRequest(_TestParamRequest):
+
+class TestStnDataRequest(_TestRequest):
     """ Unit testing for the StnDataRequest class.
 
     """
@@ -152,43 +75,22 @@ class TestStnDataRequest(_TestParamRequest):
         """
         self.request.location(sid="okc")
         self.request.dates("2011-12-31", "2012-01-01")
-        self.request.add_element("mint", smry="min")
-        self.request.add_element("maxt", smry="max")
+        self.request.add_elem("mint", smry="min")
+        self.request.add_elem("maxt", smry="max")
         self.request.meta("county", "name")  # uid should be automatic
-        params, result = self.request.submit()
-        self.assertDictEqual(result, self.result)
-        return
-
-    def test_request_error(self):
-        """ Test the 'submit' method for an invalid request.
-
-        A RequestError should be raised if an invalid request is submitted to
-        the server.
-
-        """
-        self.assertRaises(RequestError, self.request.submit)  # empty params
-        return
-
-    def test_result_error(self):
-        """ The 'submit' method for an error result.
-
-        A ResultError should be raised if the result object from the server
-        has an error message.
-
-        """
-        self.request.dates("2011-12-31", "2012-01-01")
-        self.request.location(sid="")
-        self.assertRaises(ResultError, self.request.submit)
+        query = self.request.submit()
+        self.assertDictEqual(query["result"], self.query["result"])
         return
 
 
-class TestMultiStnDataRequest(_TestParamRequest):
+class TestMultiStnDataRequest(_TestRequest):
     """ Unit testing for the MultiStnDataRequest class.
 
     """
     JSON_FILE = "data/MultiStnData.json"
     REQUEST_TYPE = MultiStnDataRequest
 
+    #@unittest.skip("skip for debugging")
     def test_submit(self):
         """ Test the 'submit()' method.
 
@@ -196,41 +98,20 @@ class TestMultiStnDataRequest(_TestParamRequest):
         object received from the server.
 
         """
-        self.request.location(sids=("okc","tul"))
+        self.request.location(sids=("okc", "tul"))
         self.request.dates("2011-12-31", "2012-01-01")
-        self.request.add_element("mint", smry="min")
-        self.request.add_element("maxt", smry="max")
+        self.request.add_elem("mint", smry="min")
+        self.request.add_elem("maxt", smry="max")
         self.request.meta("county", "name")  # uid should be automatic
-        params, result = self.request.submit()
-        self.assertDictEqual(result, self.result)
+        query = self.request.submit()
+        self.assertDictEqual(query["result"], self.query["result"])
         return
-
-    def test_request_error(self):
-        """ Test the 'submit' method for an invalid request.
-
-        A RequestError should be raised if an invalid request is submitted to
-        the server.
-
-        """
-        self.assertRaises(RequestError, self.request.submit)  # empty params
-        return
-
-    @unittest.expectedFailure
-    def test_result_error(self):
-        """ The 'submit' method for an error result.
-
-        A ResultError should be raised if the result object from the server
-        has an error message.
-
-        """
-        raise NotImplementedError
 
 
 # Specify the test cases to run for this module. Private bases classes need
 # to be explicitly excluded from automatic discovery.
 
-TEST_CASES = (TestRequest, TestStnMetaRequest, TestStnDataRequest,
-    TestMultiStnDataRequest)
+TEST_CASES = (TestStnMetaRequest, TestStnDataRequest, TestMultiStnDataRequest)
 
 def load_tests(loader, tests, pattern):
     """ Define a TestSuite for this module.
@@ -248,5 +129,4 @@ def load_tests(loader, tests, pattern):
 # Make the module executable.
 
 if __name__ == "__main__":
-    print __file__
-    #unittest.main()  # main() calls sys.exit()
+    unittest.main()  # main() calls sys.exit()

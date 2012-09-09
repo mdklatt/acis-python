@@ -19,9 +19,11 @@ class _TestResult(unittest.TestCase):
     """ Private base class for testing result classes.
 
     This class should be excluded from test discovery and execution. Child
-    classes must define JSON_FILE and RESULT_TYPE class attributes
+    classes must define JSON_FILE and RESULT_CLASS class attributes
 
     """
+    JSON_FILE = None
+
     @classmethod
     def load_json(cls):
         """ Load the JSON test data.
@@ -45,8 +47,9 @@ class _TestMetaResult(_TestResult):
 
         """
         test_data = self.load_json()
-        self.params = test_data["params"]
-        self.result = test_data["result"]
+        params = test_data["params"]
+        result = test_data["result"]
+        self.query = {"params": params, "result": result}
         self.meta = test_data["meta"]
         return
 
@@ -57,7 +60,7 @@ class _TestMetaResult(_TestResult):
         to the site UID.
 
         """
-        result = self.RESULT_TYPE(self.params, self.result)
+        result = self.RESULT_CLASS(self.query)
         for uid, site in result.meta.items():
             self.assertDictEqual(site, self.meta[str(uid)])
         return
@@ -78,9 +81,10 @@ class _TestDataResult(_TestResult):
 
         """
         test_data = self.load_json()
-        self.params = test_data["params"]
-        self.fields = [elem["name"] for elem in self.params["elems"]]
-        self.result = test_data["result"]
+        params = test_data["params"]
+        result = test_data["result"]
+        self.query = {"params": params, "result": result}
+        self.fields = [elem["name"] for elem in params["elems"]]
         self.meta = test_data["meta"]
         self.data = test_data["data"]
         self.smry = test_data["smry"]
@@ -94,7 +98,7 @@ class _TestDataResult(_TestResult):
         UID.
 
         """
-        result = self.RESULT_TYPE(self.params, self.result)
+        result = self.RESULT_CLASS(self.query)
         for uid, data in result.data.items():
             self.assertSequenceEqual(data, self.data[str(uid)])
         return
@@ -108,7 +112,7 @@ class _TestDataResult(_TestResult):
         parameters.
 
         """
-        result = self.RESULT_TYPE(self.params, self.result)
+        result = self.RESULT_CLASS(self.query)
         for uid, smry in result.smry.items():
             self.assertSequenceEqual(smry.values(), self.smry[str(uid)])
             self.assertSequenceEqual(smry.keys(), self.fields)
@@ -121,7 +125,7 @@ class _TestDataResult(_TestResult):
         request parameters.
 
         """
-        result = self.RESULT_TYPE(self.params, self.result)
+        result = self.RESULT_CLASS(self.query)
         self.assertSequenceEqual(result.fields, self.fields)
         return
 
@@ -132,7 +136,7 @@ class _TestDataResult(_TestResult):
         iterated over.
 
         """
-        result = self.RESULT_TYPE(self.params, self.result)
+        result = self.RESULT_CLASS(self.query)
         self.assertEqual(len(result), len(self.records))
         return
 
@@ -145,7 +149,7 @@ class _TestDataResult(_TestResult):
         request parameters.
 
         """
-        result = self.RESULT_TYPE(self.params, self.result)
+        result = self.RESULT_CLASS(self.query)
         fields = ["uid", "date"] + self.fields
         for i, record in enumerate(result):
             self.assertSequenceEqual(record.values(), self.records[i])
@@ -159,15 +163,14 @@ class TestStnMetaResult(_TestMetaResult):
 
     """
     JSON_FILE = "data/StnMeta.json"
-    RESULT_TYPE = StnMetaResult
+    RESULT_CLASS = StnMetaResult
 
     def test_no_uid(self):
         """ Test failure for missing 'uid'.
 
         """
-        self.result["meta"][0].pop("uid")
-        self.assertRaises(ParameterError, StnMetaResult, self.params,
-            self.result)
+        self.query["result"]["meta"][0].pop("uid")
+        self.assertRaises(ParameterError, self.RESULT_CLASS, self.query)
         return
 
 
@@ -176,15 +179,14 @@ class TestStnDataResult(_TestDataResult, _TestMetaResult):
 
     """
     JSON_FILE = "data/StnData.json"
-    RESULT_TYPE = StnDataResult
+    RESULT_CLASS = StnDataResult
 
     def test_no_uid(self):
         """ Test failure for missing 'uid'.
 
         """
-        self.result["meta"].pop("uid")
-        self.assertRaises(ParameterError, self.RESULT_TYPE, self.params,
-            self.result)
+        self.query["result"]["meta"].pop("uid")
+        self.assertRaises(ParameterError, self.RESULT_CLASS, self.query)
         return
 
 
@@ -193,15 +195,14 @@ class TestMultiStnDataResult(_TestDataResult, _TestMetaResult):
 
     """
     JSON_FILE = "data/MultiStnData.json"
-    RESULT_TYPE = MultiStnDataResult
+    RESULT_CLASS = MultiStnDataResult
 
     def test_no_uid(self):
         """ Test failure for missing 'uid'.
 
         """
-        self.result["data"][0]["meta"].pop("uid")
-        self.assertRaises(ParameterError, StnMetaResult, self.params,
-            self.result)
+        self.query["result"]["data"][0]["meta"].pop("uid")
+        self.assertRaises(ParameterError, self.RESULT_CLASS, self.query)
         return
 
 

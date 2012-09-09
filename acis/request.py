@@ -4,134 +4,83 @@ This implementation is based on ACIS Web Services Version 2:
 <http://data.rcc-acis.org/doc/>.
 
 """
-__version__ = "0.1.dev"
-
-import json
-import re
-import urllib
-import urlparse
-
+from . call import *
 from . error import *
 
 
-__all__ = ("Request", "StnMetaRequest", "StnDataRequest",
-    "MultiStnDataRequest")
+__all__ = ("StnMetaRequest", "StnDataRequest", "MultiStnDataRequest")
 
 
-class Request(object):
-    """ A generic ACIS request.
+class _JsonRequest(object):
+    """ Private base class.
 
     """
-    SERVER = "http://data.rcc-acis.org"
+    _call = WebServicesCall(None)
 
-    def __init__(self, query):
+    def __init__(self):
         """ Initialize a request.
 
-        The 'query' parameter is the type of ACIS query, e.g. 'StnMeta',
-        'StnData', etc.
-
         """
-        self.url = urlparse.urljoin(Request.SERVER, query)
-        return
-
-    def submit(self, params):
-        """ Submit a request to the server.
-
-        The 'params' parameter is a dict specifying the request parameters. The
-        return value is a dict containing the decoded JSON object returned by
-        the server.
-
-        """
-        HTTP_OK = 200
-        HTTP_BAD = 400
-        query = urllib.urlencode({"params": json.dumps(params)})
-        conn = urllib.urlopen(self.url, query)  # POST request
-        code = conn.getcode()
-        if code != HTTP_OK:
-            # This doesn't do the right thing for a "soft 404", e.g. an ISP
-            # redirects to a custom error or search page for a DNS lookup
-            # failure. If that happens expect a ValueError from json.loads().
-            if code == HTTP_BAD:  # ACIS plain text error message
-                raise RequestError(conn.read());
-            else:  # not an ACIS request error
-                raise RuntimeError("HTTP error %d" % code)
-        result = json.loads(conn.read())
-        try:
-            raise ResultError(result["error"])
-        except KeyError:  # no error
-            return params, result
-
-
-class _ParamRequest(Request):
-    """ Private base class for advanced Request types.
-
-    A _ParamRequest facilitates the creation of and maintains its own 'params'
-    object.
-
-    """
-    def __init__(self, query):
-        """ Initialize a _ParamRequest object.
-
-        The 'query' parameter is the type of ACIS query, e.g. 'StnMeta',
-        'StnData', etc.
-
-        """
-        super(_ParamRequest, self).__init__(query)
-        self._params = {}
+        self._params = {"output": "json"}
         return
 
     def submit(self):
-        """ Return the result of this request.
+        """ Submit a request to the server.
 
-        The return value is the params object submitted to the server and the
-        result object it returned.
+        The return value is the complete query consisting of the params sent
+        to the server and the result object.
 
         """
-        return super(_ParamRequest, self).submit(self._params)
+        return {"params": self._params, "result": self._call(self._params)}
 
 
-class _MetaRequest(_ParamRequest):
-    """ Private base class for retrieving metadata.
+class StnMetaRequest(_JsonRequest):
+    """ A StnMeta request.
 
     """
-    def __init__(self, query):
-        """
+    _call = WebServicesCall("StnMeta")
+
+    def __init__(self):
+        """ Initialize a StnMetaRequest object.
 
         """
-        super(_MetaRequest, self).__init__(query)
+        super(StnMetaRequest, self).__init__()
         self._params["meta"] = ["uid"]
         return
 
-    def meta(self, *args):
-        """ Define the 'meta' parameter for this request.
+    def meta(self, *items):
+        """ Specify the metadata items for this request.
 
         The ACIS site UID is automatically part of every request.
 
         """
-        args = set(args)
-        args.add("uid")
-        self._params["meta"] = list(args)
+        items = set(items)
+        items.add("uid")
+        self._params["meta"] = list(items)
         return
 
-    def location(self, **kwargs):
+    def location(self, **options):
         """ Define the location for this request.
 
         """
-        self._params.update(kwargs)
+        # Need to validate options.
+        self._params.update(options)
         return
 
 
-class _DataRequest(_ParamRequest):
-    """ Private base class for retrieving data.
+class StnDataRequest(StnMetaRequest):
+    """ A StnData request.
 
     """
-    def __init__(self, query):
-        """ Initialize a _DataRequest object.
+    _call = WebServicesCall("StnData")
+
+    def __init__(self):
+        """ Initialize a StnDataRequest object.
 
         """
-        super(_DataRequest, self).__init__(query)
+        super(StnDataRequest, self).__init__()
         self._params["elems"] = []
-        self._interval = "dly"
+        self._interval = "dly";
         return
 
     def interval(self, interval):
@@ -139,84 +88,88 @@ class _DataRequest(_ParamRequest):
 
         """
         if interval not in ("dly", "mly", "yly"):
-            raise ParameterError("invalid interval: %s" % interval)
+            raise ParameterError("invalid interval: {s}".format(interval))
         self._interval = interval
         return
 
-    def add_element(self, name, **kwargs):
-        """ Add an element to this request.
+    def add_elem(self, name, **options):
+        """ Add element "name" to this request with any "options".
 
         """
         elem = {"name": name, "interval": self._interval}
-        elem.update(kwargs)
+        elem.update(options)
         self._params["elems"].append(elem)
         return
 
-    def clear_elements(self):
-        """ Clear all elements from this request.
+    def clear_elem(self, name=None):
+        """ Clear all or just "name" from the request elements.
 
         """
-        self._params["elems"] = []
+        if name is not None:
+            self._params.pop(name)
+        else:
+            self._params["elems"] = []
         return
 
     def dates(self, sdate, edate=None):
-        """ Set the date range for this request.
+        """ Specify the date range (inclusive) for this request.
 
-        Dates must be specified in an ACIS-acceptable string format, i.e.
-        YYYY[-MM[-DD] (hyphens are optional).
+        If no "edate" is specified "sdate" is treated as a single date. The
+        parameters must be date string or the value "por" which means to
+        extend to the period-of-record in that direction. Acceptable date
+        formats are YYYY-[MM-[DD]] (hyphens are optional).
 
         """
         if edate is None:  # single date
-            self._params["date"] = sdate
+            self._params["date"]
         else:
             self._params["sdate"] = sdate
             self._params["edate"] = edate
         return
 
-
-class StnMetaRequest(_MetaRequest):
-    """ A StnMeta request.
-
-    """
-    def __init__(self):
-        """ Initialize a StnMetaRequest object.
-
-        """
-        super(StnMetaRequest, self).__init__("StnMeta")
-        return
-
-
-class StnDataRequest(_MetaRequest, _DataRequest):
-    """ A StnData request.
-
-    """
-    def __init__(self):
-        """ Initialize a StnDataRequest object.
-
-        """
-        super(StnDataRequest, self).__init__("StnData")
-        return
-
-    def location(self, uid=None, sid=None):
+    def location(self, **options):
         """ Set the location for this request.
 
         """
-        if uid is not None:
-            self._params["uid"] = int(uid)
-        elif sid is not None:
-            self._params["sid"] = str(sid)
-        else:
-            raise ParameterError("must specify uid or sid")
+        if not set(options.keys()) < set(("uid", "sid")):
+            raise ParameterError("StnData requires uid or sid")
+        self._params.update(options)
         return
 
 
-class MultiStnDataRequest(_MetaRequest, _DataRequest):
+class MultiStnDataRequest(StnDataRequest):
     """ A MultiStnData request.
 
     """
+    _call = WebServicesCall("MultiStnData")
+
     def __init__(self):
         """ Initialize a MultiStnDataRequest object.
 
         """
-        super(MultiStnDataRequest, self).__init__("MultiStnData")
+        super(MultiStnDataRequest, self).__init__()
         return
+
+    def dates(self, sdate, edate=None):
+        """ Specify the date range (inclusive) for this request.
+
+        Same as StnDataRequest but "por" is not allowed.
+
+        """
+        if (sdate.lower() == "por" or edate.lower() == "por"):
+            raise ParameterError("MultiStnData does not accept 'por'")
+        if edate is None:  # single date
+            self._params["date"]
+        else:
+            self._params["sdate"] = sdate
+            self._params["edate"] = edate
+        return
+
+    def location(self, **options):
+        """ Define the location for this request.
+
+        """
+        # Need to validate options.
+        self._params.update(options)
+        return
+

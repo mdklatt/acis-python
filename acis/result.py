@@ -15,35 +15,42 @@ from . date import *
 __all__ = ("StnMetaResult", "StnDataResult", "MultiStnDataResult")
 
 
-class _Result(object):
+class _JsonResult(object):
     """ Base class for all result objects.
 
     """
-    pass
+    def __init__(self, query):
+        result = query["result"]
+        try:
+            raise result["error"]
+        except KeyError:  # no error
+            pass
+        return;
 
 
-class StnMetaResult(_Result):
+class StnMetaResult(_JsonResult):
     """ A StnMeta result for one or more sites.
 
     The 'meta' attribute is a dict keyed to ACIS site uid(s).
 
     """
-    def __init__(self, params, result):
+    def __init__(self, query):
         """ Initialize a StnMetaResult object.
 
-        The 'result' parameter is the result object returned from the ACIS
-        server and must contain the 'uid' metadata element. The 'params'
-        parameter is ignored.
+        The query parameter is a dict containing the params sent to the server
+        and the result it return. The result must contain the uid metadata
+        item.
 
         """
+        meta = query["result"]["meta"]
         try:
-            self.meta = {site.pop("uid"): site for site in result["meta"]}
+            self.meta = {site.pop("uid"): site for site in meta}
         except KeyError:
             raise ParameterError("uid is a required meta element")
         return
 
 
-class _DataResult(_Result):
+class _DataResult(_JsonResult):
     """ Base class for a station data result.
 
     _DataResult objects have a 'data' and 'meta' attribute corresponding to
@@ -52,18 +59,21 @@ class _DataResult(_Result):
     metadata element.
 
     """
-    def __init__(self, params):
+    def __init__(self, query):
         """ Initialize a _DataResult object.
 
         """
-        elems = params["elems"]
+        super(_DataResult, self).__init__(query)
+        self.data = {}
+        self.meta = {}
+        elems = query["params"]["elems"]
         try:
             # a comma-delimited string
             self.fields = [elem.strip() for elem in elems.split(",")]
         except AttributeError:  # no split(), not a string
             try:
                 # a sequence of dicts
-                self.fields = [elem["name"] for elem in params["elems"]]
+                self.fields = [elem["name"] for elem in elems]
             except TypeError:  # no string indices, not a dict
                 # a sequence of strings
                 self.fields = elems
@@ -83,14 +93,16 @@ class StnDataResult(_DataResult):
     """ A StnData result for a single site.
 
     """
-    def __init__(self, params, result):
+    def __init__(self, query):
         """ Initialize a StnDataResult object.
 
-        The 'result' parameter is the result object returned from the ACIS
-        server and must contain the 'uid' metadata element.
+        The query parameter is a dict containing the params sent to the server
+        and the result it return. The result must contain the uid metadata
+        item.
 
         """
-        super(StnDataResult, self).__init__(params)
+        super(StnDataResult, self).__init__(query)
+        result = query["result"]
         try:
             uid = result["meta"].pop("uid")
         except KeyError:
@@ -119,18 +131,19 @@ class MultiStnDataResult(_DataResult):
     """ A MultiStnData result for one more sites.
 
     """
-    def __init__(self, params, result):
+    def __init__(self, query):
         """ Initialize a MultiStnDataResult object.
 
-        The 'result' parameter is the return value from Request.submit() and
-        must contain the 'uid' metadata element.
+        The query parameter is a dict containing the params sent to the server
+        and the result it return. The result must contain the uid metadata
+        item.
 
         """
-        super(MultiStnDataResult, self).__init__(params)
+        super(MultiStnDataResult, self).__init__(query)
         self.meta = {}
         self.data = {}
         self.smry = {}
-        for site in result["data"]:
+        for site in query["result"]["data"]:
             try:
                 uid = site["meta"].pop("uid")
             except KeyError:
@@ -142,7 +155,7 @@ class MultiStnDataResult(_DataResult):
             except KeyError:  # no "smry"
                 continue
             self.smry[uid] = collections.OrderedDict(zip(self.fields, smry))
-        self._dates = date_range(params)
+        self._dates = date_range(query["params"])
         return
 
     def __iter__(self):

@@ -3,6 +3,7 @@
 """
 __version__ = "0.1.dev"
 
+from call import *
 from date import *
 from error import *
 from result import *
