@@ -4,51 +4,56 @@ The module can be executed on its own or incorporated into a larger test suite.
 
 """
 import json
-import sys
 import unittest
 
-import env
-from acis import *
+import _env
+from acis.request import *
 
 
 # Define the TestCase classes for this module. Each public component of the
 # module being tested has its own TestCase.
 
-class _TestRequest(unittest.TestCase):
+class _RequestTest(unittest.TestCase):
     """ Private base class for testing request classes.
 
+    This class should be excluded from test discovery and execution. Child
+    classes must define the _JSON_FILE and _TEST_CLASS class attributes.
+
     """
-    JSON_FILE = None
-    REQUEST_TYPE = None
+    _JSON_FILE = None
+    _TEST_CLASS = None
 
     @classmethod
     def load_json(cls):
         """ Load the JSON test data.
 
         """
-        return json.load(open(cls.JSON_FILE, "r"))
+        return json.load(open(cls._JSON_FILE, "r"))
 
     def setUp(self):
+        """ Set up the test fixture.
+
+        This is called before each test is run so that they are isolated from
+        any side effects. This is part of the unittest API.
+
+        """
         test_data = self.load_json()
         params = test_data["params"]
         result = test_data["result"]
         self.query = {"params": params, "result": result}
-        self.request = self.REQUEST_TYPE()
+        self.request = self._TEST_CLASS()
         return
 
 
-class TestStnMetaRequest(_TestRequest):
+class StnMetaRequestTest(_RequestTest):
     """ Unit testing for the StnMetaRequest class.
 
     """
-    JSON_FILE = "data/StnMeta.json"
-    REQUEST_TYPE = StnMetaRequest
+    _JSON_FILE = "data/StnMeta.json"
+    _TEST_CLASS = StnMetaRequest
 
     def test_submit(self):
-        """ Test the 'submit()' method.
-
-        The function should return the parameters submitted to and the decoded
-        object received from the server as a dict.
+        """ Test the submit method for a normal request.
 
         """
         self.request.location(sids=("okc", "tul"))
@@ -58,19 +63,15 @@ class TestStnMetaRequest(_TestRequest):
         return
 
 
-
-class TestStnDataRequest(_TestRequest):
+class StnDataRequestTest(_RequestTest):
     """ Unit testing for the StnDataRequest class.
 
     """
-    JSON_FILE = "data/StnData.json"
-    REQUEST_TYPE = StnDataRequest
+    _JSON_FILE = "data/StnData.json"
+    _TEST_CLASS = StnDataRequest
 
     def test_submit(self):
-        """ Test the 'submit()' method.
-
-        The function should return the parameters submitted to and the decoded
-        object received from the server.
+        """ Test the submit method.
 
         """
         self.request.location(sid="okc")
@@ -83,19 +84,15 @@ class TestStnDataRequest(_TestRequest):
         return
 
 
-class TestMultiStnDataRequest(_TestRequest):
+class MultiStnDataRequestTest(_RequestTest):
     """ Unit testing for the MultiStnDataRequest class.
 
     """
-    JSON_FILE = "data/MultiStnData.json"
-    REQUEST_TYPE = MultiStnDataRequest
+    _JSON_FILE = "data/MultiStnData.json"
+    _TEST_CLASS = MultiStnDataRequest
 
-    #@unittest.skip("skip for debugging")
     def test_submit(self):
-        """ Test the 'submit()' method.
-
-        The function should return the parameters submitted to and the decoded
-        object received from the server.
+        """ Test the submit method.
 
         """
         self.request.location(sids=("okc", "tul"))
@@ -111,16 +108,18 @@ class TestMultiStnDataRequest(_TestRequest):
 # Specify the test cases to run for this module. Private bases classes need
 # to be explicitly excluded from automatic discovery.
 
-TEST_CASES = (TestStnMetaRequest, TestStnDataRequest, TestMultiStnDataRequest)
+_TEST_CASES = (StnMetaRequestTest, StnDataRequestTest, MultiStnDataRequestTest)
 
 def load_tests(loader, tests, pattern):
     """ Define a TestSuite for this module.
 
-    This is part of the unittest API. The last two arguments are ignored.
+    This is part of the unittest API. The last two arguments are ignored. The
+    _TEST_CASES global is used to determine which TestCase classes to load
+    from this module.
 
     """
     suite = unittest.TestSuite()
-    for test_case in TEST_CASES:
+    for test_case in _TEST_CASES:
         tests = loader.loadTestsFromTestCase(test_case)
         suite.addTests(tests)
     return suite

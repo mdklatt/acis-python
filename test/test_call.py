@@ -3,10 +3,9 @@
 The module can be executed on its own or incorporated into a larger test suite.
 
 """
-import sys
 import unittest
 
-import env
+import _env
 from acis.call import *
 from acis.error import *
 
@@ -14,7 +13,7 @@ from acis.error import *
 # Define the TestCase classes for this module. Each public component of the
 # module being tested has its own TestCase.
 
-class TestWebServicesCall(unittest.TestCase):
+class WebServicesCallTest(unittest.TestCase):
     """ Unit testing for the WebServicesCall class.
 
     """
@@ -29,13 +28,13 @@ class TestWebServicesCall(unittest.TestCase):
         return
 
     def test_url(self):
-        """ Test the 'url' attribute.
+        """ Test the url attribute.
 
         """
         self.assertEqual(self._call.url, "http://data.rcc-acis.org/StnData")
         return
 
-    def test_exec(self):
+    def test_call(self):
         """ Test a normal call.
 
         """
@@ -58,18 +57,18 @@ class TestWebServicesCall(unittest.TestCase):
 # Specify the test cases to run for this module. Private bases classes need
 # to be explicitly excluded from automatic discovery.
 
-TEST_CASES = (TestWebServicesCall,)
+_TEST_CASES = (WebServicesCallTest,)
 
 def load_tests(loader, tests, pattern):
     """ Define a TestSuite for this module.
 
     This is part of the unittest API. The last two arguments are ignored. The
-    'TEST_CASES' global is used to determine which TestCase classes to load
+    _TEST_CASES global is used to determine which TestCase classes to load
     from this module.
 
     """
     suite = unittest.TestSuite()
-    for test_case in TEST_CASES:
+    for test_case in _TEST_CASES:
         tests = loader.loadTestsFromTestCase(test_case)
         suite.addTests(tests)
     return suite

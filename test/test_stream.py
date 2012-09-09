@@ -4,29 +4,31 @@ The module can be executed on its own or incorporated into a larger test suite.
 
 """
 import json
-import sys
 import unittest
 
-import env
-from acis import *
+import _env
+from acis.stream import *
 
 
 # Define the TestCase classes for this module. Each public component of the
 # module being tested has its own TestCase.
 
-class _TestStream(unittest.TestCase):
+class _StreamTest(unittest.TestCase):
     """ Private base class for testing stream classes.
 
+    This class should be excluded from test discovery and execution. Child
+    classes must define the _JSON_FILE and _TEST_CLASS class attributes.
+
     """
-    JSON_FILE = None
-    STREAM_CLASS = None
+    _JSON_FILE = None
+    _TEST_CLASS = None
 
     @classmethod
     def load_json(cls):
         """ Load the JSON test data.
 
         """
-        return json.load(open(cls.JSON_FILE, "r"))
+        return json.load(open(cls._JSON_FILE, "r"))
 
     def setUp(self):
         """ Set up the test fixture.
@@ -38,18 +40,21 @@ class _TestStream(unittest.TestCase):
         test_data = self.load_json()
         self.meta = test_data["meta"]
         self.records = test_data["records"]
-        self.stream = self.STREAM_CLASS()
+        self.stream = self._TEST_CLASS()
         return
 
 
-class TestStnDataStream(_TestStream):
+class StnDataStreamTest(_StreamTest):
     """ Unit testing for the StnDataStream class.
 
     """
-    JSON_FILE = "data/StnDataCsv.json"
-    STREAM_CLASS = StnDataStream
+    _JSON_FILE = "data/StnDataCsv.json"
+    _TEST_CLASS = StnDataStream
 
     def test_iter(self):
+        """ Test the __iter__ method.
+
+        """
         self.stream.dates("2011-12-31", "2012-01-01")
         self.stream.location(sid="okc")
         self.stream.add_elem("mint")
@@ -63,14 +68,17 @@ class TestStnDataStream(_TestStream):
         return
 
 
-class TestMultiStnDataStream(_TestStream):
+class MultiStnDataStreamTest(_StreamTest):
     """ Unit testing for the MultiStnDataStream class.
 
     """
-    JSON_FILE = "data/MultiStnDataCsv.json"
-    STREAM_CLASS = MultiStnDataStream
+    _JSON_FILE = "data/MultiStnDataCsv.json"
+    _TEST_CLASS = MultiStnDataStream
 
     def test_iter(self):
+        """ Test the __iter__ method.
+
+        """
         self.stream.date("2011-12-31")
         self.stream.location(sids="okc,tul")
         self.stream.add_elem("mint")
@@ -88,16 +96,18 @@ class TestMultiStnDataStream(_TestStream):
 # Specify the test cases to run for this module. Private bases classes need
 # to be explicitly excluded from automatic discovery.
 
-TEST_CASES = (TestStnDataStream, TestMultiStnDataStream)
+_TEST_CASES = (StnDataStreamTest, MultiStnDataStreamTest)
 
 def load_tests(loader, tests, pattern):
     """ Define a TestSuite for this module.
 
-    This is part of the unittest API. The last two arguments are ignored.
+    This is part of the unittest API. The last two arguments are ignored. The
+    _TEST_CASES global is used to determine which TestCase classes to load
+    from this module.
 
     """
     suite = unittest.TestSuite()
-    for test_case in TEST_CASES:
+    for test_case in _TEST_CASES:
         tests = loader.loadTestsFromTestCase(test_case)
         suite.addTests(tests)
     return suite
