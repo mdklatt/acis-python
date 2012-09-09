@@ -1,0 +1,5 @@
+{
+	"params":{"sids":"okc,tul","date":"2011-12-31","elems":"mint,maxt","output":"csv"},
+	"records":[["13967","2011-12-31","35","71"],["13968","2011-12-31","36","70"]],
+	"meta":{"13967":{"name":"OKLAHOMA CITY WILL ROGERS AP","state":"OK","ll":[-97.60056,35.38889],"elev":1285},"13968":{"name":"TULSA INTL AP","state":"OK","ll":[-95.88722,36.19944],"elev":650}}
+}

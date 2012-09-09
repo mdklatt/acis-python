@@ -8,4 +8,5 @@ from date import *
 from error import *
 from result import *
 from request import *
+from stream import *
 from util import *
