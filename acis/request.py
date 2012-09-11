@@ -4,8 +4,8 @@ This implementation is based on ACIS Web Services Version 2:
 <http://data.rcc-acis.org/doc/>.
 
 """
-from . call import *
-from . error import *
+from . call import WebServicesCall
+from . error import ParameterError 
 
 
 __all__ = ("StnMetaRequest", "StnDataRequest", "MultiStnDataRequest")
@@ -80,7 +80,7 @@ class StnDataRequest(StnMetaRequest):
         """
         super(StnDataRequest, self).__init__()
         self._params["elems"] = []
-        self._interval = "dly";
+        self._interval = "dly"
         return
 
     def interval(self, interval):
@@ -117,11 +117,11 @@ class StnDataRequest(StnMetaRequest):
         If no "edate" is specified "sdate" is treated as a single date. The
         parameters must be date string or the value "por" which means to
         extend to the period-of-record in that direction. Acceptable date
-        formats are YYYY-[MM-[DD]] (hyphens are optional).
+        formats are YYYY-[MM-[DD]] (hyphens are optional; no two-digit years).
 
         """
         if edate is None:  # single date
-            self._params["date"]
+            self._params["date"] = sdate
         else:
             self._params["sdate"] = sdate
             self._params["edate"] = edate
@@ -159,7 +159,7 @@ class MultiStnDataRequest(StnDataRequest):
         if (sdate.lower() == "por" or edate.lower() == "por"):
             raise ParameterError("MultiStnData does not accept 'por'")
         if edate is None:  # single date
-            self._params["date"]
+            self._params["date"] = sdate
         else:
             self._params["sdate"] = sdate
             self._params["edate"] = edate

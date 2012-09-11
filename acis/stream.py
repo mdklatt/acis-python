@@ -9,15 +9,23 @@ __version__ = "0.1.dev"
 import collections
 import itertools
 
-from . date import *
-from . call import *
-from . error import *
+from . call import WebServicesCall 
+from . date import date_string
+from . date import date_object
+from . error import ParameterError 
+from . error import ResultError 
 
 __all__ = ("StnDataStream", "MultiStnDataStream")
 
 
 class _CsvStream(object):
+    """ Private base class for all CSV output.
 
+    CSV output is more limited than JSON output, but it can be streamed which
+    might be useful for large requests. A _CsvStream is like a _JsonRequest
+    that also provides some limited functionality of a _JsonResult.
+
+    """
     _call = WebServicesCall(None)
 
     def __init__(self):
@@ -64,7 +72,9 @@ class _CsvStream(object):
 
 
 class StnDataStream(_CsvStream):
+    """ A StnData stream.
 
+    """
     _call = WebServicesCall("StnData")
 
     def location(self, **options):
@@ -89,17 +99,20 @@ class StnDataStream(_CsvStream):
         If no "edate" is specified "sdate" is treated as a single date. The
         parameters must be a date string or the value "por" which means to
         extend to the period-of-record in that direction. Acceptable date
-        formats are YYYY-[MM-[DD]] (hyphens are optional).
+        formats are YYYY-[MM-[DD]] (hyphens are optional; no two-digit years).
 
         """
         if edate is None:  # single date
-            self._params["date"]
+            self._params["date"] = sdate
         else:
             self._params["sdate"] = sdate
             self._params["edate"] = edate
         return
 
     def __iter__(self):
+        """ Stream the records returned by the server.
+
+        """
         header, stream = self._connect()  # header is site name
         key, oid = self._site
         self.meta.setdefault(oid, {})["name"] = header
@@ -111,7 +124,11 @@ class StnDataStream(_CsvStream):
 
 
 class MultiStnDataStream(_CsvStream):
+    """ A MultiStnData stream.
 
+    A MultiStnData CSV call is limited to a single date.
+
+    """
     _call = WebServicesCall("MultiStnData")
 
     def date(self, date):
@@ -133,6 +150,9 @@ class MultiStnDataStream(_CsvStream):
         return
 
     def __iter__(self):
+        """ Stream the records returned by the server.
+
+        """
         header, stream = self._connect()  # header is a regular record
         fields = ["sid", "date"] + self.fields
         self.meta = {}

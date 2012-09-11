@@ -9,8 +9,9 @@ __version__ = "0.1.dev"
 import collections
 import itertools
 
-from . error import *
-from . date import *
+from . error import ParameterError 
+from . error import ResultError 
+from . date import date_range
 
 __all__ = ("StnMetaResult", "StnDataResult", "MultiStnDataResult")
 
@@ -22,10 +23,10 @@ class _JsonResult(object):
     def __init__(self, query):
         result = query["result"]
         try:
-            raise result["error"]
+            raise ResultError(result["error"])
         except KeyError:  # no error
             pass
-        return;
+        return
 
 
 class StnMetaResult(_JsonResult):
@@ -42,6 +43,7 @@ class StnMetaResult(_JsonResult):
         item.
 
         """
+        super(StnMetaResult, self).__init__(query)
         meta = query["result"]["meta"]
         try:
             self.meta = {site.pop("uid"): site for site in meta}

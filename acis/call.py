@@ -9,7 +9,7 @@ import urllib
 import urllib2
 import urlparse
 
-from . error import *
+from . error import RequestError
 
 __all__ = ("WebServicesCall",)
 
@@ -19,23 +19,23 @@ class WebServicesCall(object):
     """
     _SERVER = "http://data.rcc-acis.org"
 
-    def __init__(self, type):
+    def __init__(self, call_type):
         """ Initialize a WebServicesCall.
 
-        The 'type' parameter is the type of ACIS call, e.g. 'StnMeta',
-        'StnData', etc.
+        The call_type parameter is the type of ACIS call, e.g. "StnMeta",
+        "StnData", etc.
 
         """
-        self.url = urlparse.urljoin(self._SERVER, type)
+        self.url = urlparse.urljoin(self._SERVER, call_type)
         return
 
     def __call__(self, params):
         """ Execute a web services call.
 
-        The 'params' parameter is a dict specifying the call parameters. The
-        return depends on the output type specified in 'params'. For now,
-        JSON output (the default) gets decoded and returned as a dict. For
-        everything else the server stream gets returned.
+        The params parameter is a dict specifying the call parameters. The
+        return depends on the output type specified in params. JSON output
+	(the) default gets decoded and returned as a dict and for all other
+	output types a stream object gets returned. 
 
         """
         stream = self._post(urllib.urlencode({"params": json.dumps(params)}))
@@ -46,8 +46,8 @@ class WebServicesCall(object):
             pass
         try:
             return json.loads(stream.read())
-        except ValueError: # bad JSON
-            raise ResultError("server did not return valid JSON object")
+        except ValueError:
+            raise ValueError("server did not return valid JSON object")
 
 
     def _post(self, data):
