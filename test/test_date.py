@@ -24,7 +24,7 @@ class DateObjectFunctionTest(unittest.TestCase):
         """
         string = "2011-12-31"
         object = datetime.date(2011, 12, 31)
-        self.assertEquals(date_object(string), object)
+        self.assertEqual(date_object(string), object)
         return
 
     def test_day_no_hyphen(self):
@@ -33,7 +33,7 @@ class DateObjectFunctionTest(unittest.TestCase):
         """
         string = "20111231"
         object = datetime.date(2011, 12, 31)
-        self.assertEquals(date_object(string), object)
+        self.assertEqual(date_object(string), object)
         return
 
     def test_month_hyphen(self):
@@ -42,7 +42,7 @@ class DateObjectFunctionTest(unittest.TestCase):
         """
         string = "2011-12"
         object = datetime.date(2011, 12, 1)
-        self.assertEquals(date_object(string), object)
+        self.assertEqual(date_object(string), object)
         return
 
     def test_month_no_hyphen(self):
@@ -51,7 +51,7 @@ class DateObjectFunctionTest(unittest.TestCase):
         """
         string = "201112"
         object = datetime.date(2011, 12, 1)
-        self.assertEquals(date_object(string), object)
+        self.assertEqual(date_object(string), object)
         return
 
     def test_year(self):
@@ -60,11 +60,11 @@ class DateObjectFunctionTest(unittest.TestCase):
         """
         string = "2011"
         object = datetime.date(2011, 1, 1)
-        self.assertEquals(date_object(string), object)
+        self.assertEqual(date_object(string), object)
         return
 
     def test_bad_year(self):
-        """ Test for an error with a two-digit year.
+        """ Test exception for a two-digit year.
 
         """
         string = "11-11-11"
@@ -76,13 +76,22 @@ class DateStringFunctionTest(unittest.TestCase):
     """ Unit testing for the date_object function.
 
     """
-    def test(self):
-        """ Test a date object.
+    def test_normal(self):
+        """ Test normal operation.
 
         """
         object = datetime.date(2012, 1, 1)
-        string = "2012-01-01"  # zero fill
-        self.assertEquals(date_string(object), string)
+        string = "2012-01-01"  # test for zero fill
+        self.assertEqual(date_string(object), string)
+        return
+
+    def test_bad_arg(self):
+        """ Test exception for invalid argument type.
+
+        """
+        with self.assertRaises(TypeError) as context:
+            date_string(None)
+        message = "need a date object"
         return
 
 
@@ -128,6 +137,17 @@ class DateRangeFunctionTest(unittest.TestCase):
                 "elems": [{"name": "mint", "interval": "yly"}]}
         dates = ("2011-01-01", "2012-01-01")
         self.assertSequenceEqual(list(date_range(params)), dates)
+        return
+
+    def test_bad_params(self):
+        """ Test exception for invalid date range specification.
+
+        """
+        params = {"sdate": "2013-01-01", "elems": "mint"}  # no edate
+        with self.assertRaises(ParameterError) as context:
+            list(date_range(params))  # list needed to trigger iteration
+        message = "invalid date range specification"
+        self.assertEqual(context.exception.message, message)
         return
 
 

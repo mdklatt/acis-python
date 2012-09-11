@@ -26,7 +26,7 @@ def date_object(date_str):
     try:
         yr, mo, da = (int(s) if s is not None else 1 for s in match.groups())
     except AttributeError:  # match is None
-        raise ValueError("invalid date format")
+        raise ValueError("invalid date format: {0:s}".format(date_str))
     return datetime.date(yr, mo, da)
 
 
@@ -55,7 +55,7 @@ def date_range(params):
         try:
             yield params["date"]
         except KeyError:
-            raise ParameterError('invalid date range specification')
+            raise ParameterError("invalid date range specification")
         return  # single date
     try:
         interval = params["elems"][0]["interval"]
