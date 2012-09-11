@@ -121,7 +121,7 @@ class MultiStnDataStream(_CsvStream):
         formats are YYYY-[MM-[DD]] (hyphens are optional).
 
         """
-        self._params["date"] = format_date(parse_date(date))  # validation
+        self._params["date"] = date_string(date_object(date))  # validation
         return
 
     def location(self, **options):

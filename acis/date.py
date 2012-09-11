@@ -10,30 +10,27 @@ import re
 
 import dateutil.relativedelta as relativedelta
 
-from . error import *
-
+from . error import ParameterError
 
 _DATE_REGEX = re.compile(r"^(\d{4})(?:-?(\d{2}))?(?:-?(\d{2}))?$")
 
 
-def parse_date(date):
+def date_object(date_str):
     """ Convert an ACIS date string to a datetime.date object.
 
-    Valid date formats are YYYY[-MM[-DD]] (hyphens are optional).
+    Valid date formats are YYYY[-MM[-DD]] (hyphens are optional but leading
+    zeroes are not; no two-digit years).
 
     """
+    match = _DATE_REGEX.search(date_str)
     try:
-        match = _DATE_REGEX.search(date)
-    except TypeError:
-        raise TypeError("need a date string")
-    try:
-        y, m, d = (int(s) if s is not None else 1 for s in match.groups())
+        yr, mo, da = (int(s) if s is not None else 1 for s in match.groups())
     except AttributeError:  # match is None
         raise ValueError("invalid date format")
-    return datetime.date(y, m, d)
+    return datetime.date(yr, mo, da)
 
 
-def format_date(date):
+def date_string(date_obj):
     """ Return an ACIS-format date string from a date object.
 
     NOTE: datetime.strftime() cannot handle dates before 1900, so this should
@@ -41,10 +38,10 @@ def format_date(date):
 
     """
     try:
-        y, m, d = date.year, date.month, date.day
+        yr, mo, da = date_obj.year, date_obj.month, date_obj.day
     except AttributeError:
         raise TypeError("need a date object")
-    return "%04d-%02d-%02d" % (y, m, d)
+    return "{0:04d}-{1:02d}-{2:02d}".format(yr, mo, da)
 
 
 def date_range(params):
@@ -52,8 +49,8 @@ def date_range(params):
 
     """
     try:
-        sdate = parse_date(params["sdate"])
-        edate = parse_date(params["edate"])
+        sdate = date_object(params["sdate"])
+        edate = date_object(params["edate"])
     except KeyError:
         try:
             yield params["date"]
@@ -70,7 +67,7 @@ def date_range(params):
         "yly": relativedelta.relativedelta(years=1),
     }
     while sdate <= edate:
-        yield format_date(sdate)
+        yield date_string(sdate)
         sdate += deltas[interval]
     return
 
