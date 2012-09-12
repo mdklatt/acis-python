@@ -57,7 +57,7 @@ class StnMetaRequestTest(_RequestTest):
 
         """
         self.request.location(sids=("okc", "tul"))
-        self.request.meta("county", "name")  # uid should be automatic
+        self.request.metadata("county", "name")  # uid should be automatic
         query = self.request.submit()
         self.assertDictEqual(query["result"], self.query["result"])
         return
@@ -76,9 +76,9 @@ class StnDataRequestTest(_RequestTest):
         """
         self.request.location(sid="okc")
         self.request.dates("2011-12-31", "2012-01-01")
-        self.request.add_elem("mint", smry="min")
-        self.request.add_elem("maxt", smry="max")
-        self.request.meta("county", "name")  # uid should be automatic
+        self.request.add_element("mint", smry="min")
+        self.request.add_element("maxt", smry="max")
+        self.request.metadata("county", "name")  # uid should be automatic
         query = self.request.submit()
         self.assertDictEqual(query["result"], self.query["result"])
         return
@@ -97,9 +97,9 @@ class MultiStnDataRequestTest(_RequestTest):
         """
         self.request.location(sids=("okc", "tul"))
         self.request.dates("2011-12-31", "2012-01-01")
-        self.request.add_elem("mint", smry="min")
-        self.request.add_elem("maxt", smry="max")
-        self.request.meta("county", "name")  # uid should be automatic
+        self.request.add_element("mint", smry="min")
+        self.request.add_element("maxt", smry="max")
+        self.request.metadata("county", "name")  # uid should be automatic
         query = self.request.submit()
         self.assertDictEqual(query["result"], self.query["result"])
         return
