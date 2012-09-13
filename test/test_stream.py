@@ -60,10 +60,7 @@ class StnDataStreamTest(_StreamTest):
         self.stream.add_element("mint")
         self.stream.add_element("maxt")
         elems = ["sid", "date"] + list(self.stream.elems)
-        for i, record in enumerate(self.stream):
-            self.assertSequenceEqual(record.values(), self.records[i])
-            self.assertSequenceEqual(record.keys(), elems)
-        self.assertEqual(i + 1, 2)
+        self.assertSequenceEqual(list(self.stream), self.records)
         self.assertDictEqual(self.stream.meta, self.meta)
         return
 
@@ -84,13 +81,9 @@ class MultiStnDataStreamTest(_StreamTest):
         self.stream.add_element("mint")
         self.stream.add_element("maxt")
         elems = ["sid", "date"] + list(self.stream.elems)
-        for i, record in enumerate(self.stream):
-            self.assertSequenceEqual(record.values(), self.records[i])
-            self.assertSequenceEqual(record.keys(), elems)
-        self.assertEqual(i + 1, 2)
+        self.assertSequenceEqual(list(self.stream), self.records)
         self.assertDictEqual(self.stream.meta, self.meta)
         return
-
 
 
 # Specify the test cases to run for this module. Private bases classes need

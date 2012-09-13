@@ -18,7 +18,6 @@ This implementation is based on ACIS Web Services Version 2:
 """
 __version__ = "0.1.dev"
 
-import collections
 import itertools
 
 from .date import date_range
@@ -143,8 +142,7 @@ class StnDataResult(_DataResult):
             raise ParameterError("uid is a required meta element")
         self.meta[uid] = result["meta"]
         self.data[uid] = result["data"]
-        smry = result.get("smry", [])
-        self.smry[uid] = collections.OrderedDict(zip(self.elems, smry))
+        self.smry[uid] = result.get("smry", [])
         return
 
     def __iter__(self):
@@ -154,11 +152,10 @@ class StnDataResult(_DataResult):
         individual record. Records are in chronological order.
 
         """
-        fields = ["uid", "date"] + list(self.elems)
         for uid, data in self.data.items():
             for record in data:
                 record.insert(0, uid)
-                yield collections.OrderedDict(zip(fields, record))
+                yield record
         return
 
 
@@ -179,10 +176,9 @@ class MultiStnDataResult(_DataResult):
             self.meta[uid] = site["meta"]
             self.data[uid] = site["data"]
             try:
-                smry = site["smry"]
+                self.smry[uid]  = site["smry"]
             except KeyError:  # no "smry"
                 continue
-            self.smry[uid] = collections.OrderedDict(zip(self.elems, smry))
         self._dates = date_range(query["params"])
         return
 
@@ -198,11 +194,10 @@ class MultiStnDataResult(_DataResult):
 
         """
         # TODO: Correct dates for "groupby" results, c.f. date_range().
-        fields = ["uid", "date"] + list(self.elems)
         date_iter = itertools.cycle(self._dates)
         for uid, data in self.data.items():
             for record in data:
                 record.insert(0, uid)
                 record.insert(1, date_iter.next())
-                yield collections.OrderedDict(zip(fields, record))
+                yield record
         return

@@ -14,7 +14,6 @@ This implementation is based on ACIS Web Services Version 2:
 """
 __version__ = "0.1.dev"
 
-import collections
 import itertools
 
 from .call import WebServicesCall
@@ -109,13 +108,12 @@ class StnDataStream(_CsvStream):
 
         """
         for key in ("uid", "sid"):  # uid takes precedence
-            oid = options.get(key)
-            if not oid:
+            try:
+                sid = self._params[key] = options[key]
+            except KeyError:
                 continue
-            oid = options[key]
-            self._params[key] = oid
-            self._site = (key, oid)
-            break  # or else the exception is triggered below
+            self.meta[sid] = {}
+            break
         else:
             raise ParameterError("StnDataStream requires uid or sid")
         return
@@ -148,12 +146,11 @@ class StnDataStream(_CsvStream):
 
         """
         site_name, stream = self._connect()
-        key, oid = self._site
-        self.meta.setdefault(oid, {})["name"] = site_name
-        fields = [key, "date"] + list(self.elems)
+        sid = self.meta.keys()[0]
+        self.meta[sid] = {"name": site_name}
         for line in stream:
-            record = [oid] + line.rstrip().split(",")
-            yield collections.OrderedDict(zip(fields, record))
+            record = [sid] + line.rstrip().split(",")
+            yield record
         stream.close()
         return
 
@@ -192,8 +189,6 @@ class MultiStnDataStream(_CsvStream):
 
         """
         first_line, stream = self._connect()
-        fields = ["sid", "date"] + list(self.elems)
-        self.meta = {}
         for line in itertools.chain([first_line], stream):
             record = line.rstrip().split(",")
             try:
@@ -203,6 +198,6 @@ class MultiStnDataStream(_CsvStream):
             self.meta[sid] = {"name": name, "state": state,
                     "elev": float(elev), "ll": [float(lon), float(lat)]}
             record = [sid, self._params["date"]] + record[6:]
-            yield collections.OrderedDict(zip(fields, record))
+            yield record
         stream.close()
         return
