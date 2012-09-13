@@ -20,3 +20,10 @@ install:
 # Test script
 
 script: python test/test_acis.py
+
+
+# Branch restrictions
+
+branches:
+    only:
+        - master
