@@ -1,13 +1,23 @@
-""" Exception classes for the ACIS package.
+""" Exception classes for the acis library.
+
+All exception classes should be defined in this module.
 
 """
 __version__ = "0.1.dev"
 
 
-__all__ = ("RequestError", "ResultError", "ParameterError")
+__all__ = ("Error", "RequestError", "ResultError", "ParameterError")
 
 
-class RequestError(Exception):
+class Error(Exception):
+    """ The base class for all acis libary exceptions.
+    
+    This class provides the standard Exception functionality.
+    """
+    pass
+
+    
+class RequestError(Error):
     """ The server reported that the request was invalid.
 
     The ACIS server returned an HTTP status code of 400 indicating that it
@@ -17,18 +27,18 @@ class RequestError(Exception):
     pass
 
 
-class ResultError(Exception):
+class ResultError(Error):
     """ An error reported by the ACIS result object.
 
     The server returned an object, but it is invalid. The object will contain
-    an 'error' key with a string describing the error.
+    an "error" key with a string describing the error.
 
     """
     pass
 
 
 class ParameterError(Exception):
-    """ The request parameters are not correct.
+    """ The call parameters are not correct.
 
     """
     pass

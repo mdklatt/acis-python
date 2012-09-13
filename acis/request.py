@@ -1,21 +1,29 @@
-""" Classes for performing an ACIS web services request.
+""" Classes for ACIS data requests.
+
+This module provides a uniform interface for constructing an ACIS data request
+and retrieving the result from the server. There is a class for each type of
+web services call (StnData, MultiStnData, etc).
+
+These classes are designed to be used with their result module counterparts,
+but this is not mandatory. GridData and General calls are not currently
+implemented; use a WebServicesCall instead (see the call module).
 
 This implementation is based on ACIS Web Services Version 2:
-<http://data.rcc-acis.org/doc/>.
+    <http://data.rcc-acis.org/doc/>.
 
 """
-from . call import WebServicesCall
-from . error import ParameterError
+from .call import WebServicesCall
+from .error import ParameterError
 
 
 __all__ = ("StnMetaRequest", "StnDataRequest", "MultiStnDataRequest")
 
 
 class _JsonRequest(object):
-    """ Private base class.
+    """ Abstract base class for all request objects.
 
     """
-    _call = WebServicesCall(None)
+    _call = None  # child classes must set to an appropriate WebServicesCall
 
     def __init__(self):
         """ Initialize a request.
@@ -28,38 +36,46 @@ class _JsonRequest(object):
         """ Submit a request to the server.
 
         The return value is the complete query consisting of the params sent
-        to the server and the result object.
+        to the server and the result object (this can be the input for a Result
+        constructor; see result.py).
 
         """
         return {"params": self._params, "result": self._call(self._params)}
 
 
 class _MetaRequest(_JsonRequest):
-    """
+    """ Abstract base class for requests with metadata.
 
     """
     def __init__(self):
         """ Initialize a _MetaRequest object.
+
+        For compatibility with Result classes, the "uid" field is included by
+        default (see result.py).
 
         """
         super(_MetaRequest, self).__init__()
         self._params["meta"] = ["uid"]
         return
 
-    def metadata(self, *items):
-        """ Specify the metadata items for this request.
+    def metadata(self, *fields):
+        """ Specify the metadata fields for this request.
 
-        The ACIS site UID is automatically part of every request.
+        The fields parameter is an argument list of the desired fields. The
+        "uid" field is included by default.
 
         """
-        # TODO: Needd to validate items.
-        items = set(items)
-        items.add("uid")
-        self._params["meta"] = list(items)
+        # TODO: Need to validate items.
+        fields = set(fields)
+        fields.add("uid")
+        self._params["meta"] = list(fields)
         return
 
     def location(self, **options):
         """ Define the location for this request.
+
+        The options parameter is a keyword argument list defining the location
+        for this request.
 
         """
         # TODO: Need to validate options.
@@ -68,7 +84,11 @@ class _MetaRequest(_JsonRequest):
 
 
 class _DataRequest(_MetaRequest):
+    """ Abstract base class for all requests with data.
 
+    Data requests like StnData and MultiStnData also include metadata.
+
+    """
     def __init__(self):
         """ Initialize a _DataRequest object.
 
@@ -81,11 +101,8 @@ class _DataRequest(_MetaRequest):
     def submit(self):
         """ Submit a request to the server.
 
-        The return value is the complete query consisting of the params sent
-        to the server and the result object.
-
         """
-        # Add interval to each element.
+        # Fully construct _params before submitting request.
         for elem in self._params['elems']:
             elem['interval'] = self._interval
         return super(_DataRequest, self).submit()
@@ -94,14 +111,15 @@ class _DataRequest(_MetaRequest):
         """ Specify the date range (inclusive) for this request.
 
         If no "edate" is specified "sdate" is treated as a single date. The
-        parameters must be date string or the value "por" which means to
+        parameters must be a date string or the value "por" which means to
         extend to the period-of-record in that direction. Acceptable date
-        formats are YYYY-[MM-[DD]] (hyphens are optional; no two-digit years).
+        formats are YYYY-[MM-[DD]] (hyphens are optional but leading zeroes are
+        not; no two-digit years).
 
         """
         if edate is None:
             if sdate.lower() == "por":  # entire period of record
-                self.params["sdate"] = self.params["edate"] = "por"
+                self._params["sdate"] = self._params["edate"] = "por"
             else:  # single date
                 self._params["date"] = sdate
         else:
@@ -112,31 +130,37 @@ class _DataRequest(_MetaRequest):
     def interval(self, interval):
         """ Set the interval for this request.
 
+        The default interval is daily ("dly").
         """
         if interval not in ("dly", "mly", "yly"):
-            raise ParameterError("invalid interval: {s}".format(interval))
+            raise ParameterError("invalid interval: {0:s}".format(interval))
         self._interval = interval
         return
 
     def add_element(self, name, **options):
-        """ Add element "name" to this request with any "options".
+        """ Add an element to this request.
 
         """
-        # TODO: Check if "name" already exists before adding.
-        elem = dict([("name", name)] + options.items())
-        self._params["elems"].append(elem)
+        new_elem = dict([("name", name)] + options.items())
+        elements = self._params["elems"]
+        for pos, elem in enumerate(elements):
+            if elem["name"] == name:
+                elements[pos] = new_elem
+                break
+        else:
+            elements.append(new_elem)
         return
 
     def del_element(self, name=None):
-        """ Clear all or just "name" from the element list.
+        """ Delete all or just "name" from the requested elements.
 
         """
         if name is None:
             self._params["elems"] = []
-        elems = self._params["elems"]
-        for pos, elem in enumerate(elems):
+        elements = self._params["elems"]
+        for pos, elem in enumerate(elements):
             if elem["name"] == name:
-                elems.pop(pos)
+                elements.pop(pos)
                 break
         return
 
@@ -157,8 +181,10 @@ class StnDataRequest(_DataRequest):
     def location(self, **options):
         """ Set the location for this request.
 
+        StnData only accepts a single "uid" or "sid" parameter.
+
         """
-        # More restrictive parameters.
+        # TODO: Need to validate options.
         if not set(options.keys()) < set(("uid", "sid")):
             raise ParameterError("StnData requires uid or sid")
         super(StnDataRequest, self).location(**options)
@@ -174,9 +200,11 @@ class MultiStnDataRequest(_DataRequest):
     def dates(self, sdate, edate=None):
         """ Specify the date range (inclusive) for this request.
 
+        MultiStnData does not accept period-of-record ("por").
+
         """
-        # More restrictive parameters.
+        # TODO: Need to validate dates.
         if (sdate.lower() == "por" or edate.lower() == "por"):
-            raise ParameterError("MultiStnData does not accept 'por'")
+            raise ParameterError("MultiStnData does not accept por")
         super(MultiStnDataRequest, self).dates(sdate, edate)
         return

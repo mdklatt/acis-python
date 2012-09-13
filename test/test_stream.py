@@ -57,12 +57,12 @@ class StnDataStreamTest(_StreamTest):
         """
         self.stream.dates("2011-12-31", "2012-01-01")
         self.stream.location(sid="okc")
-        self.stream.add_elem("mint")
-        self.stream.add_elem("maxt")
-        fields = ["sid", "date"] + self.stream.fields
+        self.stream.add_element("mint")
+        self.stream.add_element("maxt")
+        elems = ["sid", "date"] + list(self.stream.elems)
         for i, record in enumerate(self.stream):
             self.assertSequenceEqual(record.values(), self.records[i])
-            self.assertSequenceEqual(record.keys(), fields)
+            self.assertSequenceEqual(record.keys(), elems)
         self.assertEqual(i + 1, 2)
         self.assertDictEqual(self.stream.meta, self.meta)
         return
@@ -81,12 +81,12 @@ class MultiStnDataStreamTest(_StreamTest):
         """
         self.stream.date("2011-12-31")
         self.stream.location(sids="okc,tul")
-        self.stream.add_elem("mint")
-        self.stream.add_elem("maxt")
-        fields = ["sid", "date"] + self.stream.fields
+        self.stream.add_element("mint")
+        self.stream.add_element("maxt")
+        elems = ["sid", "date"] + list(self.stream.elems)
         for i, record in enumerate(self.stream):
             self.assertSequenceEqual(record.values(), self.records[i])
-            self.assertSequenceEqual(record.keys(), fields)
+            self.assertSequenceEqual(record.keys(), elems)
         self.assertEqual(i + 1, 2)
         self.assertDictEqual(self.stream.meta, self.meta)
         return

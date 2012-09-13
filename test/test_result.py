@@ -84,7 +84,7 @@ class _DataResultTest(_ResultTest):
         params = test_data["params"]
         result = test_data["result"]
         self.query = {"params": params, "result": result}
-        self.fields = [elem["name"] for elem in params["elems"]]
+        self.elems = [elem["name"] for elem in params["elems"]]
         self.meta = test_data["meta"]
         self.data = test_data["data"]
         self.smry = test_data["smry"]
@@ -107,15 +107,15 @@ class _DataResultTest(_ResultTest):
         result = self._TEST_CLASS(self.query)
         for uid, smry in result.smry.items():
             self.assertSequenceEqual(smry.values(), self.smry[str(uid)])
-            self.assertSequenceEqual(smry.keys(), self.fields)
+            self.assertSequenceEqual(smry.keys(), self.elems)
         return
 
-    def test_fields(self):
-        """ Test the fields attribute.
+    def test_elems(self):
+        """ Test the elems attribute.
 
         """
         result = self._TEST_CLASS(self.query)
-        self.assertSequenceEqual(result.fields, self.fields)
+        self.assertSequenceEqual(result.elems, self.elems)
         return
 
     def test_len(self):
@@ -134,7 +134,7 @@ class _DataResultTest(_ResultTest):
 
         """
         result = self._TEST_CLASS(self.query)
-        fields = ["uid", "date"] + self.fields
+        fields = ["uid", "date"] + self.elems
         for i, record in enumerate(result):
             self.assertSequenceEqual(record.values(), self.records[i])
             self.assertSequenceEqual(record.keys(), fields)

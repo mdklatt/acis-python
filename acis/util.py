@@ -1,4 +1,7 @@
-""" Miscellaneous ACIS utility functions.
+""" ACIS utility functions.
+
+This module contains various functions that can be used for processing ACIS
+data.
 
 """
 __version__ = "0.1.dev"
@@ -27,9 +30,9 @@ _SID_TYPES = {
 def sids_types(sids):
     """ Return a dict of site IDs keyed by their ID types.
 
-    The 'sids' parameter is a list of SIDs from ACIS metadata where each SID is
+    The sids parameter is a list of SIDs from ACIS metadata where each SID is
     a single string containing an identifier and its integer type code
-    separated by a space.
+    separated by a space, e.g. "13697 1".
 
     """
     types = {}
