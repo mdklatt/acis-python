@@ -15,7 +15,7 @@ This implementation is based on ACIS Web Services Version 2:
 from .__version__ import __version__
 
 from .call import WebServicesCall
-from .error import ParameterError
+from .error import RequestError
 
 
 __all__ = ("StnMetaRequest", "StnDataRequest", "MultiStnDataRequest")
@@ -135,7 +135,7 @@ class _DataRequest(_MetaRequest):
         The default interval is daily ("dly").
         """
         if interval not in ("dly", "mly", "yly"):
-            raise ParameterError("invalid interval: {0:s}".format(interval))
+            raise RequestError("invalid interval: {0:s}".format(interval))
         self._interval = interval
         return
 
@@ -188,7 +188,7 @@ class StnDataRequest(_DataRequest):
         """
         # TODO: Need to validate options.
         if not set(options.keys()) < set(("uid", "sid")):
-            raise ParameterError("StnData requires uid or sid")
+            raise RequestError("StnData requires uid or sid")
         super(StnDataRequest, self).location(**options)
         return
 
@@ -207,6 +207,6 @@ class MultiStnDataRequest(_DataRequest):
         """
         # TODO: Need to validate dates.
         if (sdate.lower() == "por" or edate.lower() == "por"):
-            raise ParameterError("MultiStnData does not accept por")
+            raise RequestError("MultiStnData does not accept por")
         super(MultiStnDataRequest, self).dates(sdate, edate)
         return

@@ -148,7 +148,7 @@ class StnMetaResultTest(_MetaResultTest):
 
         """
         self.query["result"]["meta"][0].pop("uid")
-        self.assertRaises(ParameterError, self._TEST_CLASS, self.query)
+        self.assertRaises(ResultError, self._TEST_CLASS, self.query)
         return
 
 
@@ -164,7 +164,7 @@ class StnDataResultTest(_DataResultTest, _MetaResultTest):
 
         """
         self.query["result"]["meta"].pop("uid")
-        self.assertRaises(ParameterError, self._TEST_CLASS, self.query)
+        self.assertRaises(ResultError, self._TEST_CLASS, self.query)
         return
 
 
@@ -180,7 +180,7 @@ class MultiStnDataResultTest(_DataResultTest, _MetaResultTest):
 
         """
         self.query["result"]["data"][0]["meta"].pop("uid")
-        self.assertRaises(ParameterError, self._TEST_CLASS, self.query)
+        self.assertRaises(ResultError, self._TEST_CLASS, self.query)
         return
 
 

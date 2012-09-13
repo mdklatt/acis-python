@@ -17,6 +17,7 @@ import urllib2
 import urlparse
 
 from .error import RequestError
+from .error import ResultError
 
 __all__ = ("WebServicesCall",)
 
@@ -54,7 +55,7 @@ class WebServicesCall(object):
         try:
             result = json.loads(stream.read())
         except ValueError:
-            raise ValueError("server did not return valid JSON object")
+            raise ResultError("server did not return valid JSON object")
         stream.close()
         return result
 

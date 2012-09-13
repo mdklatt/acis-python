@@ -31,13 +31,6 @@ class _ErrorTest(unittest.TestCase):
         return
 
 
-class ParameterErrorTest(_ErrorTest):
-    """ Unit testing for the ParameterError class.
-
-    """
-    _TEST_CLASS = ParameterError
-
-
 class RequestErrorTest(_ErrorTest):
     """ Unit testing for the RequestError class.
 
@@ -55,7 +48,7 @@ class ResultErrorTest(_ErrorTest):
 # Specify the test cases to run for this module. Private bases classes need
 # to be explicitly excluded from automatic discovery.
 
-_TEST_CASES = (ParameterErrorTest, RequestErrorTest, ResultErrorTest)
+_TEST_CASES = (RequestErrorTest, ResultErrorTest)
 
 def load_tests(loader, tests, pattern):
     """ Define a TestSuite for this module.

@@ -144,7 +144,7 @@ class DateRangeFunctionTest(unittest.TestCase):
 
         """
         params = {"sdate": "2013-01-01", "elems": "mint"}  # no edate
-        with self.assertRaises(ParameterError) as context:
+        with self.assertRaises(ValueError) as context:
             list(date_range(params))  # list needed to trigger iteration
         message = "invalid date range specification"
         self.assertEqual(context.exception.message, message)

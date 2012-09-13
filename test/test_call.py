@@ -45,11 +45,11 @@ class WebServicesCallTest(unittest.TestCase):
         return
 
     def test_error(self):
-        """ Test a call with invalid parameters.
+        """ Test an invalid call.
 
         """
         with self.assertRaises(RequestError) as context:
-            self._call({})
+            self._call({})  # empty parameters
         self.assertEqual(context.exception.message, "Need sId")
         return
 

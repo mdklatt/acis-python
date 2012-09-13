@@ -18,7 +18,7 @@ import re
 
 import dateutil.relativedelta as relativedelta
 
-from .error import ParameterError
+from .error import RequestError
 
 _DATE_REGEX = re.compile(r"^(\d{4})(?:-?(\d{2}))?(?:-?(\d{2}))?$")
 
@@ -57,7 +57,7 @@ def date_string(date_obj):
 def date_range(params):
     """ Return a generator expression for the date range specified by params.
 
-    The params parameter is a dict of options sent to an ACIS call. The
+    The params parameter is a dict of options defining an ACIS call. The
     returned date range will be the dates for a result returned by that
     call. This cannot be used for period-of-record ("por") date ranges.
 
@@ -72,7 +72,7 @@ def date_range(params):
         try:  # single date?
             yield params["date"]
         except KeyError:
-            raise ParameterError("invalid date range specification")
+            raise ValueError("invalid date range specification")
         return
     try:
         # All elements must have the same interval, so check the first element

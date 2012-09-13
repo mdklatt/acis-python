@@ -17,7 +17,7 @@ from .__version__ import __version__
 import itertools
 
 from .call import WebServicesCall
-from .error import ParameterError
+from .error import RequestError
 from .error import ResultError
 
 __all__ = ("StnDataStream", "MultiStnDataStream")
@@ -91,7 +91,7 @@ class _CsvStream(object):
         stream = self._call(self._params)
         header = stream.readline().rstrip()
         if header.startswith("error"):  # "error: error message"
-            raise ResultError(header.split(":")[1].lstrip())
+            raise RequestError(header.split(":")[1].lstrip())
         return header, stream
 
 
@@ -115,7 +115,7 @@ class StnDataStream(_CsvStream):
             self.meta[sid] = {}
             break
         else:
-            raise ParameterError("StnDataStream requires uid or sid")
+            raise RequestError("StnDataStream requires uid or sid")
         return
 
     def dates(self, sdate, edate=None):

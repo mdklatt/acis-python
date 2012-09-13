@@ -21,7 +21,7 @@ from .__version__ import __version__
 import itertools
 
 from .date import date_range
-from .error import ParameterError
+from .error import RequestError
 from .error import ResultError
 
 __all__ = ("StnMetaResult", "StnDataResult", "MultiStnDataResult")
@@ -66,7 +66,7 @@ class StnMetaResult(_JsonResult):
         try:
             self.meta = {site.pop("uid"): site for site in meta}
         except KeyError:
-            raise ParameterError("uid is a required meta element")
+            raise ResultError("uid is a required meta element")
         return
 
 
@@ -139,7 +139,7 @@ class StnDataResult(_DataResult):
         try:
             uid = result["meta"].pop("uid")
         except KeyError:
-            raise ParameterError("uid is a required meta element")
+            raise ResultError("uid is a required meta element")
         self.meta[uid] = result["meta"]
         self.data[uid] = result["data"]
         self.smry[uid] = result.get("smry", [])
@@ -172,7 +172,7 @@ class MultiStnDataResult(_DataResult):
             try:
                 uid = site["meta"].pop("uid")
             except KeyError:
-                raise ParameterError("uid is a required meta element")
+                raise ResultError("uid is a required meta element")
             self.meta[uid] = site["meta"]
             self.data[uid] = site["data"]
             try:
