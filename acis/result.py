@@ -16,7 +16,7 @@ This implementation is based on ACIS Web Services Version 2:
     <http://data.rcc-acis.org/doc/>.
 
 """
-__version__ = "0.1.dev"
+from .__version__ import __version__
 
 import itertools
 

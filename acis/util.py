@@ -4,7 +4,7 @@ This module contains various functions that can be used for processing ACIS
 data.
 
 """
-__version__ = "0.1.dev"
+from .__version__ import __version__
 
 import re
 

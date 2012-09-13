@@ -3,7 +3,7 @@
 This library provides tools for ACIS Web Services clients.
 
 """
-__version__ = "0.1.dev"
+from .__version__ import __version__
 
 from .call import *
 from .date import *

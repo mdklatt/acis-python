@@ -3,20 +3,19 @@
 All exception classes should be defined in this module.
 
 """
-__version__ = "0.1.dev"
-
+from .__version__ import __version__
 
 __all__ = ("Error", "RequestError", "ResultError", "ParameterError")
 
 
 class Error(Exception):
     """ The base class for all acis libary exceptions.
-    
+
     This class provides the standard Exception functionality.
     """
     pass
 
-    
+
 class RequestError(Error):
     """ The server reported that the request was invalid.
 

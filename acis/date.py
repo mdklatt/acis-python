@@ -11,7 +11,7 @@ The external dateutil library is required:
     <http://pypi.python.org/pypi/python-dateutil>.
 
 """
-__version__ = "0.1.dev"
+from .__version__ import __version__
 
 import datetime
 import re
