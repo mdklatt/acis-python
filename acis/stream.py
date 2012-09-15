@@ -18,18 +18,19 @@ import itertools
 
 from .call import WebServicesCall
 from .error import RequestError
-from .error import ResultError
 
 __all__ = ("StnDataStream", "MultiStnDataStream")
 
 
 class _CsvStream(object):
-    """ Private base class for all CSV output.
+    """ Abstract base class for all CSV output.
 
     CSV output can be streamed, which might be useful for large requests.
+    Derived classes must define the _call attribute with the appropriate
+    WebServicesCall.
 
     """
-    _call = None  # child classes must set to an appropriate WebServicesCall
+    _call = None  # derived class must define a WebServicesCall
 
     def __init__(self):
         """ Initialize a _CsvStream object.
@@ -42,7 +43,9 @@ class _CsvStream(object):
 
     @property
     def elems(self):
-        """ Getter method for the elems attribute. """
+        """ Getter method for the elems attribute.
+
+        """
         return tuple(elem["name"] for elem in self._params["elems"])
 
     def add_element(self, name, **options):
@@ -75,24 +78,45 @@ class _CsvStream(object):
     def __iter__(self):
         """ Stream the records from the server.
 
-        Each record is of the form (sid, date, elem1, ...).
-
         """
-        raise NotImplementedError
+        first_line, stream = self._connect()
+        line_iter = itertools.chain([first_line], stream)
+        self._header(line_iter)
+        for line in line_iter:
+            yield self._record(line.rstrip())
+        stream.close()
+        return
 
     def _connect(self):
         """ Connect to the ACIS server.
 
-        Executes the web services call, check for success, and return the
-        result header (the first line) and the stream object. The header has
-        a different meaning depending on the call type.
+        Execute the web services call, check for success, and return the first
+        line and the stream object.
 
         """
         stream = self._call(self._params)
-        header = stream.readline().rstrip()
-        if header.startswith("error"):  # "error: error message"
-            raise RequestError(header.split(":")[1].lstrip())
-        return header, stream
+        first_line = stream.readline().rstrip()
+        if first_line.startswith("error"):  # "error: error message"
+            raise RequestError(first_line.split(":")[1].lstrip())
+        return first_line, stream
+
+    def _header(self, line_iter):
+        """ Read the stream header.
+
+        Derived classes should override this if the stream contains any header
+        information. The iterator must be advanced to the first line of data.
+
+        """
+        return  # no header
+
+    def _record(self, line):
+        """ Process a line of data from the server.
+
+        Each derived class must implement this to return a record of the form
+        (sid, date, elem1, ...).
+
+        """
+        raise NotImplementedError
 
 
 class StnDataStream(_CsvStream):
@@ -109,17 +133,16 @@ class StnDataStream(_CsvStream):
         """
         for key in ("uid", "sid"):  # uid takes precedence
             try:
-                sid = self._params[key] = options[key]
+                self._sid = self._params[key] = options[key]
             except KeyError:
                 continue
-            self.meta[sid] = {}
             break
         else:
             raise RequestError("StnDataStream requires uid or sid")
         return
 
     def dates(self, sdate, edate=None):
-        """ Specify the date range (inclusive) for this request.
+        """ Set the date range (inclusive) for this request.
 
         If no "edate" is specified "sdate" is treated as a single date. The
         parameters must be a date string or the value "por" which means to
@@ -139,20 +162,19 @@ class StnDataStream(_CsvStream):
             self._params["edate"] = edate
         return
 
-    def __iter__(self):
-        """ Stream the records from the server.
-
-        Records will be in chronological order.
+    def _header(self, line_iter):
+        """ Read the stream header.
 
         """
-        site_name, stream = self._connect()
-        sid = self.meta.keys()[0]
-        self.meta[sid] = {"name": site_name}
-        for line in stream:
-            record = [sid] + line.rstrip().split(",")
-            yield record
-        stream.close()
+        # The first line is the site name.
+        self.meta[self._sid] = {"name": line_iter.next()}
         return
+
+    def _record(self, line):
+        """ Process a line of data from the server.
+
+        """
+        return [self._sid] + line.split(",")
 
 
 class MultiStnDataStream(_CsvStream):
@@ -162,7 +184,7 @@ class MultiStnDataStream(_CsvStream):
     _call = WebServicesCall("MultiStnData")
 
     def date(self, date):
-        """ Specify the date for this request.
+        """ Set the date for this request.
 
         MultStnData only accepts a single date for CSV output. Acceptable date
         formats are YYYY-[MM-[DD]] (hyphens are optional but leading zeroes
@@ -181,23 +203,18 @@ class MultiStnDataStream(_CsvStream):
         self._params.update(options)
         return
 
-    def __iter__(self):
-        """ Stream the records from the server.
+    def _record(self, line):
+        """ Process a line of data from the server.
 
-        The meta attribute will not be fully populated until every record has
+        The meta attribute will not be fully populated until every line has
         been receieved.
 
         """
-        first_line, stream = self._connect()
-        for line in itertools.chain([first_line], stream):
-            record = line.rstrip().split(",")
-            try:
-                sid, name, state, lon, lat, elev = record[:6]
-            except ValueError:  # blank line at end of output?
-                break
-            self.meta[sid] = {"name": name, "state": state,
-                    "elev": float(elev), "ll": [float(lon), float(lat)]}
-            record = [sid, self._params["date"]] + record[6:]
-            yield record
-        stream.close()
-        return
+        record = line.split(",")
+        try:
+            sid, name, state, lon, lat, elev = record[:6]
+        except ValueError:  # blank line at end of output?
+            raise StopIteration
+        self.meta[sid] = {"name": name, "state": state,
+                "elev": float(elev), "ll": [float(lon), float(lat)]}
+        return [sid, self._params["date"]] + record[6:]
