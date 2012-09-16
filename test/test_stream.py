@@ -59,7 +59,6 @@ class StnDataStreamTest(_StreamTest):
         self.stream.location(sid="okc")
         self.stream.add_element("mint")
         self.stream.add_element("maxt")
-        elems = ["sid", "date"] + list(self.stream.elems)
         self.assertSequenceEqual(list(self.stream), self.records)
         self.assertDictEqual(self.stream.meta, self.meta)
         return
@@ -77,10 +76,9 @@ class MultiStnDataStreamTest(_StreamTest):
 
         """
         self.stream.date("2011-12-31")
-        self.stream.location(sids="okc,tul")
+        self.stream.location(sids="okc,OKCthr")
         self.stream.add_element("mint")
         self.stream.add_element("maxt")
-        elems = ["sid", "date"] + list(self.stream.elems)
         self.assertSequenceEqual(list(self.stream), self.records)
         self.assertDictEqual(self.stream.meta, self.meta)
         return

@@ -51,6 +51,8 @@ class _CsvStream(object):
     def add_element(self, name, **options):
         """ Add an element to this request.
 
+        Adding an element that already exists will overwrite the existing
+        element.
         """
         new_elem = dict([("name", name)] + options.items())
         elements = self._params["elems"]
@@ -210,11 +212,20 @@ class MultiStnDataStream(_CsvStream):
         been receieved.
 
         """
+        # The metadata for each site--name, state, lat/lon, and elevation--is
+        # part of its data record.
         record = line.split(",")
         try:
             sid, name, state, lon, lat, elev = record[:6]
         except ValueError:  # blank line at end of output?
             raise StopIteration
-        self.meta[sid] = {"name": name, "state": state,
-                "elev": float(elev), "ll": [float(lon), float(lat)]}
+        self.meta[sid] = {"name": name, "state": state}
+        try:
+            self.meta[sid]["elev"] = float(elev)
+        except ValueError:  # elev is blank
+            pass
+        try:
+            self.meta[sid]["ll"] = [float(lon), float(lat)]
+        except ValueError:  # lat/lon is blank
+            pass
         return [sid, self._params["date"]] + record[6:]
