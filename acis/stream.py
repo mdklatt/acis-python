@@ -48,6 +48,16 @@ class _CsvStream(object):
         """
         return tuple(elem["name"] for elem in self._params["elems"])
 
+    def interval(self, value):
+        """ Set the interval for this request.
+
+        The default interval is daily ("dly").
+        """
+        if value not in ("dly", "mly", "yly"):
+            raise RequestError("invalid interval: {0:s}".format(value))
+        self._interval = value
+        return
+
     def add_element(self, name, **options):
         """ Add an element to this request.
 
@@ -96,6 +106,8 @@ class _CsvStream(object):
         line and the stream object.
 
         """
+        for elem in self._params['elems']:
+            elem['interval'] = self._interval
         stream = self._call(self._params)
         first_line = stream.readline().rstrip()
         if first_line.startswith("error"):  # "error: error message"
