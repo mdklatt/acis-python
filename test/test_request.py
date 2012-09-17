@@ -9,7 +9,6 @@ import unittest
 import _env
 from acis.request import *
 
-
 # Define the TestCase classes for this module. Each public component of the
 # module being tested has its own TestCase.
 
@@ -91,6 +90,15 @@ class MultiStnDataRequestTest(_RequestTest):
     _JSON_FILE = "data/MultiStnData.json"
     _TEST_CLASS = MultiStnDataRequest
 
+    def test_single_date(self):
+        """ Test for a single date.
+        
+        Added due to a bug, so don't refactor it away!
+        """
+        self.request.dates("2011-12-31")
+        self.assertTrue(True)  # pass if no exception
+        return
+            
     def test_submit(self):
         """ Test the submit method.
 

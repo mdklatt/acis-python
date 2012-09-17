@@ -206,7 +206,8 @@ class MultiStnDataRequest(_DataRequest):
 
         """
         # TODO: Need to validate dates.
-        if (sdate.lower() == "por" or edate.lower() == "por"):
+        if (sdate.lower() == "por" or (edate is not None and 
+                                       edate.lower() == "por")):
             raise RequestError("MultiStnData does not accept POR")
         super(MultiStnDataRequest, self).dates(sdate, edate)
         return
