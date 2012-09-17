@@ -18,7 +18,6 @@ import re
 
 import dateutil.relativedelta as relativedelta
 
-from .error import RequestError
 
 _DATE_REGEX = re.compile(r"^(\d{4})(?:-?(\d{2}))?(?:-?(\d{2}))?$")
 

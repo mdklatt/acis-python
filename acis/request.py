@@ -112,7 +112,7 @@ class _DataRequest(_MetaRequest):
     def dates(self, sdate, edate=None):
         """ Specify the date range (inclusive) for this request.
 
-        If no "edate" is specified "sdate" is treated as a single date. The
+        If no edate is specified sdate is treated as a single date. The
         parameters must be a date string or the value "por" which means to
         extend to the period-of-record in that direction. Acceptable date
         formats are YYYY-[MM-[DD]] (hyphens are optional but leading zeroes are
@@ -129,14 +129,14 @@ class _DataRequest(_MetaRequest):
             self._params["edate"] = edate
         return
 
-    def interval(self, interval):
+    def interval(self, value):
         """ Set the interval for this request.
 
         The default interval is daily ("dly").
         """
-        if interval not in ("dly", "mly", "yly"):
-            raise RequestError("invalid interval: {0:s}".format(interval))
-        self._interval = interval
+        if value not in ("dly", "mly", "yly"):
+            raise RequestError("invalid interval: {0:s}".format(value))
+        self._interval = value
         return
 
     def add_element(self, name, **options):
@@ -207,6 +207,6 @@ class MultiStnDataRequest(_DataRequest):
         """
         # TODO: Need to validate dates.
         if (sdate.lower() == "por" or edate.lower() == "por"):
-            raise RequestError("MultiStnData does not accept por")
+            raise RequestError("MultiStnData does not accept POR")
         super(MultiStnDataRequest, self).dates(sdate, edate)
         return

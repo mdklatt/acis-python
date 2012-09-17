@@ -40,7 +40,7 @@ def sids_types(sids):
         try:
             ident, code = _SID_REGEX.search(sid).groups()
         except AttributeError:  # search returned None
-            raise ValueError("not a valid sid: {0:s}".format(sid))
+            raise ValueError("invalid sid: {0:s}".format(sid))
         try:
             types[_SID_TYPES[int(code)]] = ident
         except KeyError:

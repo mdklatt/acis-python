@@ -66,7 +66,7 @@ class StnMetaResult(_JsonResult):
         try:
             self.meta = {site.pop("uid"): site for site in meta}
         except KeyError:
-            raise ResultError("uid is a required meta element")
+            raise ResultError("metadata does not contain uid")
         return
 
 
@@ -139,7 +139,7 @@ class StnDataResult(_DataResult):
         try:
             uid = result["meta"].pop("uid")
         except KeyError:
-            raise ResultError("uid is a required meta element")
+            raise ResultError("metadata does not contain uid")
         self.meta[uid] = result["meta"]
         self.data[uid] = result["data"]
         self.smry[uid] = result.get("smry", [])
@@ -172,7 +172,7 @@ class MultiStnDataResult(_DataResult):
             try:
                 uid = site["meta"].pop("uid")
             except KeyError:
-                raise ResultError("uid is a required meta element")
+                raise ResultError("metadata does not contain uid")
             self.meta[uid] = site["meta"]
             self.data[uid] = site["data"]
             try:

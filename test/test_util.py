@@ -33,7 +33,7 @@ class SidsTypesFunctionTest(unittest.TestCase):
         sids = ("13967",)  # no type code
         with self.assertRaises(ValueError) as context:
             sids_types(sids)
-        message = "not a valid sid: 13967"
+        message = "invalid sid: 13967"
         self.assertEqual(context.exception.message, message)
         return
 

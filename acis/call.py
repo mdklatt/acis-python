@@ -1,4 +1,4 @@
-""" Execute ACIS web services calls.
+""" Execute ACIS Web Services calls.
 
 This is the core library module. The WebServicesCall is all that is needed to
 execute an ACIS Web Services call, and can be uses in cases where the Request,
@@ -55,7 +55,7 @@ class WebServicesCall(object):
         try:
             result = json.loads(stream.read())
         except ValueError:
-            raise ResultError("server did not return valid JSON object")
+            raise ResultError("server returned invalid JSON")
         stream.close()
         return result
 
