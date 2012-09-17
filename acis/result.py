@@ -38,7 +38,7 @@ class _JsonResult(object):
         sent to the server and the "result" dict that it returned.
 
         """
-        # Initialization is limited to basic error checking at this point.
+        # Error checking.
         try:
             params = query["params"]
             result = query["result"]
@@ -148,8 +148,8 @@ class StnDataResult(_DataResult):
     def __iter__(self):
         """ Iterate over all data records.
 
-        For a "groupby" result this will iterate over each group, not each
-        individual record. Records are in chronological order.
+        Records are in chronological order. For a "groupby" result this will 
+        iterate over each group, not each individual record.
 
         """
         for uid, data in self.data.items():
@@ -168,18 +168,25 @@ class MultiStnDataResult(_DataResult):
 
         """
         super(MultiStnDataResult, self).__init__(query)
+        self._dates = tuple(date_range(query["params"]))
         for site in query["result"]["data"]:
             try:
                 uid = site["meta"].pop("uid")
             except KeyError:
                 raise ResultError("metadata does not contain uid")
             self.meta[uid] = site["meta"]
-            self.data[uid] = site["data"]
+            # For single-date requests MultStnData returns the single record
+            # for each site as a 1D list instead of a 2D list, i.e. no time
+            # dimension. (StnData returns a 2D list no matter what.)
+            #
+            # self.data[uid] = site["data"]  # preferred
+            data1d = len(self._dates) == 1
+            self.data[uid] = [site["data"]] if data1d else site["data"]
+            # END WORKAROUND
             try:
                 self.smry[uid]  = site["smry"]
             except KeyError:  # no "smry"
                 continue
-        self._dates = date_range(query["params"])
         return
 
     def __iter__(self):
@@ -189,8 +196,8 @@ class MultiStnDataResult(_DataResult):
         For a "groupby" result this will yield each group, not each individual
         record.
 
-        IN THE CURRENT IMPLEMENTATION THE RESULTS FOR A "GROUPBY" RESULT WILL
-        NOT BE CORRECT.
+        IN THE CURRENT IMPLEMENTATION THE DATES FOR A "GROUPBY" RESULT WILL NOT
+        BE CORRECT.
 
         """
         # TODO: Correct dates for "groupby" results, c.f. date_range().
