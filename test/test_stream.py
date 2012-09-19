@@ -43,6 +43,19 @@ class _StreamTest(unittest.TestCase):
         self.stream = self._TEST_CLASS()
         return
 
+    def test_elems(self):
+        """ Test the add_element method and related functionality.
+        
+        """
+        self.assertSequenceEqual(self.stream.elems, [])
+        self.stream.add_element("maxt")
+        self.stream.add_element("mint")
+        self.assertSequenceEqual(self.stream.elems, ("maxt", "mint"))
+        self.stream.add_element("maxt")  # duplicates ok
+        self.assertSequenceEqual(self.stream.elems, ("maxt0", "mint", "maxt1"))
+        self.stream.clear_elements()
+        self.assertSequenceEqual(self.stream.elems, [])        
+        return
 
 class StnDataStreamTest(_StreamTest):
     """ Unit testing for the StnDataStream class.

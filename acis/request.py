@@ -21,6 +21,30 @@ from .error import RequestError
 __all__ = ("StnMetaRequest", "StnDataRequest", "MultiStnDataRequest")
 
 
+def _annotate(sequence):
+    """ Annotate duplicate items in a sequence to make them unique.
+    
+    Duplicate items will be numbered, e.g. (abc0, abc1, ...) The original
+    order of the sequence is preserved, and it is returned as a tuple.
+    
+    """
+    # Reverse the sequence, then the duplicate count acts as in index while
+    # successive duplicates are annotated and the count is decremented. Reverse
+    # the sequence again to restore the orignal order.
+    sequence = list(sequence)
+    sequence.reverse()
+    for key, count in collections.Counter(sequence).items():
+        if not count > 1:
+            continue
+        for pos, item in enumerate(sequence):
+            if item != key:
+                continue
+            count -= 1
+            sequence[pos] = item + "{0:d}".format(count)
+    sequence.reverse()
+    return tuple(sequence)             
+
+    
 class _JsonRequest(object):
     """ Abstract base class for all request objects.
 
@@ -141,27 +165,15 @@ class _DataRequest(_MetaRequest):
         """ Add an element to this request.
 
         """
-        new_elem = dict([("name", name)] + options.items())
-        elements = self._params["elems"]
-        for pos, elem in enumerate(elements):
-            if elem["name"] == name:
-                elements[pos] = new_elem
-                break
-        else:
-            elements.append(new_elem)
+        elem = dict([("name", name)] + options.items())
+        self._params["elems"].append(elem)
         return
 
-    def del_element(self, name=None):
-        """ Delete all or just "name" from the requested elements.
+    def clear_element(self):
+        """ Clear all elements from this request.
 
         """
-        if name is None:
-            self._params["elems"] = []
-        elements = self._params["elems"]
-        for pos, elem in enumerate(elements):
-            if elem["name"] == name:
-                elements.pop(pos)
-                break
+        self._params["elems"] = []
         return
 
 

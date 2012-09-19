@@ -5,8 +5,7 @@ accessing the result. CSV calls are very restricted compared to JSON calls, but
 the output can be streamed one record at a time rather than as a single JSON
 object; this can be useful for large data requests. Metadata is stored as dict
 keyed to a site identifer. Data records are streamed using the iterator
-interface. The elems attribute is a tuple of element names for this stream.
-See the call, request, and result modules if a CSV request is too limited.
+interface. The elems attribute is a tuple of element aliases for this stream.
 
 This implementation is based on ACIS Web Services Version 2:
     <http://data.rcc-acis.org/doc/>.
@@ -14,6 +13,7 @@ This implementation is based on ACIS Web Services Version 2:
 """
 from .__version__ import __version__
 
+import collections
 import itertools
 
 from .call import WebServicesCall
@@ -22,6 +22,30 @@ from .error import RequestError
 __all__ = ("StnDataStream", "MultiStnDataStream")
 
 
+def _annotate(sequence):
+    """ Annotate duplicate items in a sequence to make them unique.
+    
+    Duplicate items will be indexed, e.g. (abc0, abc1, ...). The original order
+    of the sequence is preserved, and it is returned as a tuple.
+    
+    """
+    # Reverse the sequence, then the duplicate count acts as a reverse index 
+    # while successive duplicates are annotated and the count is decremented. 
+    # Reverse the sequence again to restore the orignal order.
+    sequence = list(sequence)
+    sequence.reverse()
+    for key, count in collections.Counter(sequence).items():
+        if not count > 1:
+            continue
+        for pos, item in enumerate(sequence):
+            if item != key:
+                continue
+            count -= 1
+            sequence[pos] = item + "{0:d}".format(count)
+    sequence.reverse()
+    return tuple(sequence)             
+
+    
 class _CsvStream(object):
     """ Abstract base class for all CSV output.
 
@@ -45,8 +69,12 @@ class _CsvStream(object):
     def elems(self):
         """ Getter method for the elems attribute.
 
+        This is a list of element aliases. The alias is normally just the 
+        element name, but if there are multiple instances of the same element 
+        the alias is the name plus an index number, e.g. maxt0, maxt1, etc. 
+
         """
-        return tuple(elem["name"] for elem in self._params["elems"])
+        return _annotate([elem["name"] for elem in self._params["elems"]])
 
     def interval(self, value):
         """ Set the interval for this request.
@@ -59,34 +87,20 @@ class _CsvStream(object):
         return
 
     def add_element(self, name, **options):
-        """ Add an element to this request.
-
-        Adding an element that already exists will overwrite the existing
-        element.
-        """
-        new_elem = dict([("name", name)] + options.items())
-        elements = self._params["elems"]
-        for pos, elem in enumerate(elements):
-            if elem["name"] == name:
-                elements[pos] = new_elem
-                break
-        else:
-            elements.append(new_elem)
-        return
-
-    def del_element(self, name=None):
-        """ Delete all or just "name" from the requested elements.
+        """ Add an element to this stream.
 
         """
-        if name is None:
-            self._params["elems"] = []
-        elements = self._params["elems"]
-        for pos, elem in enumerate(elements):
-            if elem["name"] == name:
-                elements.pop(pos)
-                break
+        elem = dict([("name", name)] + options.items())
+        self._params["elems"].append(elem)
         return
 
+    def clear_elements(self):
+        """ Clear all elements from this stream.
+
+        """
+        self._params["elems"] = []
+        return
+        
     def __iter__(self):
         """ Stream the records from the server.
 

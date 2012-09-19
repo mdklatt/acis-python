@@ -18,6 +18,7 @@ This implementation is based on ACIS Web Services Version 2:
 """
 from .__version__ import __version__
 
+import collections
 import itertools
 
 from .date import date_range
@@ -27,6 +28,30 @@ from .error import ResultError
 __all__ = ("StnMetaResult", "StnDataResult", "MultiStnDataResult")
 
 
+def _annotate(sequence):
+    """ Annotate duplicate items in a sequence to make them unique.
+    
+    Duplicate items will be indexed, e.g. (abc0, abc1, ...). The original order
+    of the sequence is preserved, and it is returned as a tuple.
+    
+    """
+    # Reverse the sequence, then the duplicate count acts as a reverse index 
+    # while successive duplicates are annotated and the count is decremented. 
+    # Reverse the sequence again to restore the orignal order.
+    sequence = list(sequence)  # make mutable
+    sequence.reverse()
+    for key, count in collections.Counter(sequence).items():
+        if not count > 1:
+            continue
+        for pos, item in enumerate(sequence):
+            if item != key:
+                continue
+            count -= 1
+            sequence[pos] = item + "{0:d}".format(count)
+    sequence.reverse()
+    return tuple(sequence)             
+  
+    
 class _JsonResult(object):
     """ Abstract base class for all result objects.
 
@@ -76,8 +101,10 @@ class _DataResult(_JsonResult):
     _DataResult objects have data, meta, and smry attributes corresponding to
     the data, metadata, and summary result in the result object. Each attribute
     is a dict keyed to the ACIS site UID so this field must be included in the
-    result metadata. The elems attribute is a tuple of element names for this
-    result.
+    result metadata. The elems attribute is a tuple of element aliases for this
+    result. The alias is normally just the element name, but if there are 
+    multiple instances of the same element the alias is the name plus an index 
+    number, e.g. maxt0, maxt1, etc.
 
     """
     def __init__(self, query):
@@ -90,12 +117,12 @@ class _DataResult(_JsonResult):
         self.smry = {}
         elems = query["params"]["elems"]
         try:  # a comma-delimited string?
-            self.elems = tuple([elem.strip() for elem in elems.split(",")])
-        except AttributeError:  # no split()
-            try:  # a sequence of dicts?
-                self.elems = tuple([elem["name"] for elem in elems])
-            except TypeError:  # no string indices
-                self.elems = tuple(elems) # a sequence of strings
+            self.elems = _annotate([elem.strip() for elem in elems.split(",")])
+        except AttributeError:  # no split(), not a str
+            try:  # sequence of element objects (dicts)?
+                self.elems = _annotate([elem["name"] for elem in elems])
+            except TypeError:  # no string indices, not a dict
+                self.elems = _annotate(elems) # a sequence of strings
         return
 
     def __len__(self):
