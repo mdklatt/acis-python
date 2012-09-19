@@ -14,6 +14,7 @@ This implementation is based on ACIS Web Services Version 2:
 """
 from .__version__ import __version__
 
+from ._misc import date_params
 from .call import WebServicesCall
 from .error import RequestError
 
@@ -134,23 +135,17 @@ class _DataRequest(_MetaRequest):
         return super(_DataRequest, self).submit()
 
     def dates(self, sdate, edate=None):
-        """ Specify the date range (inclusive) for this request.
+        """ Set the date range (inclusive) for this request.
 
         If no edate is specified sdate is treated as a single date. The
-        parameters must be a date string or the value "por" which means to
-        extend to the period-of-record in that direction. Acceptable date
-        formats are YYYY-[MM-[DD]] (hyphens are optional but leading zeroes are
-        not; no two-digit years).
+        parameters must be a date string or "por" which means to extend to the
+        period of record in that direction. Using "por" as a single date will
+        return the entire period of record. The acceptable date string formats
+        are YYYY-[MM-[DD]] (hyphens are optional but leading zeroes are not; no
+        two-digit years).
 
         """
-        if edate is None:
-            if sdate.lower() == "por":  # entire period of record
-                self._params["sdate"] = self._params["edate"] = "por"
-            else:  # single date
-                self._params["date"] = sdate
-        else:
-            self._params["sdate"] = sdate
-            self._params["edate"] = edate
+        self._params.update(date_params(sdate, edate))
         return
 
     def interval(self, value):
@@ -196,7 +191,6 @@ class StnDataRequest(_DataRequest):
         StnData only accepts a single "uid" or "sid" parameter.
 
         """
-        # TODO: Need to validate options.
         if not set(options.keys()) < set(("uid", "sid")):
             raise RequestError("StnData requires uid or sid")
         super(StnDataRequest, self).location(**options)
@@ -215,9 +209,8 @@ class MultiStnDataRequest(_DataRequest):
         MultiStnData does not accept period-of-record ("por").
 
         """
-        # TODO: Need to validate dates.
         if (sdate.lower() == "por" or (edate is not None and
                                        edate.lower() == "por")):
             raise RequestError("MultiStnData does not accept POR")
-        super(MultiStnDataRequest, self).dates(sdate, edate)
+        self._params.update(date_params(sdate, edate))
         return

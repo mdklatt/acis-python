@@ -21,6 +21,7 @@ from .__version__ import __version__
 import collections
 import itertools
 
+from ._misc import annotate
 from .date import date_range
 from .error import RequestError
 from .error import ResultError
@@ -28,30 +29,6 @@ from .error import ResultError
 __all__ = ("StnMetaResult", "StnDataResult", "MultiStnDataResult")
 
 
-def _annotate(sequence):
-    """ Annotate duplicate items in a sequence to make them unique.
-    
-    Duplicate items will be indexed, e.g. (abc0, abc1, ...). The original order
-    of the sequence is preserved, and it is returned as a tuple.
-    
-    """
-    # Reverse the sequence, then the duplicate count acts as a reverse index 
-    # while successive duplicates are annotated and the count is decremented. 
-    # Reverse the sequence again to restore the orignal order.
-    sequence = list(sequence)  # make mutable
-    sequence.reverse()
-    for key, count in collections.Counter(sequence).items():
-        if not count > 1:
-            continue
-        for pos, item in enumerate(sequence):
-            if item != key:
-                continue
-            count -= 1
-            sequence[pos] = item + "{0:d}".format(count)
-    sequence.reverse()
-    return tuple(sequence)             
-  
-    
 class _JsonResult(object):
     """ Abstract base class for all result objects.
 
@@ -117,12 +94,12 @@ class _DataResult(_JsonResult):
         self.smry = {}
         elems = query["params"]["elems"]
         try:  # a comma-delimited string?
-            self.elems = _annotate([elem.strip() for elem in elems.split(",")])
+            self.elems = annotate([elem.strip() for elem in elems.split(",")])
         except AttributeError:  # no split(), not a str
             try:  # sequence of element objects (dicts)?
-                self.elems = _annotate([elem["name"] for elem in elems])
+                self.elems = annotate([elem["name"] for elem in elems])
             except TypeError:  # no string indices, not a dict
-                self.elems = _annotate(elems) # a sequence of strings
+                self.elems = annotate(elems) # a sequence of strings
         return
 
     def __len__(self):

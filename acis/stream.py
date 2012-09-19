@@ -13,39 +13,16 @@ This implementation is based on ACIS Web Services Version 2:
 """
 from .__version__ import __version__
 
-import collections
 import itertools
 
+from ._misc import annotate
+from ._misc import date_params
 from .call import WebServicesCall
 from .error import RequestError
 
 __all__ = ("StnDataStream", "MultiStnDataStream")
 
 
-def _annotate(sequence):
-    """ Annotate duplicate items in a sequence to make them unique.
-    
-    Duplicate items will be indexed, e.g. (abc0, abc1, ...). The original order
-    of the sequence is preserved, and it is returned as a tuple.
-    
-    """
-    # Reverse the sequence, then the duplicate count acts as a reverse index 
-    # while successive duplicates are annotated and the count is decremented. 
-    # Reverse the sequence again to restore the orignal order.
-    sequence = list(sequence)
-    sequence.reverse()
-    for key, count in collections.Counter(sequence).items():
-        if not count > 1:
-            continue
-        for pos, item in enumerate(sequence):
-            if item != key:
-                continue
-            count -= 1
-            sequence[pos] = item + "{0:d}".format(count)
-    sequence.reverse()
-    return tuple(sequence)             
-
-    
 class _CsvStream(object):
     """ Abstract base class for all CSV output.
 
@@ -74,7 +51,7 @@ class _CsvStream(object):
         the alias is the name plus an index number, e.g. maxt0, maxt1, etc. 
 
         """
-        return _annotate([elem["name"] for elem in self._params["elems"]])
+        return annotate([elem["name"] for elem in self._params["elems"]])
 
     def interval(self, value):
         """ Set the interval for this request.
@@ -172,22 +149,15 @@ class StnDataStream(_CsvStream):
     def dates(self, sdate, edate=None):
         """ Set the date range (inclusive) for this request.
 
-        If no "edate" is specified "sdate" is treated as a single date. The
-        parameters must be a date string or the value "por" which means to
-        extend to the period-of-record in that direction. Acceptable date
-        formats are YYYY-[MM-[DD]] (hyphens are optional but leading zeroes are
-        not; no two-digit years).
+        If no edate is specified sdate is treated as a single date. The
+        parameters must be a date string or "por" which means to extend to the
+        period of record in that direction. Using "por" as a single date will
+        return the entire period of record. The acceptable date string formats
+        are YYYY-[MM-[DD]] (hyphens are optional but leading zeroes are not; no
+        two-digit years).
 
         """
-        # TODO: Need to validate dates.
-        if edate is None:
-            if sdate.lower() == "por":  # entire period of record
-                self._params["sdate"] = self._params["edate"] = "por"
-            else:  # single date
-                self._params["date"] = sdate
-        else:
-            self._params["sdate"] = sdate
-            self._params["edate"] = edate
+        self._params.update(date_params(sdate, edate))
         return
 
     def _header(self, line_iter):
@@ -219,8 +189,7 @@ class MultiStnDataStream(_CsvStream):
         are not; no two-digit years).
 
         """
-        # TODO: Need to validate date.
-        self._params["date"] = date
+        self._params.update(date_params(date))
         return
 
     def location(self, **options):
