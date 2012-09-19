@@ -18,34 +18,10 @@ import re
 
 import dateutil.relativedelta
 
+__all__ = ("date_object", "date_string", "date_range")
+
 
 _DATE_REGEX = re.compile(r"^(\d{4})(?:-?(\d{2}))?(?:-?(\d{2}))?$")
-
-
-def date_delta(interval):
-    """ Determine the date delta for an interval.
-
-    An interval can be a name ("dly", "mly", "yly") or a (yr, mo, da) value
-    given as a list/tuple or comma-delimited string. For (yr, mo, da) the least
-    significant nonzero value sets the interval, e.g. "0, 3, 0" is an interval
-    of 3 months.
-
-    """
-    named_deltas = {
-        "dly": (0, 0, 1),
-        "mly": (0, 1, 0),
-        "yly": (1, 0, 0),
-    }
-    try:
-        yr, mo, da = named_deltas[interval]
-    except (KeyError, TypeError):  # unknown delta or not a str
-        try:  # comma-delimited string?
-            yr, mo, da = (int(x) for x in interval.split(","))
-        except AttributeError:  # no split, not a str
-            yr, mo, da = interval
-    mo = 0 if da > 0 else mo
-    yr = 0 if mo > 0 else yr
-    return dateutil.relativedelta.relativedelta(years=yr, months=mo, days=da)
 
 
 def date_object(date_str):
@@ -79,6 +55,32 @@ def date_string(date_obj):
     return "{0:04d}-{1:02d}-{2:02d}".format(yr, mo, da)
 
 
+def _delta(interval):
+    """ Determine the date delta for an interval.
+
+    An interval can be a name ("dly", "mly", "yly") or a (yr, mo, da) value
+    given as a list/tuple or comma-delimited string. For (yr, mo, da) the least
+    significant nonzero value sets the interval, e.g. "0, 3, 0" is an interval
+    of 3 months.
+
+    """
+    named_deltas = {
+        "dly": (0, 0, 1),
+        "mly": (0, 1, 0),
+        "yly": (1, 0, 0),
+    }
+    try:
+        yr, mo, da = named_deltas[interval]
+    except (KeyError, TypeError):  # unknown delta or not a str
+        try:  # comma-delimited string?
+            yr, mo, da = (int(x) for x in interval.split(","))
+        except AttributeError:  # no split, not a str
+            yr, mo, da = interval
+    mo = 0 if da > 0 else mo
+    yr = 0 if mo > 0 else yr
+    return dateutil.relativedelta.relativedelta(years=yr, months=mo, days=da)
+
+
 def date_range(params):
     """ Return a generator expression for the date range specified by params.
 
@@ -105,7 +107,7 @@ def date_range(params):
         interval = params["elems"][0]["interval"]
     except (TypeError, KeyError):
         interval = (0, 0, 1)  # default value is daily
-    delta = date_delta(interval)
+    delta = _delta(interval)
     while sdate <= edate:
         yield date_string(sdate)
         sdate += delta
