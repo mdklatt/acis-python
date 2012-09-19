@@ -16,10 +16,36 @@ from .__version__ import __version__
 import datetime
 import re
 
-import dateutil.relativedelta as relativedelta
+import dateutil.relativedelta
 
 
 _DATE_REGEX = re.compile(r"^(\d{4})(?:-?(\d{2}))?(?:-?(\d{2}))?$")
+
+
+def date_delta(interval):
+    """ Determine the date delta for an interval.
+
+    An interval can be a name ("dly", "mly", "yly") or a (yr, mo, da) value
+    given as a list/tuple or comma-delimited string. For (yr, mo, da) the least
+    significant nonzero value sets the interval, e.g. "0, 3, 0" is an interval
+    of 3 months.
+
+    """
+    named_deltas = {
+        "dly": (0, 0, 1),
+        "mly": (0, 1, 0),
+        "yly": (1, 0, 0),
+    }
+    try:
+        yr, mo, da = named_deltas[interval]
+    except (KeyError, TypeError):  # unknown delta or not a str
+        try:  # comma-delimited string?
+            yr, mo, da = (int(x) for x in interval.split(","))
+        except AttributeError:  # no split, not a str
+            yr, mo, da = interval
+    mo = 0 if da > 0 else mo
+    yr = 0 if mo > 0 else yr
+    return dateutil.relativedelta.relativedelta(years=yr, months=mo, days=da)
 
 
 def date_object(date_str):
@@ -78,13 +104,9 @@ def date_range(params):
         # for an interval specification.
         interval = params["elems"][0]["interval"]
     except (TypeError, KeyError):
-        interval = "dly"  # default value
-    deltas = {
-        "dly": datetime.timedelta(days=1),
-        "mly": relativedelta.relativedelta(months=1),
-        "yly": relativedelta.relativedelta(years=1),
-    }
+        interval = (0, 0, 1)  # default value is daily
+    delta = date_delta(interval)
     while sdate <= edate:
         yield date_string(sdate)
-        sdate += deltas[interval]
+        sdate += delta
     return

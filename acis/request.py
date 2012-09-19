@@ -132,10 +132,8 @@ class _DataRequest(_MetaRequest):
     def interval(self, value):
         """ Set the interval for this request.
 
-        The default interval is daily ("dly").
+        The default interval is daily.
         """
-        if value not in ("dly", "mly", "yly"):
-            raise RequestError("invalid interval: {0:s}".format(value))
         self._interval = value
         return
 
@@ -206,7 +204,7 @@ class MultiStnDataRequest(_DataRequest):
 
         """
         # TODO: Need to validate dates.
-        if (sdate.lower() == "por" or (edate is not None and 
+        if (sdate.lower() == "por" or (edate is not None and
                                        edate.lower() == "por")):
             raise RequestError("MultiStnData does not accept POR")
         super(MultiStnDataRequest, self).dates(sdate, edate)
