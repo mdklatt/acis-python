@@ -24,10 +24,10 @@ __all__ = ("StnMetaRequest", "StnDataRequest", "MultiStnDataRequest")
 
 def _annotate(sequence):
     """ Annotate duplicate items in a sequence to make them unique.
-    
+
     Duplicate items will be numbered, e.g. (abc0, abc1, ...) The original
     order of the sequence is preserved, and it is returned as a tuple.
-    
+
     """
     # Reverse the sequence, then the duplicate count acts as in index while
     # successive duplicates are annotated and the count is decremented. Reverse
@@ -43,9 +43,9 @@ def _annotate(sequence):
             count -= 1
             sequence[pos] = item + "{0:d}".format(count)
     sequence.reverse()
-    return tuple(sequence)             
+    return tuple(sequence)
 
-    
+
 class _JsonRequest(object):
     """ Abstract base class for all request objects.
 
@@ -164,7 +164,7 @@ class _DataRequest(_MetaRequest):
         self._params["elems"].append(elem)
         return
 
-    def clear_element(self):
+    def clear_elements(self):
         """ Clear all elements from this request.
 
         """
