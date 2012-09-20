@@ -8,7 +8,7 @@ For basic installation in the current user's site-packages directory:
 import distutils.core
 import sys
 
-from acis.__init__ import __version__
+from acis import __version__
 
 def main():
     dist = {
