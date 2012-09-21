@@ -73,6 +73,19 @@ class StnDataRequestTest(_RequestTest):
     def setUpClass(cls):
         cls._DATA = TestData("data/StnData.xml")
         return
+
+    def test_interval(self):
+        """ Test the interval method.
+        
+        """
+        self._request.interval("dly")
+        self._request.interval("mly")
+        self._request.interval("yly")
+        self._request.interval("0,0,1")
+        self._request.interval((0, 1, 0))
+        self._request.interval([1, 0, 0])
+        self.assertTrue(True)  # no execptions
+        return
         
     def test_submit(self):
         """ Test the submit method.
@@ -106,6 +119,19 @@ class MultiStnDataRequestTest(_RequestTest):
         """
         self._request.dates("2011-12-31")
         self.assertTrue(True)  # pass if no exception
+        return
+
+    def test_interval(self):
+        """ Test the interval method.
+        
+        """
+        self._request.interval("dly")
+        self._request.interval("mly")
+        self._request.interval("yly")
+        self._request.interval("0,0,1")
+        self._request.interval((0, 1, 0))
+        self._request.interval([1, 0, 0])
+        self.assertTrue(True)  # no execptions
         return
 
     def test_submit(self):

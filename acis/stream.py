@@ -58,8 +58,6 @@ class _CsvStream(object):
 
         The default interval is daily ("dly").
         """
-        if value not in ("dly", "mly", "yly"):
-            raise RequestError("invalid interval: {0:s}".format(value))
         self._interval = value
         return
 

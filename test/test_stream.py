@@ -53,6 +53,18 @@ class _StreamTest(unittest.TestCase):
         self.assertSequenceEqual([], self._stream.elems)        
         return
 
+    def test_interval(self):
+        """ Test the interval method.
+        
+        """
+        self._stream.interval("dly")
+        self._stream.interval("mly")
+        self._stream.interval("yly")
+        self._stream.interval("0,0,1")
+        self._stream.interval((0, 1, 0))
+        self._stream.interval([1, 0, 0])
+        self.assertTrue(True)  # no execptions
+        return
 
 class StnDataStreamTest(_StreamTest):
     """ Unit testing for the StnDataStream class.
