@@ -6,7 +6,8 @@ The module can be executed on its own or incorporated into a larger test suite.
 import unittest
 
 import _env
-from acis.util import sids_types
+
+from acis import sids_types
 
 
 # Define the TestCase classes for this module. Each public component of the

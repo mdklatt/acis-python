@@ -3,11 +3,15 @@
 The module can be executed on its own or incorporated into a larger test suite.
 
 """
-import json
 import unittest
 
 import _env
-from acis.request import *
+from _data import TestData
+
+from acis import RequestError
+from acis import StnMetaRequest
+from acis import StnDataRequest
+from acis import MultiStnDataRequest
 
 # Define the TestCase classes for this module. Each public component of the
 # module being tested has its own TestCase.
@@ -19,16 +23,10 @@ class _RequestTest(unittest.TestCase):
     classes must define the _JSON_FILE and _TEST_CLASS class attributes.
 
     """
-    _JSON_FILE = None
-    _TEST_CLASS = None
-
     @classmethod
-    def load_json(cls):
-        """ Load the JSON test data.
-
-        """
-        return json.load(open(cls._JSON_FILE, "r"))
-
+    def setUpClass(cls):
+        raise NotImplementedError
+        
     def setUp(self):
         """ Set up the test fixture.
 
@@ -36,11 +34,10 @@ class _RequestTest(unittest.TestCase):
         any side effects. This is part of the unittest API.
 
         """
-        test_data = self.load_json()
-        params = test_data["params"]
-        result = test_data["result"]
-        self.query = {"params": params, "result": result}
-        self.request = self._TEST_CLASS()
+        params = self._DATA.params
+        result = self._DATA.result
+        self._query = {"params": params, "result": result}
+        self._request = self._class()
         return
 
 
@@ -48,17 +45,21 @@ class StnMetaRequestTest(_RequestTest):
     """ Unit testing for the StnMetaRequest class.
 
     """
-    _JSON_FILE = "data/StnMeta.json"
-    _TEST_CLASS = StnMetaRequest
-
+    _class = StnMetaRequest
+    
+    @classmethod
+    def setUpClass(cls):
+        cls._DATA = TestData("data/StnMeta.xml")
+        return
+        
     def test_submit(self):
         """ Test the submit method for a normal request.
 
         """
-        self.request.location(sids=("okc", "tul"))
-        self.request.metadata("county", "name")  # uid should be automatic
-        query = self.request.submit()
-        self.assertDictEqual(query["result"], self.query["result"])
+        self._request.location(sids=("okc", "tul"))
+        self._request.metadata("county", "name")  # uid should be automatic
+        query = self._request.submit()
+        self.assertDictEqual(self._query["result"], query["result"])
         return
 
 
@@ -66,20 +67,24 @@ class StnDataRequestTest(_RequestTest):
     """ Unit testing for the StnDataRequest class.
 
     """
-    _JSON_FILE = "data/StnData.json"
-    _TEST_CLASS = StnDataRequest
-
+    _class = StnDataRequest
+    
+    @classmethod
+    def setUpClass(cls):
+        cls._DATA = TestData("data/StnData.xml")
+        return
+        
     def test_submit(self):
         """ Test the submit method.
 
         """
-        self.request.location(sid="okc")
-        self.request.dates("2011-12-31", "2012-01-01")
-        self.request.add_element("mint", smry="min")
-        self.request.add_element("maxt", smry="max")
-        self.request.metadata("county", "name")  # uid should be automatic
-        query = self.request.submit()
-        self.assertDictEqual(query["result"], self.query["result"])
+        self._request.location(sid="okc")
+        self._request.dates("2011-12-31", "2012-01-01")
+        self._request.add_element("mint", smry="min")
+        self._request.add_element("maxt", smry="max")
+        self._request.metadata("county", "name")  # uid should be automatic
+        query = self._request.submit()
+        self.assertDictEqual(self._query["result"], query["result"])
         return
 
 
@@ -87,29 +92,33 @@ class MultiStnDataRequestTest(_RequestTest):
     """ Unit testing for the MultiStnDataRequest class.
 
     """
-    _JSON_FILE = "data/MultiStnData.json"
-    _TEST_CLASS = MultiStnDataRequest
-
+    _class = MultiStnDataRequest
+    
+    @classmethod
+    def setUpClass(cls):
+        cls._DATA = TestData("data/MultiStnData.xml")
+        return
+        
     def test_single_date(self):
         """ Test for a single date.
-        
+
         Added due to a bug, so don't refactor it away!
         """
-        self.request.dates("2011-12-31")
+        self._request.dates("2011-12-31")
         self.assertTrue(True)  # pass if no exception
         return
-            
+
     def test_submit(self):
         """ Test the submit method.
 
         """
-        self.request.location(sids=("okc", "tul"))
-        self.request.dates("2011-12-31", "2012-01-01")
-        self.request.add_element("mint", smry="min")
-        self.request.add_element("maxt", smry="max")
-        self.request.metadata("county", "name")  # uid should be automatic
-        query = self.request.submit()
-        self.assertDictEqual(query["result"], self.query["result"])
+        self._request.location(sids=("okc", "tul"))
+        self._request.dates("2011-12-31", "2012-01-01")
+        self._request.add_element("mint", smry="min")
+        self._request.add_element("maxt", smry="max")
+        self._request.metadata("county", "name")  # uid should be automatic
+        query = self._request.submit()
+        self.assertDictEqual(self._query["result"], query["result"])
         return
 
 

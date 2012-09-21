@@ -6,7 +6,8 @@ The module can be executed on its own or incorporated into a larger test suite.
 import unittest
 
 import _env
-from acis.error import *
+from acis import RequestError
+from acis import ResultError
 
 
 # Define the TestCase classes for this module. Each public component of the
@@ -15,18 +16,18 @@ from acis.error import *
 class _ErrorTest(unittest.TestCase):
     """ Private base class for testing error classes.
 
-    This class should be excluded from test discovery and execution. Child
-    classes must define the _TEST_CLASS class attribute.
+    This class should be excluded from test discovery and execution. Derived
+    classes must define the _class attribute.
 
     """
-    _TEST_CLASS = None
+    _class = None
 
     def test_init(self):
         """ Test normal initialization.
 
         """
         message = "test error message"
-        error = self._TEST_CLASS(message)
+        error = self._class(message)
         self.assertEqual(error.message, message)
         return
 
@@ -35,14 +36,14 @@ class RequestErrorTest(_ErrorTest):
     """ Unit testing for the RequestError class.
 
     """
-    _TEST_CLASS = RequestError
+    _class = RequestError
 
 
 class ResultErrorTest(_ErrorTest):
     """ Unit testing for the ResultError class.
 
     """
-    _TEST_CLASS = ResultError
+    _class = ResultError
 
 
 # Specify the test cases to run for this module. Private bases classes need

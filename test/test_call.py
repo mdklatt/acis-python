@@ -6,8 +6,10 @@ The module can be executed on its own or incorporated into a larger test suite.
 import unittest
 
 import _env
-from acis.call import *
-from acis.error import *
+from _data import TestData
+
+from acis import WebServicesCall
+from acis import RequestError
 
 
 # Define the TestCase classes for this module. Each public component of the
@@ -17,6 +19,13 @@ class WebServicesCallTest(unittest.TestCase):
     """ Unit testing for the WebServicesCall class.
 
     """
+    _class = WebServicesCall
+    
+    @classmethod
+    def setUpClass(cls):
+        cls._DATA = TestData("data/StnData.xml")
+        return
+        
     def setUp(self):
         """ Set up the test fixture.
 
@@ -37,11 +46,9 @@ class WebServicesCallTest(unittest.TestCase):
     def test_call(self):
         """ Test a normal call.
 
-        """
-        params = {"sid": "okc", "date": "2012-01-01", "elems": "maxt",
-                  "meta": "uid"}
-        result = {"meta": {"uid":92}, "data": [["2012-01-01","50"]]}
-        self.assertDictEqual(self._call(params), result)
+        """    
+        result = self._DATA.result
+        self.assertDictEqual(self._call(self._DATA.params), result)
         return
 
     def test_error(self):

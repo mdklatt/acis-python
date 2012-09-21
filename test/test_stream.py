@@ -7,7 +7,10 @@ import json
 import unittest
 
 import _env
-from acis.stream import *
+from _data import TestData
+
+from acis.stream import StnDataStream
+from acis.stream import MultiStnDataStream
 
 
 # Define the TestCase classes for this module. Each public component of the
@@ -20,15 +23,9 @@ class _StreamTest(unittest.TestCase):
     classes must define the _JSON_FILE and _TEST_CLASS class attributes.
 
     """
-    _JSON_FILE = None
-    _TEST_CLASS = None
-
     @classmethod
-    def load_json(cls):
-        """ Load the JSON test data.
-
-        """
-        return json.load(open(cls._JSON_FILE, "r"))
+    def setUpClass(cls):
+        raise NotImplementedError
 
     def setUp(self):
         """ Set up the test fixture.
@@ -36,44 +33,48 @@ class _StreamTest(unittest.TestCase):
         This is called before each test is run so that they are isolated from
         any side effects. This is part of the unittest API.
 
-        """
-        test_data = self.load_json()
-        self.meta = test_data["meta"]
-        self.records = test_data["records"]
-        self.stream = self._TEST_CLASS()
+        """    
+        self._meta = self._DATA.meta
+        self._records = self._DATA.records
+        self._stream = self._class()
         return
 
     def test_elems(self):
         """ Test the add_element method and related functionality.
         
         """
-        self.assertSequenceEqual(self.stream.elems, [])
-        self.stream.add_element("maxt")
-        self.stream.add_element("mint")
-        self.assertSequenceEqual(self.stream.elems, ("maxt", "mint"))
-        self.stream.add_element("maxt")  # duplicates ok
-        self.assertSequenceEqual(self.stream.elems, ("maxt0", "mint", "maxt1"))
-        self.stream.clear_elements()
-        self.assertSequenceEqual(self.stream.elems, [])        
+        self.assertSequenceEqual([], self._stream.elems)
+        self._stream.add_element("maxt")
+        self._stream.add_element("mint")
+        self.assertSequenceEqual(("maxt","mint"), self._stream.elems)
+        self._stream.add_element("maxt")  # duplicates ok
+        self.assertSequenceEqual(("maxt0","mint","maxt1"), self._stream.elems)
+        self._stream.clear_elements()
+        self.assertSequenceEqual([], self._stream.elems)        
         return
+
 
 class StnDataStreamTest(_StreamTest):
     """ Unit testing for the StnDataStream class.
 
     """
-    _JSON_FILE = "data/StnDataCsv.json"
-    _TEST_CLASS = StnDataStream
-
+    _class = StnDataStream
+    
+    @classmethod
+    def setUpClass(cls):
+        cls._DATA = TestData("data/StnDataCsv.xml")
+        return
+        
     def test_iter(self):
         """ Test the __iter__ method.
 
         """
-        self.stream.dates("2011-12-31", "2012-01-01")
-        self.stream.location(sid="okc")
-        self.stream.add_element("mint")
-        self.stream.add_element("maxt")
-        self.assertSequenceEqual(list(self.stream), self.records)
-        self.assertDictEqual(self.stream.meta, self.meta)
+        self._stream.dates("2011-12-31", "2012-01-01")
+        self._stream.location(sid="okc")
+        self._stream.add_element("mint")
+        self._stream.add_element("maxt")
+        self.assertSequenceEqual(self._records, list(self._stream))
+        self.assertDictEqual(self._meta, self._stream.meta)
         return
 
 
@@ -81,19 +82,23 @@ class MultiStnDataStreamTest(_StreamTest):
     """ Unit testing for the MultiStnDataStream class.
 
     """
-    _JSON_FILE = "data/MultiStnDataCsv.json"
-    _TEST_CLASS = MultiStnDataStream
+    _class = MultiStnDataStream
+    
+    @classmethod
+    def setUpClass(cls):
+        cls._DATA = TestData("data/MultiStnDataCsv.xml")
+        return
 
     def test_iter(self):
         """ Test the __iter__ method.
 
         """
-        self.stream.date("2011-12-31")
-        self.stream.location(sids="okc,OKCthr")
-        self.stream.add_element("mint")
-        self.stream.add_element("maxt")
-        self.assertSequenceEqual(list(self.stream), self.records)
-        self.assertDictEqual(self.stream.meta, self.meta)
+        self._stream.date("2011-12-31")
+        self._stream.location(sids="okc,OKCthr")
+        self._stream.add_element("mint")
+        self._stream.add_element("maxt")
+        self.assertSequenceEqual(self._records, list(self._stream))
+        self.assertDictEqual(self._meta, self._stream.meta)
         return
 
 

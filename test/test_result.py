@@ -3,42 +3,37 @@
 The module can be executed on its own or incorporated into a larger test suite.
 
 """
-import json
 import unittest
 
 import _env
-from acis.error import *
-from acis.result import *
+from _data import TestData
+
+from acis import ResultError
+from acis import StnMetaResult
+from acis import StnDataResult
+from acis import MultiStnDataResult
 
 
 # Define the TestCase classes for this module. Each public component of the
 # module being tested has its own TestCase.
 
-class _ResultTest(unittest.TestCase):
-    """ Private base class for testing result classes.
-
-    This class should be excluded from test discovery and execution. Child
-    classes must define the _JSON_FILE and _TEST_CLASS class attributes.
+class StnMetaResultTest(unittest.TestCase):
+    """ Unit testing for the StnMetaResult class.
 
     """
-    _JSON_FILE = None
-    _TEST_CLASS = None
-
+    _class = StnMetaResult
+    
     @classmethod
-    def load_json(cls):
-        """ Load the JSON test data.
-
+    def setUpClass(cls):
+        """ Initialize the StnMetaResult class.
+        
+        This is called before any tests are run. This is part of the unittest
+        API.
+        
         """
-        return json.load(open(cls._JSON_FILE, "r"))
-
-
-class _MetaResultTest(_ResultTest):
-    """ Private base class for testing result classes with metadata.
-
-    All results with metadata are expected to share the same interface for that
-    metadata. This class should be excluded from test discovery and execution.
-
-    """
+        cls._DATA = TestData("data/StnMeta.xml")
+        return    
+   
     def setUp(self):
         """ Set up the test fixture.
 
@@ -46,11 +41,10 @@ class _MetaResultTest(_ResultTest):
         any side effects. This is part of the unittest API.
 
         """
-        test_data = self.load_json()
-        params = test_data["params"]
-        result = test_data["result"]
-        self.query = {"params": params, "result": result}
-        self.meta = test_data["meta"]
+        params = self._DATA.params
+        result = self._DATA.result
+        self._query = {"params": params, "result": result}
+        self._meta = StnMetaResultTest._DATA.meta
         return
 
     def test_meta(self):
@@ -60,60 +54,60 @@ class _MetaResultTest(_ResultTest):
         to the site UID.
 
         """
-        result = self._TEST_CLASS(self.query)
-        for uid, site in result.meta.items():
-            self.assertDictEqual(site, self.meta[str(uid)])
+        result = self._class(self._query)
+        self.assertDictEqual(self._meta, result.meta)
         return
 
+    def test_uid_missing(self):
+        """ Test for exception for missing site UID.
 
-class _DataResultTest(_ResultTest):
+        """
+        self._query["result"]["meta"][0].pop("uid")
+        self.assertRaises(ResultError, self._class, self._query)
+        return
+
+        
+class _DataResultTest(StnMetaResultTest):
     """ Private base class for testing result classes with data.
 
     All results with data are expected to share the same interface for that
     data. This class should be excluded from test discovery and execution.
 
     """
-    def setUp(self):
-        """ Set up the test fixture.
-
-        This is called before each test is run so that they are isolated from
-        any side effects. This is part of the unittest API.
+    _class = None  # the class under test
+    
+    @classmethod
+    def setUpClass(cls):
+        raise NotImplementedError
+            
+    def test_uid_missing(self):
+        """ Test for exception for missing site UID.
 
         """
-        test_data = self.load_json()
-        params = test_data["params"]
-        result = test_data["result"]
-        self.query = {"params": params, "result": result}
-        self.elems = [elem["name"] for elem in params["elems"]]
-        self.meta = test_data["meta"]
-        self.data = test_data["data"]
-        self.smry = {int(n): x for (n, x) in test_data["smry"].items()}
-        self.records = test_data["records"]
-        return
-
+        raise NotImplementedError
+                
     def test_data(self):
         """ Test the data attribute.
 
         """
-        result = self._TEST_CLASS(self.query)
-        for uid, data in result.data.items():
-            self.assertSequenceEqual(data, self.data[str(uid)])
+        result = self._class(self._query)
+        self.assertDictEqual(self._data, result.data)
         return
 
     def test_smry(self):
         """ Test the smry attribute.
 
         """
-        result = self._TEST_CLASS(self.query)
-        self.assertDictEqual(result.smry, self.smry)
+        result = self._class(self._query)
+        self.assertDictEqual(self._smry, result.smry)
         return
 
     def test_elems(self):
         """ Test the elems attribute.
 
         """
-        result = self._TEST_CLASS(self.query)
-        self.assertSequenceEqual(result.elems, self.elems)
+        result = self._class(self._query)
+        self.assertSequenceEqual(self._elems, result.elems)
         return
 
     def test_len(self):
@@ -123,69 +117,106 @@ class _DataResultTest(_ResultTest):
         iterated over.
 
         """
-        result = self._TEST_CLASS(self.query)
-        self.assertEqual(len(result), len(self.records))
+        result = self._class(self._query)
+        self.assertEqual(len(self._records), len(result))
         return
 
     def test_iter(self):
         """ Test the __iter__ method.
 
         """
-        result = self._TEST_CLASS(self.query)
-        self.assertSequenceEqual(list(result), self.records)
+        result = self._class(self._query)
+        self.assertSequenceEqual(self._records, list(result))
         return
 
-
-class StnMetaResultTest(_MetaResultTest):
-    """ Unit testing for the StnMetaResult class.
-
-    """
-    _JSON_FILE = "data/StnMeta.json"
-    _TEST_CLASS = StnMetaResult
-
-    def test_no_uid(self):
-        """ Test failure for missing uid.
-
-        """
-        self.query["result"]["meta"][0].pop("uid")
-        self.assertRaises(ResultError, self._TEST_CLASS, self.query)
-        return
-
-
-class StnDataResultTest(_DataResultTest, _MetaResultTest):
+         
+class StnDataResultTest(_DataResultTest):
     """ Unit testing for the StnDataResult class.
 
     """
-    _JSON_FILE = "data/StnData.json"
-    _TEST_CLASS = StnDataResult
+    _class = StnDataResult
+    
+    @classmethod
+    def setUpClass(cls):
+        """ Initialize the StnMetaResult class.
+        
+        This is called before any tests are run. This is part of the unittest
+        API.
+        
+        """
+        cls._DATA = TestData("data/StnData.xml")
+        return  
+          
+    def setUp(self):
+        """ Set up the test fixture.
 
-    def test_no_uid(self):
-        """ Test failure for missing uid.
+        This is called before each test is run so that they are isolated from
+        any side effects. This is part of the unittest API.
 
         """
-        self.query["result"]["meta"].pop("uid")
-        self.assertRaises(ResultError, self._TEST_CLASS, self.query)
+        params = self._DATA.params
+        result = self._DATA.result
+        self._query = {"params": params, "result": result}
+        self._meta = self._DATA.meta
+        self._data = self._DATA.data
+        self._smry = self._DATA.smry
+        self._records = self._DATA.records
+        self._elems = self._DATA.elems
+        return
+
+    def test_uid_missing(self):
+        """ Test for exception for missing site UID.
+        
+        """
+        self._query["result"]["meta"].pop("uid")
+        self.assertRaises(ResultError, self._class, self._query)
         return
 
 
-class MultiStnDataResultTest(_DataResultTest, _MetaResultTest):
-    """ Unit testing for the MultiStnDataResult class.
+class MultiStnDataResultTest(_DataResultTest):
+    """ Unit testing for the StnDataResult class.
 
     """
-    _JSON_FILE = "data/MultiStnData.json"
-    _TEST_CLASS = MultiStnDataResult
+    _class = MultiStnDataResult
+    
+    @classmethod
+    def setUpClass(cls):
+        """ Initialize the StnMetaResult class.
+        
+        This is called before any tests are run. This is part of the unittest
+        API.
+        
+        """
+        cls._DATA = TestData("data/MultiStnData.xml")
+        return  
+          
+    def setUp(self):
+        """ Set up the test fixture.
 
-    def test_no_uid(self):
-        """ Test failure for missing uid.
+        This is called before each test is run so that they are isolated from
+        any side effects. This is part of the unittest API.
 
         """
-        self.query["result"]["data"][0]["meta"].pop("uid")
-        self.assertRaises(ResultError, self._TEST_CLASS, self.query)
+        params = self._DATA.params
+        result = self._DATA.result
+        self._query = {"params": params, "result": result}
+        self._meta = self._DATA.meta
+        self._data = self._DATA.data
+        self._smry = self._DATA.smry
+        self._records = self._DATA.records
+        self._elems = self._DATA.elems
+        return
+
+    def test_uid_missing(self):
+        """ Test for exception for missing site UID.
+        
+        """
+        self._query["result"]["data"][0]["meta"].pop("uid")
+        self.assertRaises(ResultError, self._class, self._query)
         return
 
 
-
-# Specify the test cases to run for this module. Private bases classes need
+# Specify the test cases to run for this module. Abstract bases classes need
 # to be explicitly excluded from automatic discovery.
 
 _TEST_CASES = (StnMetaResultTest, StnDataResultTest, MultiStnDataResultTest)

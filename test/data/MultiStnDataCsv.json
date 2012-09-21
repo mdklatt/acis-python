@@ -1,5 +1,0 @@
-{
-	"params":{"sids":"okc,okcthr","date":"2011-12-31","elems":"mint,maxt","output":"csv"},
-	"records":[["13967","2011-12-31","35","71"],["OKCthr","2011-12-31","35","71"]],
-	"meta":{"13967":{"name":"OKLAHOMA CITY WILL ROGERS AP","state":"OK","ll":[-97.60056,35.38889],"elev":1285},"OKCthr":{"name":"Oklahoma City Area","state":"OK"}}
-}

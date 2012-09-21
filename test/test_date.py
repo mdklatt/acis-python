@@ -7,7 +7,11 @@ import datetime
 import unittest
 
 import _env
-from acis.date import *
+from _data import TestData
+
+from acis import date_object
+from acis import date_range
+from acis import date_string
 
 
 # Define the TestCase classes for this module. Each public component of the
@@ -22,53 +26,53 @@ class DateObjectFunctionTest(unittest.TestCase):
         """ Test a YYYY-MM-DD string.
 
         """
-        string = "2011-12-31"
-        object = datetime.date(2011, 12, 31)
-        self.assertEqual(date_object(string), object)
+        date_str = "2011-12-31"
+        date_obj = datetime.date(2011, 12, 31)
+        self.assertEqual(date_obj, date_object(date_str))
         return
 
     def test_day_no_hyphen(self):
         """ Test a YYYYMMDD string.
 
         """
-        string = "20111231"
-        object = datetime.date(2011, 12, 31)
-        self.assertEqual(date_object(string), object)
+        date_str = "20111231"
+        date_obj = datetime.date(2011, 12, 31)
+        self.assertEqual(date_obj, date_object(date_str))
         return
 
     def test_month_hyphen(self):
         """ Test a YYYY-MM string.
 
         """
-        string = "2011-12"
-        object = datetime.date(2011, 12, 1)
-        self.assertEqual(date_object(string), object)
+        date_str = "2011-12"
+        date_obj = datetime.date(2011, 12, 1)
+        self.assertEqual(date_obj, date_object(date_str))
         return
 
     def test_month_no_hyphen(self):
         """ Test a YYYYMM string.
 
         """
-        string = "201112"
-        object = datetime.date(2011, 12, 1)
-        self.assertEqual(date_object(string), object)
+        date_str = "201112"
+        date_obj = datetime.date(2011, 12, 1)
+        self.assertEqual(date_obj, date_object(date_str))
         return
 
     def test_year(self):
         """ Test a YYYY string.
 
         """
-        string = "2011"
-        object = datetime.date(2011, 1, 1)
-        self.assertEqual(date_object(string), object)
+        date_str = "2011"
+        date_obj = datetime.date(2011, 1, 1)
+        self.assertEqual(date_obj, date_object(date_str))
         return
 
     def test_bad_year(self):
         """ Test exception for a two-digit year.
 
         """
-        string = "11-11-11"
-        self.assertRaises(ValueError, date_object, string)
+        date_str = "11-11-11"
+        self.assertRaises(ValueError, date_object, date_str)
         return
 
 
@@ -80,9 +84,9 @@ class DateStringFunctionTest(unittest.TestCase):
         """ Test normal operation.
 
         """
-        object = datetime.date(2012, 1, 1)
-        string = "2012-01-01"  # test for zero fill
-        self.assertEqual(date_string(object), string)
+        date_obj = datetime.date(2012, 1, 1)
+        date_str = "2012-01-01"  # test for zero fill
+        self.assertEqual(date_str, date_string(date_obj))
         return
 
     def test_bad_arg(self):
@@ -106,7 +110,7 @@ class DateRangeFunctionTest(unittest.TestCase):
         params = {"sdate": "2011-12-31", "edate": "2012-01-01",
             "elems": "mint"}  # no interval given
         dates = ("2011-12-31", "2012-01-01")
-        self.assertSequenceEqual(list(date_range(params)), dates)
+        self.assertSequenceEqual(dates, list(date_range(params)))
         return
 
     def test_daily_str(self):
@@ -116,7 +120,7 @@ class DateRangeFunctionTest(unittest.TestCase):
         params = {"sdate": "2011-12-31", "edate": "2012-01-01",
                 "elems": [{"name": "mint", "interval": "dly"}]}
         dates = ("2011-12-31", "2012-01-01")
-        self.assertSequenceEqual(list(date_range(params)), dates)
+        self.assertSequenceEqual(dates, list(date_range(params)))
         return
 
     def test_daily_ymd_str(self):
@@ -126,7 +130,7 @@ class DateRangeFunctionTest(unittest.TestCase):
         params = {"sdate": "2011-12-31", "edate": "2012-01-05",
                 "elems": [{"name": "mint", "interval": "0,0,2"}]}
         dates = ("2011-12-31", "2012-01-02", "2012-01-04")
-        self.assertSequenceEqual(list(date_range(params)), dates)
+        self.assertSequenceEqual(dates, list(date_range(params)))
         return
 
     def test_daily_ymd_list(self):
@@ -136,7 +140,7 @@ class DateRangeFunctionTest(unittest.TestCase):
         params = {"sdate": "2011-12-31", "edate": "2012-01-05",
                 "elems": [{"name": "mint", "interval": [0, 0, 2]}]}
         dates = ("2011-12-31", "2012-01-02", "2012-01-04")
-        self.assertSequenceEqual(list(date_range(params)), dates)
+        self.assertSequenceEqual(dates, list(date_range(params)))
         return
 
     def test_monthly_str(self):
@@ -146,7 +150,7 @@ class DateRangeFunctionTest(unittest.TestCase):
         params = {"sdate": "2011-12-01", "edate": "2012-01-01",
                 "elems": [{"name": "mint", "interval": "mly"}]}
         dates = ("2011-12-01", "2012-01-01")
-        self.assertSequenceEqual(list(date_range(params)), dates)
+        self.assertSequenceEqual(dates, list(date_range(params)))
         return
 
     def test_monthly_ymd_str(self):
@@ -156,7 +160,7 @@ class DateRangeFunctionTest(unittest.TestCase):
         params = {"sdate": "2011-12-01", "edate": "2012-05-01",
                 "elems": [{"name": "mint", "interval": "0,2,0"}]}
         dates = ("2011-12-01", "2012-02-01", "2012-04-01")
-        self.assertSequenceEqual(list(date_range(params)), dates)
+        self.assertSequenceEqual(dates, list(date_range(params)))
         return
 
     def test_monthly_ymd_list(self):
@@ -166,7 +170,7 @@ class DateRangeFunctionTest(unittest.TestCase):
         params = {"sdate": "2011-12-01", "edate": "2012-05-01",
                   "elems": [{"name": "mint", "interval": [0, 2, 0]}]}
         dates = ("2011-12-01", "2012-02-01", "2012-04-01")
-        self.assertSequenceEqual(list(date_range(params)), dates)
+        self.assertSequenceEqual(dates, list(date_range(params)))
         return
 
     def test_yearly_str(self):
@@ -176,7 +180,7 @@ class DateRangeFunctionTest(unittest.TestCase):
         params = {"sdate": "2011-01-01", "edate": "2012-01-01",
                   "elems": [{"name": "mint", "interval": "yly"}]}
         dates = ("2011-01-01", "2012-01-01")
-        self.assertSequenceEqual(list(date_range(params)), dates)
+        self.assertSequenceEqual(dates, list(date_range(params)))
         return
 
     def test_yearly_ymd_str(self):
@@ -186,7 +190,7 @@ class DateRangeFunctionTest(unittest.TestCase):
         params = {"sdate": "2011-01-01", "edate": "2016-01-01",
                   "elems": [{"name": "mint", "interval": "2,0,0"}]}
         dates = ("2011-01-01", "2013-01-01", "2015-01-01")
-        self.assertSequenceEqual(list(date_range(params)), dates)
+        self.assertSequenceEqual(dates, list(date_range(params)))
         return
 
     def test_yearly_ymd_list(self):
@@ -196,7 +200,7 @@ class DateRangeFunctionTest(unittest.TestCase):
         params = {"sdate": "2011-01-01", "edate": "2016-01-01",
                   "elems": [{"name": "mint", "interval": [2, 0, 0]}]}
         dates = ("2011-01-01", "2013-01-01", "2015-01-01")
-        self.assertSequenceEqual(list(date_range(params)), dates)
+        self.assertSequenceEqual(dates, list(date_range(params)))
         return
 
     def test_bad_params(self):
