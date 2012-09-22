@@ -77,7 +77,7 @@ def _delta(interval):
         except AttributeError:  # no split, not a str
             yr, mo, da = interval
     mo = 0 if da > 0 else mo
-    yr = 0 if mo > 0 else yr
+    yr = 0 if (mo > 0 or da > 0) else yr 
     return dateutil.relativedelta.relativedelta(years=yr, months=mo, days=da)
 
 
