@@ -26,9 +26,15 @@ class _Request(object):
     """ Abstract base class for all request objects. 
     
     """
-    _call = None  # child classes must set to an appropriate WebServicesCall
-    
+    # Child classes must define this as an appropriate WebServicesCall (or
+    # equivalent). It can be either a class or object attribute/method as
+    # needed.
+    _call = None
+        
     def __init__(self):
+        """ Initialize a _Request object.
+        
+        """
         self._params = {}
         return
 
@@ -42,15 +48,6 @@ class _Request(object):
         """
         return {"params": self._params, "result": self._call(self._params)}
 
-        
-class _PlaceTimeRequest(_Request):
-    """ Abstract base class for requests for spatiotemporal data.
-
-    """
-    def __init__(self):
-        super(_PlaceTimeRequest, self).__init__()
-        return
-        
     def metadata(self, *fields):
         """ Specify the metadata fields for this request.
 
@@ -58,6 +55,18 @@ class _PlaceTimeRequest(_Request):
         self._params["meta"] = list(set(fields))  # no duplicates
         return
 
+        
+class _PlaceTimeRequest(_Request):
+    """ Abstract base class for requests for spatiotemporal data.
+
+    """
+    def __init__(self):
+        """ Initialize a _PlaceTimeRequest object.
+        
+        """
+        super(_PlaceTimeRequest, self).__init__()
+        return
+        
     def location(self, **options):
         """ Define the location for this request.
 
@@ -99,6 +108,9 @@ class _StnRequest(_PlaceTimeRequest):
         return
     
     def metadata(self, *fields):
+        """ Set the metadata for this request.
+        
+        """
         super(_StnRequest, self).metadata("uid", *fields)
         return
 
@@ -199,3 +211,49 @@ class MultiStnDataRequest(_StnRequest, _DataRequest):
             raise RequestError("MultiStnData does not accept POR")
         self._params.update(date_params(sdate, edate))
         return
+ 
+ 
+# Development versions--not part of public interface. Testing and corresponding
+# Result objects are still needed.      
+
+class GridDataRequest(_DataRequest):
+    """ A GridData request.
+        
+    """
+    def grid(self, id):
+        """ Set the grid ID for this request.
+        
+        """
+        self._params["grid"] = id
+        return
+        
+
+class GeneralRequest(_Request):
+    """ A General request.
+    
+    """
+    def __init__(self, area):
+        """ Initalize a GeneralRequest object.
+        
+        The "id" metadata field is part of every request.
+        
+        """
+        super(GeneralRequest, self).__init__()
+        self._call = WebServicesCall("General/{0:s}".format(area))
+        self._params["meta"] = "id"
+        return
+        
+    def state(self, postal):
+        """ Set the state for this request.
+        
+        """    
+        self._params["state"] = postal
+        return
+        
+    def metadata(self, *fields):
+        """ Set the metadata for this request.
+        
+        """
+        super(GeneralRequest, self).metadata("id", *fields)
+        return
+        
