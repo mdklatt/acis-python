@@ -5,7 +5,7 @@ import collections
 
 from .date import date_object
 from .date import date_string
-
+from .error import RequestError
 
 def annotate(sequence):
     """ Annotate duplicate items in a sequence to make them unique.
@@ -51,3 +51,28 @@ def date_params(sdate, edate=None):
         params["sdate"] = "por" if sdate.lower() == "por" else verify(sdate)
         params["edate"] = "por" if edate.lower() == "por" else verify(edate)
     return params
+
+
+def valid_interval(value):
+    """ Return a valid ACIS interval.
+    
+    An interval can be specified as a name ("dly", "mly", "yly") or a year,
+    month, day sequence. For a sequence, only the least-signficant nonzero 
+    value is used.
+    
+    """
+    try:
+        value = value.lower()
+    except AttributeError:  # no lower(), not a str
+        # Normalize a (y, m, d) sequence of ints.
+        try:  
+            yr, mo, da = (int(x) for x in value)
+        except ValueError:  # not ints
+            raise RequestError("invalid interval: {0:s}".format(value))
+        mo = 0 if da > 0 else mo
+        yr = 0 if (mo > 0 or da > 0) else yr
+        value = (yr, mo, da)             
+    else:
+        if value not in ("dly", "mly", "yly"):
+            raise RequestError("invalid interval name: {0:s}".format(value))
+    return value

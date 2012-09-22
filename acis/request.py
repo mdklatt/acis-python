@@ -15,6 +15,7 @@ This implementation is based on ACIS Web Services Version 2:
 from .__version__ import __version__
 
 from ._misc import date_params
+from ._misc import valid_interval
 from .call import WebServicesCall
 from .error import RequestError
 
@@ -143,7 +144,7 @@ class _DataRequest(_PlaceTimeRequest):
         The default interval is daily.
         
         """
-        self._interval = value
+        self._interval = valid_interval(value)
         return
 
     def add_element(self, name, **options):

@@ -83,7 +83,6 @@ class StnDataRequestTest(_RequestTest):
         self._request.interval("dly")
         self._request.interval("mly")
         self._request.interval("yly")
-        self._request.interval("0,0,1")
         self._request.interval((0, 1, 0))
         self._request.interval([1, 0, 0])
         self.assertTrue(True)  # no execptions
@@ -130,7 +129,6 @@ class MultiStnDataRequestTest(_RequestTest):
         self._request.interval("dly")
         self._request.interval("mly")
         self._request.interval("yly")
-        self._request.interval("0,0,1")
         self._request.interval((0, 1, 0))
         self._request.interval([1, 0, 0])
         self.assertTrue(True)  # no execptions

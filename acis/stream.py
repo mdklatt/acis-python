@@ -17,6 +17,7 @@ import itertools
 
 from ._misc import annotate
 from ._misc import date_params
+from ._misc import valid_interval
 from .call import WebServicesCall
 from .error import RequestError
 
@@ -57,8 +58,9 @@ class _CsvStream(object):
         """ Set the interval for this request.
 
         The default interval is daily ("dly").
+        
         """
-        self._interval = value
+        self._interval = valid_interval(value)
         return
 
     def add_element(self, name, **options):
