@@ -56,7 +56,9 @@ class StnMetaRequestTest(_RequestTest):
         """ Test the submit method for a normal request.
 
         """
-        self._request.location(sids=("okc", "tul"))
+        self._request.location(county="40109")
+        self._request.dates("1890-01-01", "1907-11-15")
+        self._request.elements("maxt", "mint")
         self._request.metadata("county", "name")  # uid should be automatic
         query = self._request.submit()
         self.assertDictEqual(self._query["result"], query["result"])

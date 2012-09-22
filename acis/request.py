@@ -22,41 +22,14 @@ from .error import RequestError
 __all__ = ("StnMetaRequest", "StnDataRequest", "MultiStnDataRequest")
 
 
-def _annotate(sequence):
-    """ Annotate duplicate items in a sequence to make them unique.
-
-    Duplicate items will be numbered, e.g. (abc0, abc1, ...) The original
-    order of the sequence is preserved, and it is returned as a tuple.
-
-    """
-    # Reverse the sequence, then the duplicate count acts as in index while
-    # successive duplicates are annotated and the count is decremented. Reverse
-    # the sequence again to restore the orignal order.
-    sequence = list(sequence)
-    sequence.reverse()
-    for key, count in collections.Counter(sequence).items():
-        if not count > 1:
-            continue
-        for pos, item in enumerate(sequence):
-            if item != key:
-                continue
-            count -= 1
-            sequence[pos] = item + "{0:d}".format(count)
-    sequence.reverse()
-    return tuple(sequence)
-
-
-class _JsonRequest(object):
-    """ Abstract base class for all request objects.
-
+class _Request(object):
+    """ Abstract base class for all request objects. 
+    
     """
     _call = None  # child classes must set to an appropriate WebServicesCall
-
+    
     def __init__(self):
-        """ Initialize a request.
-
-        """
-        self._params = {"output": "json"}
+        self._params = {}
         return
 
     def submit(self):
@@ -69,33 +42,20 @@ class _JsonRequest(object):
         """
         return {"params": self._params, "result": self._call(self._params)}
 
-
-class _MetaRequest(_JsonRequest):
-    """ Abstract base class for requests with metadata.
+        
+class _PlaceTimeRequest(_Request):
+    """ Abstract base class for requests for spatiotemporal data.
 
     """
     def __init__(self):
-        """ Initialize a _MetaRequest object.
-
-        For compatibility with Result classes, the "uid" field is included by
-        default (see result.py).
-
-        """
-        super(_MetaRequest, self).__init__()
-        self._params["meta"] = ["uid"]
+        super(_PlaceTimeRequest, self).__init__()
         return
-
+        
     def metadata(self, *fields):
         """ Specify the metadata fields for this request.
 
-        The fields parameter is an argument list of the desired fields. The
-        "uid" field is included by default.
-
         """
-        # TODO: Need to validate items.
-        fields = set(fields)
-        fields.add("uid")
-        self._params["meta"] = list(fields)
+        self._params["meta"] = list(set(fields))  # no duplicates
         return
 
     def location(self, **options):
@@ -105,34 +65,8 @@ class _MetaRequest(_JsonRequest):
         for this request.
 
         """
-        # TODO: Need to validate options.
         self._params.update(options)
         return
-
-
-class _DataRequest(_MetaRequest):
-    """ Abstract base class for all requests with data.
-
-    Data requests like StnData and MultiStnData also include metadata.
-
-    """
-    def __init__(self):
-        """ Initialize a _DataRequest object.
-
-        """
-        super(_DataRequest, self).__init__()
-        self._params["elems"] = []
-        self._interval = "dly"
-        return
-
-    def submit(self):
-        """ Submit a request to the server.
-
-        """
-        # Fully construct _params before submitting request.
-        for elem in self._params['elems']:
-            elem['interval'] = self._interval
-        return super(_DataRequest, self).submit()
 
     def dates(self, sdate, edate=None):
         """ Set the date range (inclusive) for this request.
@@ -148,10 +82,54 @@ class _DataRequest(_MetaRequest):
         self._params.update(date_params(sdate, edate))
         return
 
+
+class _StnRequest(_PlaceTimeRequest):
+    """ Abstract base class for station (meta)data requests.
+    
+    For compatibility with Result classes the "uid" metadata field is part of
+    every request (see result.py).
+    
+    """
+    def __init__(self):
+        """ Initialize a _SiteRequest object.
+
+        """
+        super(_StnRequest, self).__init__()
+        self._params["meta"] = ["uid"]
+        return
+    
+    def metadata(self, *fields):
+        super(_StnRequest, self).metadata("uid", *fields)
+        return
+
+
+class _DataRequest(_PlaceTimeRequest):
+    """ Abstract base class for all meteorological data requests.
+
+    """
+    def __init__(self):
+        """ Initialize a _DataRequest object.
+
+        """
+        super(_DataRequest, self).__init__()
+        self._params["elems"] = []
+        self._interval = "dly"
+        return
+
+    def submit(self):
+        """ Submit a request to the server.
+
+        """
+        # Add interval to each element before submitting request.
+        for elem in self._params["elems"]:
+            elem['interval'] = self._interval
+        return super(_DataRequest, self).submit()
+
     def interval(self, value):
         """ Set the interval for this request.
 
         The default interval is daily.
+        
         """
         self._interval = value
         return
@@ -172,14 +150,21 @@ class _DataRequest(_MetaRequest):
         return
 
 
-class StnMetaRequest(_MetaRequest):
+class StnMetaRequest(_StnRequest):
     """ A StnMeta request.
 
     """
     _call = WebServicesCall("StnMeta")
 
-
-class StnDataRequest(_DataRequest):
+    def elements(self, *names):
+        """ Set the elements for this request.
+        
+        """
+        self._params["elems"] = list(names)
+        return
+        
+        
+class StnDataRequest(_StnRequest, _DataRequest):
     """ A StnData request.
 
     """
@@ -197,7 +182,7 @@ class StnDataRequest(_DataRequest):
         return
 
 
-class MultiStnDataRequest(_DataRequest):
+class MultiStnDataRequest(_StnRequest, _DataRequest):
     """ A MultiStnData request.
 
     """
@@ -210,7 +195,7 @@ class MultiStnDataRequest(_DataRequest):
 
         """
         if (sdate.lower() == "por" or (edate is not None and
-                                       edate.lower() == "por")):
+                                                      edate.lower() == "por")):
             raise RequestError("MultiStnData does not accept POR")
         self._params.update(date_params(sdate, edate))
         return

@@ -1,15 +1,17 @@
 <TestData>
 	<description></description>
     <value name="params" dtype="json">
-        {"sids":"okc,tul","meta":"uid,name,county"}
+        {"county":"40109","meta":"uid,name,county","elems":"maxt,mint",
+        "sdate":"1890-01-01","edate":"1907-11-07"}     
     </value>
     <value name="result" dtype="json">
-        {"meta":[{"county":"40109","uid":92,
-         "name":"OKLAHOMA CITY WILL ROGERS AP"},{"county":"40143",
-         "uid":14134,"name":"TULSA INTL AP"}]}        
+        {"meta":[{"county":"40109","uid":14012,"name":
+        "OKLAHOMA CITY PENN AVE"},{"county":"40109","uid":28780,"name":
+        "EDMOND"},{"county":"40109","uid":38537,"name":"LUTHER"}]}    
     </value>
     <value name="meta" dtype="dict">
-        {92: {"county": "40109", "name": "OKLAHOMA CITY WILL ROGERS AP"},
-         14134: {"county": "40143", "name": "TULSA INTL AP"}}
+        {14012: {"county": "40109", "name": "OKLAHOMA CITY PENN AVE"},
+         28780: {"county": "40109", "name": "EDMOND"},
+         38537: {"county": "40109", "name": "LUTHER"}}
     </value>
 </TestData>
