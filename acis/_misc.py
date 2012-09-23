@@ -76,3 +76,25 @@ def valid_interval(value):
         if value not in ("dly", "mly", "yly"):
             raise RequestError("invalid interval name: {0:s}".format(value))
     return value
+
+
+def date_span(params):
+    """
+    Determine a request's start date, end date, and interval from params.
+    
+    If there is no end date it will None. If there is no interval it will be
+    "dly".
+    
+    """
+    try:
+        sdate = params["sdate"]
+    except KeyError:
+        sdate = params["data"]
+    edate = params.get("edate", None)
+    try:
+        # All elements must have the same interval, so check the first 
+        # element for an interval specification.
+        interval = params["elems"][0]["interval"]
+    except (TypeError, KeyError): # not an array or no interval defined
+        interval = "dly"  # default value is daily
+    return sdate, edate, interval

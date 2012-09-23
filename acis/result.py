@@ -22,6 +22,7 @@ import collections
 import itertools
 
 from ._misc import annotate
+from ._misc import date_span
 from .date import date_range
 from .error import RequestError
 from .error import ResultError
@@ -172,7 +173,8 @@ class MultiStnDataResult(_DataResult):
 
         """
         super(MultiStnDataResult, self).__init__(query)
-        self._dates = tuple(date_range(query["params"]))
+        params = query["params"]
+        self._dates = tuple(date_range(*date_span(query["params"])))
         for site in query["result"]["data"]:
             try:
                 uid = site["meta"].pop("uid")

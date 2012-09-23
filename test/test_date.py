@@ -9,6 +9,7 @@ import unittest
 import _env
 from _data import TestData
 
+from acis import date_trunc
 from acis import date_object
 from acis import date_range
 from acis import date_string
@@ -99,113 +100,104 @@ class DateStringFunctionTest(unittest.TestCase):
         return
 
 
+class DateTruncFunctionTest(unittest.TestCase):
+    """ Unit testing for the date_trunc function.
+    
+    """
+    def test_mly(self):
+        """ Test "mly" interval.
+        
+        """
+        self.assertEqual("2011-12", date_trunc("20111215", "mly"))
+        self.assertEqual("2011-12", date_trunc("2011-12-05", "mly"))
+        self.assertEqual("2011-12", date_trunc("2011-12", "mly"))
+        self.assertEqual("2011-01", date_trunc("2011", "mly"))
+        return
+
+    def test_yly(self):
+        """ Test "yly" interval".
+        
+        """
+        self.assertEqual("2011", date_trunc("20111215", "yly"))
+        self.assertEqual("2011", date_trunc("2011-12-05", "yly"))
+        self.assertEqual("2011", date_trunc("2011-12", "yly"))
+        self.assertEqual("2011", date_trunc("2011", "yly"))
+        return
+
+    def test_other(self):
+        """ Test (yr, mo, da) sequences.
+        
+        """
+        self.assertEqual("2011-12-15", date_trunc("2011-12-15", (0, 1, 0)))
+        self.assertEqual("2011-12-15", date_trunc("2011-12-15", [1, 0, 0]))
+        return
+        
+
 class DateRangeFunctionTest(unittest.TestCase):
     """ Unit testing for the date_range function.
 
     """
-    def test_default(self):
-        """ Test a daily default interval.
+    def test_defaults(self):
+        """ Test defaults for edate and interval.
 
         """
-        params = {"sdate": "2011-12-31", "edate": "2012-01-01",
-            "elems": "mint"}  # no interval given
-        dates = ("2011-12-31", "2012-01-01")
-        self.assertSequenceEqual(dates, list(date_range(params)))
+        expected = ("2011-12-31",)
+        actual = date_range("2011-12-31")
+        self.assertSequenceEqual(expected, list(actual))
         return
 
     def test_daily_str(self):
         """ Test daily interval "dly".
 
         """
-        params = {"sdate": "2011-12-31", "edate": "2012-01-01",
-                "elems": [{"name": "mint", "interval": "dly"}]}
-        dates = ("2011-12-31", "2012-01-01")
-        self.assertSequenceEqual(dates, list(date_range(params)))
+        expected = ("2011-12-31", "2012-01-01", "2012-01-02")
+        actual = date_range("2011-12-31", "2012-01-02", "dly")
+        self.assertSequenceEqual(expected, list(actual))
         return
 
     def test_daily_ymd(self):
-        """ Test daily interval [0, 0, 2]
+        """ Test daily interval (0, 0, 2)
 
         """
-        params = {"sdate": "2011-12-31", "edate": "2012-01-05",
-                "elems": [{"name": "mint", "interval": [0, 0, 2]}]}
-        dates = ("2011-12-31", "2012-01-02", "2012-01-04")
-        self.assertSequenceEqual(dates, list(date_range(params)))
+        expected = ("2011-12-31", "2012-01-02", "2012-01-04")
+        actual = date_range("2011-12-31", "2012-01-04", (0, 0, 2))
+        self.assertSequenceEqual(expected, list(actual))
         return
 
     def test_monthly_str(self):
         """ Test a monthly interval "mly".
 
         """
-        params = {"sdate": "2011-12-01", "edate": "2012-01-01",
-                "elems": [{"name": "mint", "interval": "mly"}]}
-        dates = ("2011-12-01", "2012-01-01")
-        self.assertSequenceEqual(dates, list(date_range(params)))
+        expected = ("2011-12", "2012-01", "2012-02")
+        actual = date_range("20111215", "2012-02-15", "mly")
+        self.assertSequenceEqual(expected, list(actual))
         return
 
     def test_monthly_ymd(self):
-        """ Test monthly interval [0, 2, 0]
+        """ Test monthly interval (0, 2, 0)
 
         """
-        params = {"sdate": "2011-12-01", "edate": "2012-05-01",
-                  "elems": [{"name": "mint", "interval": [0, 2, 0]}]}
-        dates = ("2011-12-01", "2012-02-01", "2012-04-01")
-        self.assertSequenceEqual(dates, list(date_range(params)))
+        expected = ("2011-12-15", "2012-02-15", "2012-04-15")
+        actual = date_range("2011-12-15", "2012-04-15", (0, 2, 0))
+        self.assertSequenceEqual(expected, list(actual))
         return
 
     def test_yearly_str(self):
         """ Test yearly interval "yly".
 
         """
-        params = {"sdate": "2011-01-01", "edate": "2012-01-01",
-                  "elems": [{"name": "mint", "interval": "yly"}]}
-        dates = ("2011-01-01", "2012-01-01")
-        self.assertSequenceEqual(dates, list(date_range(params)))
+        expected = ("2011", "2012", "2013")
+        actual = date_range("2011-12-15", "2013-12-15", "yly")
+        self.assertSequenceEqual(expected, list(actual))
         return
 
     def test_yearly_ymd(self):
-        """ Test yearly interval [2, 0, 0].
+        """ Test yearly interval (2, 0, 0).
 
         """
-        params = {"sdate": "2011-01-01", "edate": "2016-01-01",
-                  "elems": [{"name": "mint", "interval": (2,0,0)}]}
-        dates = ("2011-01-01", "2013-01-01", "2015-01-01")
-        self.assertSequenceEqual(dates, list(date_range(params)))
-        return
-
-    # This fails due to a less restrictive date_range() funtion. Intervals
-    # are normalized for Requests and Streams; is it necessary to normalize for
-    # manually created params objects?
-    @unittest.expectedFailure  
-    def test_ymd_mutex(self):
-        """ Test that y, m, d specifications are mutually exclusive.
-
-        The least significant place takes precedence. 
-        
-        """
-        params = {"sdate": "2011-01-01", "edate": "2011-02-02",
-                  "elems": [{"interval": (0, 1, 1)}]}
-        dates = ("2011-01-01", "2011-01-02")
-        self.assertSequenceEqual(dates, list(date_range(params))[:2])
-        params = {"sdate": "2011-01-01", "edate": "2012-02-01",
-                  "elems": [{"interval": (1, 1, 0)}]}
-        dates = ("2011-01-01", "2011-02-01")
-        self.assertSequenceEqual(dates, list(date_range(params))[:2])
-        params = {"sdate": "2011-01-01", "edate": "2012-01-02",
-                  "elems": [{"interval": (1, 0, 1)}]}
-        dates = ("2011-01-01", "2011-01-02")
-        self.assertSequenceEqual(dates, list(date_range(params))[:2])
-        return
-
-    def test_bad_params(self):
-        """ Test exception for invalid date range specification.
-
-        """
-        params = {"sdate": "2013-01-01", "elems": "mint"}  # no edate
-        with self.assertRaises(ValueError) as context:
-            list(date_range(params))  # list needed to trigger iteration
-        message = "invalid date range specification"
-        self.assertEqual(context.exception.message, message)
+        expected = ("2011-12-15", "2013-12-15", "2015-12-15")
+        actual = date_range("2011-12-15", "2015-12-15", (2, 0, 0))
+        self.assertSequenceEqual(expected, list(actual))
         return
 
 
@@ -213,7 +205,7 @@ class DateRangeFunctionTest(unittest.TestCase):
 # to be explicitly excluded from automatic discovery.
 
 _TEST_CASES = (DateObjectFunctionTest, DateStringFunctionTest,
-        DateRangeFunctionTest)
+        DateTruncFunctionTest, DateRangeFunctionTest)
 
 def load_tests(loader, tests, pattern):
     """ Define a TestSuite for this module.
