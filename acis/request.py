@@ -60,14 +60,7 @@ class _Request(object):
 class _PlaceTimeRequest(_Request):
     """ Abstract base class for requests for spatiotemporal data.
 
-    """
-    def __init__(self):
-        """ Initialize a _PlaceTimeRequest object.
-        
-        """
-        super(_PlaceTimeRequest, self).__init__()
-        return
-        
+    """        
     def location(self, **options):
         """ Define the location for this request.
 
