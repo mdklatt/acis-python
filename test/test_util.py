@@ -7,7 +7,7 @@ import unittest
 
 import _env
 
-from acis import sids_types
+from acis import sids_table
 
 
 # Define the TestCase classes for this module. Each public component of the
@@ -15,7 +15,7 @@ from acis import sids_types
 
 
 class SidsTypesFunctionTest(unittest.TestCase):
-    """ Unit testing for the sids_types function.
+    """ Unit testing for the sids_table function.
 
     """
     def test(self):
@@ -24,7 +24,7 @@ class SidsTypesFunctionTest(unittest.TestCase):
         """
         sids = ("13967 1", "346661 2")
         types = {"WBAN": "13967", "COOP": "346661"}
-        self.assertDictEqual(sids_types(sids), types)
+        self.assertDictEqual(sids_table(sids), types)
         return
 
     def test_bad_format(self):
@@ -33,8 +33,8 @@ class SidsTypesFunctionTest(unittest.TestCase):
         """
         sids = ("13967",)  # no type code
         with self.assertRaises(ValueError) as context:
-            sids_types(sids)
-        message = "invalid sid: 13967"
+            sids_table(sids)
+        message = "invalid SID: 13967"
         self.assertEqual(context.exception.message, message)
         return
 
@@ -44,8 +44,8 @@ class SidsTypesFunctionTest(unittest.TestCase):
         """
         sids = ("13967 9999",)
         with self.assertRaises(ValueError) as context:
-            sids_types(sids)
-        message = "unknown sid type: 9999"
+            sids_table(sids)
+        message = "unknown SID type: 9999"
         self.assertEqual(context.exception.message, message)
         return
 
