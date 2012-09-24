@@ -1,7 +1,7 @@
+import ast
 import copy
 import json
 import xml.etree.ElementTree
-import unittest
 
 
 class TestData(object):
@@ -11,7 +11,7 @@ class TestData(object):
     effects.    
     
     """
-    _convert = { 
+    _conversions = { 
         # Conversions for non-native data types.
         "json": json.loads,  # native type will be a dict
     }
@@ -23,12 +23,9 @@ class TestData(object):
         self._data = {}
         root = xml.etree.ElementTree.parse(data_file)
         for elem in root.iterfind("value"):
-            dtype = elem.get("dtype")
-            try:     
-                value = TestData._convert[dtype](elem.text)
-            except KeyError:  # use a native conversion
-                value = eval("{0:s}({1:s})".format(dtype, elem.text))
-            self._data[elem.get("name")] = value
+            name, dtype = elem.get("name"), elem.get("dtype")
+            convert = self._conversions.get(dtype, ast.literal_eval)
+            self._data[name] = convert(elem.text.strip())
         return
             
     def __getattr__(self, name):
