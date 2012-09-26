@@ -41,7 +41,7 @@ class _JsonResult(object):
         sent to the server and the "result" dict that it returned.
 
         """
-        # Error checking.
+        # Check for required values.
         try:
             params = query["params"]
             result = query["result"]
@@ -50,7 +50,22 @@ class _JsonResult(object):
         try:
             raise ResultError(result["error"])
         except KeyError:  # no error
+            pass
+            
+        # Define the elems attribute.
+        try:
+            elems = query["params"]["elems"]
+        except KeyError:  # no elems
             return
+        try:  # a comma-delimited string?
+            self.elems = annotate([elem.strip() for elem in elems.split(",")])
+        except AttributeError:  # no split(), not a str
+            try:  # sequence of element objects (dicts)?
+                self.elems = annotate([elem["name"] for elem in elems])
+            except TypeError:  # no string indices, not a dict
+                self.elems = annotate(elems) # a sequence of strings
+        return
+        
 
 
 class StnMetaResult(_JsonResult):
@@ -93,14 +108,6 @@ class _DataResult(_JsonResult):
         self.data = {}
         self.meta = {}
         self.smry = {}
-        elems = query["params"]["elems"]
-        try:  # a comma-delimited string?
-            self.elems = annotate([elem.strip() for elem in elems.split(",")])
-        except AttributeError:  # no split(), not a str
-            try:  # sequence of element objects (dicts)?
-                self.elems = annotate([elem["name"] for elem in elems])
-            except TypeError:  # no string indices, not a dict
-                self.elems = annotate(elems) # a sequence of strings
         return
 
     def __len__(self):
