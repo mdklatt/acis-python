@@ -17,18 +17,16 @@ def annotate(sequence):
     # Reverse the sequence, then the duplicate count acts as a reverse index 
     # while successive duplicates are annotated and the count is decremented. 
     # Reverse the sequence again to restore the orignal order.
-    sequence = list(sequence)
-    sequence.reverse()
-    for key, count in collections.Counter(sequence).items():
+    annotated = list(reversed(sequence))
+    for key, count in collections.Counter(annotated).items():
         if not count > 1:
             continue
-        for pos, item in enumerate(sequence):
+        for pos, item in enumerate(annotated):
             if item != key:
                 continue
             count -= 1
-            sequence[pos] = item + "{0:d}".format(count)
-    sequence.reverse()
-    return tuple(sequence)             
+            annotated[pos] = item + "{0:d}".format(count)
+    return tuple(reversed(annotated))             
 
     
 def date_params(sdate, edate=None):
