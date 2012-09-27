@@ -3,6 +3,9 @@
 This module contains various functions that can be useful for processing ACIS
 data.
 
+The array_result function requires the numpy library: 
+    <http://numpy.scipy.org/>
+
 This implementation is based on ACIS Web Services Version 2:
     <http://data.rcc-acis.org/doc/>.
 
@@ -11,7 +14,12 @@ from .__version__ import __version__
 
 import re
 
-__all__ = ("sids_table",)
+try:
+    import numpy
+except ImportError:
+    pass  # don't define numpy_array()
+
+__all__ = ("sids_table", "result_array")
 
 _SID_REGEX = re.compile(r"^([^ ]*) (\d+)$")
 
@@ -39,3 +47,15 @@ def sids_table(sids):
         except KeyError:
             raise ValueError("unknown SID type: {0:s}".format(code))
     return table
+
+
+if "numpy" in globals():  # conditional compilation
+    def result_array(result):
+            """ Convert a data result to a numpy record array.
+    
+            """
+            # Element names are converted to plain strings because numpy does
+            # not play well with Unicode.
+            elems = [(str(elem), object) for elem in result.elems]
+            dtype = [("uid", int), ("date", str, 10)] + elems
+            return numpy.array([tuple(record) for record in result], dtype)

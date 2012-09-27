@@ -6,13 +6,15 @@ The module can be executed on its own or incorporated into a larger test suite.
 import unittest
 
 import _env
+from _data import TestData
 
+from acis import result_array
 from acis import sids_table
+from acis import StnDataResult
 
 
 # Define the TestCase classes for this module. Each public component of the
 # module being tested has its own TestCase.
-
 
 class SidsTypesFunctionTest(unittest.TestCase):
     """ Unit testing for the sids_table function.
@@ -50,10 +52,36 @@ class SidsTypesFunctionTest(unittest.TestCase):
         return
 
 
+class ResultArrayFunctionTest(unittest.TestCase):
+    """ Unit testing for the result_array function.
+    
+    """
+    @classmethod
+    def setUpClass(cls):
+        """ Initialize the ResultArrayFunctionTest class.
+        
+        This is called before any tests are run. This is part of the unittest
+        API.
+        
+        """
+        cls._DATA = TestData("data/StnData.xml")
+        return  
+
+    def test(self):
+        """ Test normal operation.
+        
+        """
+        query = {"params": self._DATA.params, "result": self._DATA.result}
+        result = StnDataResult(query)
+        array = result_array(result)
+        for actual, expected in zip(result, array):
+            self.assertSequenceEqual(actual, expected)
+        return
+
 # Specify the test cases to run for this module. Private bases classes need
 # to be explicitly excluded from automatic discovery.
 
-_TEST_CASES = (SidsTypesFunctionTest,)
+_TEST_CASES = (SidsTypesFunctionTest, ResultArrayFunctionTest)
 
 def load_tests(loader, tests, pattern):
     """ Define a TestSuite for this module.
