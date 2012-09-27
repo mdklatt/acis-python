@@ -159,8 +159,7 @@ class StnDataResult(_DataResult):
         """
         for uid, data in self.data.items():
             for record in data:
-                record.insert(0, uid)
-                yield record
+                yield [uid] + record
         return
 
 
@@ -210,7 +209,5 @@ class MultiStnDataResult(_DataResult):
         date_iter = itertools.cycle(self._dates)
         for uid, data in self.data.items():
             for record in data:
-                record.insert(0, uid)
-                record.insert(1, date_iter.next())
-                yield record
+                yield [uid, date_iter.next()] + record
         return

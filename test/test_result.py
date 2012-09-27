@@ -127,6 +127,7 @@ class _DataResultTest(StnMetaResultTest):
         """
         result = self._class(self._query)
         self.assertSequenceEqual(self._records, list(result))
+        self.assertSequenceEqual(self._records, list(result))  # idempotent?
         return
 
          
