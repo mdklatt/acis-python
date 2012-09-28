@@ -40,7 +40,7 @@ import acis
 print "Using acis library v{0:s}".format(acis.__version__)
 
 
-"""
+""" 
 *** Using WebServicesCall ***
 
 The core component of the library is the WebServicesCall class. This class
@@ -84,7 +84,7 @@ print "-"*40
 
 
 
-"""
+""" 
 *** Using Requests ***
 
 The Request class hierarchy simplifies the process of executing an ACIS call by
@@ -202,7 +202,7 @@ print "The total rainfall for the month was {0:s}\".".format(pcpn_sum)
 print "-"*40
 
 
-"""
+""" 
 *** Using Results ***
 
 The Result class hierarchy simplifies the interpretation of an ACIS result
@@ -290,12 +290,14 @@ for record in result:
     # Don't need to know the order of elements.
     (uid, date), elems = record[0:2], dict(zip(result.elems, record[2:]))
     print "The high temperature for {0:s} on {1:s} was {2:s}F.".format(
-       result.meta[uid]["name"], date, elems['maxt'])
+       result.meta[uid]["name"], date, elems["maxt"])
 print "({0:d} records returned)".format(len(result))
 print "-"*40
 
 
 """
+*** Using Streams ***
+
 A potential drawback of using a Request/Result is that the entire result object
 has to be received before the first record can be processed. With the Stream
 classes, however, records can be streamed one by one from the server as soon as
@@ -327,4 +329,48 @@ for record in stream:
     print "The high temperature for {0:s} on {1:s} was {2:s}F.".format(
        stream.meta[sid]["name"], date, elems['maxt'])
 print "({0:d} records returned)".format(count)  # Streams don't have len()
+print "-"*40
+
+
+"""
+*** Utility Functions ***
+
+The sids_table function can be used to interpret the "sids" metadata field.
+This example will find all CoCoRaHS sites in Cleveland County, OK.
+
+"""
+print "EXAMPLE 11\n"
+request = acis.StnMetaRequest()
+request.location(county="40027")
+request.metadata("sids", "name")
+result = acis.StnMetaResult(request.submit())
+for site in result.meta.values():
+    try:
+        sid = acis.sids_table(site["sids"])["CoCoRaHS"]
+    except KeyError:  # no CoCoRaHS id
+        continue
+    print "{0:s}: {1:s}".format(sid, site["name"])
+print "-"*40
+
+
+"""
+The result_array function converts a StnDataResult or MultiStnDataResult to a
+numpy record array (numpy library required). This result will retrieve the
+max temperature for multiple sites and multiple dates and sort the output by
+date.
+
+"""
+print "EXAMPLE 12\n"
+request = acis.MultiStnDataRequest()
+request.location(sids="OKC,TUL,LAW,MLC,GAG")
+request.dates("2012-08-01", "2012-08-03")
+request.metadata("name")
+request.add_element("maxt")
+result = acis.MultiStnDataResult(request.submit())
+array = acis.result_array(result)
+array.sort(order="date")
+for record in array:
+    name = result.meta[record["uid"]]["name"]
+    print "The high temperature for {0:s} on {1:s} was {2:s}F.".format(
+       name, record["date"], record["maxt"])
 print "-"*40
