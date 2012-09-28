@@ -212,6 +212,9 @@ class MultiStnDataResult(_DataResult):
         BE CORRECT.
 
         """
+        # The number of records for each site is equal to the number of dates, 
+        # so date_iter will automatically reset when adnvancing to the next
+        # site.
         # TODO: Correct dates for "groupby" results, c.f. date_range().
         date_iter = itertools.cycle(self._dates)
         for uid, data in self.data.items():
