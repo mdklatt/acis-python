@@ -28,7 +28,7 @@ class _ErrorTest(unittest.TestCase):
         """
         message = "test error message"
         error = self._class(message)
-        self.assertEqual(error.message, message)
+        self.assertEqual(message, error.message)
         return
 
 

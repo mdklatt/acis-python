@@ -25,7 +25,7 @@ class StnMetaResultTest(unittest.TestCase):
     
     @classmethod
     def setUpClass(cls):
-        """ Initialize the StnMetaResult class.
+        """ Initialize the StnMetaResultTest class.
         
         This is called before any tests are run. This is part of the unittest
         API.
@@ -113,9 +113,6 @@ class _DataResultTest(StnMetaResultTest):
     def test_len(self):
         """ Test the __len__ method.
 
-        The length of a result should be equal to the number of records to be
-        iterated over.
-
         """
         result = self._class(self._query)
         self.assertEqual(len(self._records), len(result))
@@ -125,9 +122,10 @@ class _DataResultTest(StnMetaResultTest):
         """ Test the __iter__ method.
 
         """
+        # Iteration is tested twice to check for idempotentcy.
         result = self._class(self._query)
         self.assertSequenceEqual(self._records, list(result))
-        self.assertSequenceEqual(self._records, list(result))  # idempotent?
+        self.assertSequenceEqual(self._records, list(result))
         return
 
          
@@ -139,7 +137,7 @@ class StnDataResultTest(_DataResultTest):
     
     @classmethod
     def setUpClass(cls):
-        """ Initialize the StnMetaResult class.
+        """ Initialize the StnDataResultTest class.
         
         This is called before any tests are run. This is part of the unittest
         API.
@@ -175,7 +173,7 @@ class StnDataResultTest(_DataResultTest):
 
 
 class MultiStnDataResultTest(_DataResultTest):
-    """ Unit testing for the StnDataResult class.
+    """ Unit testing for the MultiStnDataResultTest class.
 
     """
     _class = MultiStnDataResult

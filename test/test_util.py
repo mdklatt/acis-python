@@ -16,7 +16,7 @@ from acis import StnDataResult
 # Define the TestCase classes for this module. Each public component of the
 # module being tested has its own TestCase.
 
-class SidsTypesFunctionTest(unittest.TestCase):
+class SidsTableFunctionTest(unittest.TestCase):
     """ Unit testing for the sids_table function.
 
     """
@@ -25,19 +25,19 @@ class SidsTypesFunctionTest(unittest.TestCase):
 
         """
         sids = ("13967 1", "346661 2")
-        types = {"WBAN": "13967", "COOP": "346661"}
-        self.assertDictEqual(sids_table(sids), types)
+        table = {"WBAN": "13967", "COOP": "346661"}
+        self.assertDictEqual(table, sids_table(sids))
         return
 
     def test_bad_format(self):
         """ Test exception for invalid sid format.
 
         """
-        sids = ("13967",)  # no type code
+        sids = ("13967",)  # missing type code
         with self.assertRaises(ValueError) as context:
             sids_table(sids)
         message = "invalid SID: 13967"
-        self.assertEqual(context.exception.message, message)
+        self.assertEqual(message, context.exception.message)
         return
 
     def test_unknown_type(self):
@@ -48,7 +48,7 @@ class SidsTypesFunctionTest(unittest.TestCase):
         with self.assertRaises(ValueError) as context:
             sids_table(sids)
         message = "unknown SID type: 9999"
-        self.assertEqual(context.exception.message, message)
+        self.assertEqual(message, context.exception.message)
         return
 
 
@@ -74,14 +74,15 @@ class ResultArrayFunctionTest(unittest.TestCase):
         query = {"params": self._DATA.params, "result": self._DATA.result}
         result = StnDataResult(query)
         array = result_array(result)
-        for actual, expected in zip(result, array):
-            self.assertSequenceEqual(actual, expected)
+        for expected, actual in zip(result, array):
+            self.assertSequenceEqual(expected, actual)
         return
+
 
 # Specify the test cases to run for this module. Private bases classes need
 # to be explicitly excluded from automatic discovery.
 
-_TEST_CASES = (SidsTypesFunctionTest, ResultArrayFunctionTest)
+_TEST_CASES = (SidsTableFunctionTest, ResultArrayFunctionTest)
 
 def load_tests(loader, tests, pattern):
     """ Define a TestSuite for this module.

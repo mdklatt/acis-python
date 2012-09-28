@@ -49,6 +49,12 @@ class StnMetaRequestTest(_RequestTest):
     
     @classmethod
     def setUpClass(cls):
+        """ Initialize the StnMetaRequestTest class.
+        
+        This is called before any tests are run. This is part of the unittest
+        API.
+        
+        """
         cls._DATA = TestData("data/StnMeta.xml")
         return
         
@@ -73,6 +79,12 @@ class StnDataRequestTest(_RequestTest):
     
     @classmethod
     def setUpClass(cls):
+        """ Initialize the StnDataRequestTest class.
+        
+        This is called before any tests are run. This is part of the unittest
+        API.
+        
+        """
         cls._DATA = TestData("data/StnData.xml")
         return
 
@@ -110,6 +122,12 @@ class MultiStnDataRequestTest(_RequestTest):
     
     @classmethod
     def setUpClass(cls):
+        """ Initialize the MultiStnDataRequestTest class.
+        
+        This is called before any tests are run. This is part of the unittest
+        API.
+        
+        """
         cls._DATA = TestData("data/MultiStnData.xml")
         return
         

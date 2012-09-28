@@ -40,15 +40,14 @@ class WebServicesCallTest(unittest.TestCase):
         """ Test the url attribute.
 
         """
-        self.assertEqual(self._call.url, "http://data.rcc-acis.org/StnData")
+        self.assertEqual("http://data.rcc-acis.org/StnData", self._call.url)
         return
 
     def test_call(self):
         """ Test a normal call.
 
         """    
-        result = self._DATA.result
-        self.assertDictEqual(self._call(self._DATA.params), result)
+        self.assertDictEqual(self._DATA.result, self._call(self._DATA.params))
         return
 
     def test_error(self):
@@ -57,7 +56,7 @@ class WebServicesCallTest(unittest.TestCase):
         """
         with self.assertRaises(RequestError) as context:
             self._call({})  # empty parameters
-        self.assertEqual(context.exception.message, "Need sId")
+        self.assertEqual("Need sId", context.exception.message)
         return
 
 

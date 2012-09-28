@@ -18,7 +18,6 @@ from acis import date_string
 # Define the TestCase classes for this module. Each public component of the
 # module being tested has its own TestCase.
 
-
 class DateObjectFunctionTest(unittest.TestCase):
     """ Unit testing for the date_object function.
 
