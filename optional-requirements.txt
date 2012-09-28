@@ -1,0 +1,7 @@
+# Optional requirements file for the acis library. 
+#
+# These dependencies are not required, but some functionality will be limited 
+# without them. Dependencies can be installed using pip:
+#     pip install -r optional-requirements.txt 
+
+numpy>=1.6

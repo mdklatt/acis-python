@@ -15,6 +15,7 @@ python:
 
 install:
     - pip install --use-mirrors -r requirements.txt
+    - pip install --use-mirrors -r optional-requirements.txt
 
 
 # Test script

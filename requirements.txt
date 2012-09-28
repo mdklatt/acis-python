@@ -1,6 +1,7 @@
 # Requirements file for the acis library. 
 #
-# This file specifies external dependencies, which can be installed using pip: 
+# These dependencies are required to use the library. Dependencies can be
+# installed using pip: 
 #     pip install -r requirements.txt 
 
 python-dateutil>=1.5
