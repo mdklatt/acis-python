@@ -192,8 +192,8 @@ class MultiStnDataResult(_DataResult):
             # dimension. (StnData returns a 2D list no matter what.)
             #
             # self.data[uid] = site["data"]  # preferred
-            data1d = len(self._dates) == 1
-            self.data[uid] = [site["data"]] if data1d else site["data"]
+            data2d = len(self._dates) > 1
+            self.data[uid] = site["data"] if data2d else [site["data"]] 
             # END WORKAROUND
             try:
                 self.smry[uid]  = site["smry"]
@@ -212,7 +212,7 @@ class MultiStnDataResult(_DataResult):
         BE CORRECT.
 
         """
-        # The number of records for each site is equal to the number of dates, 
+        # The number of records for every site is equal to the number of dates, 
         # so date_iter will automatically reset when adnvancing to the next
         # site.
         # TODO: Correct dates for "groupby" results, c.f. date_range().
