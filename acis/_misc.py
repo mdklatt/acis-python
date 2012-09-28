@@ -19,7 +19,7 @@ def annotate(sequence):
     # Reverse the sequence again to restore the orignal order.
     annotated = list(reversed(sequence))
     for key, count in collections.Counter(annotated).items():
-        if not count > 1:
+        if count == 1:
             continue
         for pos, item in enumerate(annotated):
             if item != key:
@@ -30,7 +30,7 @@ def annotate(sequence):
 
     
 def date_params(sdate, edate=None):
-    """ Set the date range (inclusive) for this request.
+    """ Define the date parameters for a call.
 
     If "edate" is None "sdate" is treated as a single date. The parameters must
     be a date string or "por" (period of record). Acceptable date formats are 
@@ -78,7 +78,7 @@ def valid_interval(value):
 
 def date_span(params):
     """
-    Determine a request's start date, end date, and interval from params.
+    Determine the start date, end date, and interval for a call.
     
     If there is no end date it will None. If there is no interval it will be
     "dly".
@@ -87,12 +87,12 @@ def date_span(params):
     try:
         sdate = params["sdate"]
     except KeyError:
-        sdate = params["data"]
+        sdate = params["date"]
     edate = params.get("edate", None)
     try:
         # All elements must have the same interval, so check the first 
         # element for an interval specification.
         interval = params["elems"][0]["interval"]
-    except (TypeError, KeyError): # not an array or no interval defined
+    except (TypeError, KeyError): # not a sequence or no explicit interval
         interval = "dly"  # default value is daily
     return sdate, edate, interval

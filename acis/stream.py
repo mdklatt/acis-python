@@ -13,6 +13,7 @@ This implementation is based on ACIS Web Services Version 2:
 """
 from .__version__ import __version__
 
+import contextlib
 import itertools
 
 from ._misc import annotate
@@ -55,7 +56,7 @@ class _CsvStream(object):
         return annotate([elem["name"] for elem in self._params["elems"]])
 
     def interval(self, value):
-        """ Set the interval for this request.
+        """ Set the interval for this stream.
 
         The default interval is daily ("dly").
         
@@ -79,15 +80,15 @@ class _CsvStream(object):
         return
         
     def __iter__(self):
-        """ Stream the records from the server.
+        """ Stream records from the server.
 
         """
         first_line, stream = self._connect()
-        line_iter = itertools.chain([first_line], stream)
-        self._header(line_iter)
-        for line in line_iter:
-            yield self._record(line.rstrip())
-        stream.close()
+        with contextlib.closing(stream):
+            line_iter = itertools.chain([first_line], stream)
+            self._header(line_iter)
+            for line in line_iter:
+                yield self._record(line.rstrip())
         return
 
     def _connect(self):
@@ -131,7 +132,7 @@ class StnDataStream(_CsvStream):
     _call = WebServicesCall("StnData")
 
     def location(self, **options):
-        """ Set the location for this request.
+        """ Set the location optoins for this request.
 
         StnData only accepts a single "uid" or "sid" parameter.
 
@@ -193,7 +194,7 @@ class MultiStnDataStream(_CsvStream):
         return
 
     def location(self, **options):
-        """ Set the location for this request.
+        """ Set the location options for this request.
 
         """
         # TODO: Need to validate options.

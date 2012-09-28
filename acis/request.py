@@ -50,7 +50,7 @@ class _Request(object):
         return {"params": self._params, "result": self._call(self._params)}
 
     def metadata(self, *fields):
-        """ Specify the metadata fields for this request.
+        """ Set the metadata fields for this request.
 
         """
         self._params["meta"] = list(set(fields))  # no duplicates
@@ -62,10 +62,7 @@ class _PlaceTimeRequest(_Request):
 
     """        
     def location(self, **options):
-        """ Define the location for this request.
-
-        The options parameter is a keyword argument list defining the location
-        for this request.
+        """ Define the location options for this request.
 
         """
         self._params.update(options)
@@ -102,7 +99,7 @@ class _StnRequest(_PlaceTimeRequest):
         return
     
     def metadata(self, *fields):
-        """ Set the metadata for this request.
+        """ Set the metadata fields for this request.
         
         """
         super(_StnRequest, self).metadata("uid", *fields)
@@ -115,7 +112,7 @@ class _DataRequest(_PlaceTimeRequest):
     """
     def __init__(self):
         """ Initialize a _DataRequest object.
-
+        
         """
         super(_DataRequest, self).__init__()
         self._params["elems"] = []
@@ -166,7 +163,7 @@ class StnMetaRequest(_StnRequest):
         """ Set the elements for this request.
         
         """
-        self._params["elems"] = list(names)
+        self._params["elems"] = names
         return
         
         
@@ -177,7 +174,7 @@ class StnDataRequest(_StnRequest, _DataRequest):
     _call = WebServicesCall("StnData")
 
     def location(self, **options):
-        """ Set the location for this request.
+        """ Set the location options for this request.
 
         StnData only accepts a single "uid" or "sid" parameter.
 
@@ -195,7 +192,7 @@ class MultiStnDataRequest(_StnRequest, _DataRequest):
     _call = WebServicesCall("MultiStnData")
 
     def dates(self, sdate, edate=None):
-        """ Specify the date range (inclusive) for this request.
+        """ Set the date range (inclusive) for this request.
 
         MultiStnData does not accept period-of-record ("por").
 
@@ -245,7 +242,7 @@ class GeneralRequest(_Request):
         return
         
     def metadata(self, *fields):
-        """ Set the metadata for this request.
+        """ Set the metadata fields for this request.
         
         """
         super(GeneralRequest, self).metadata("id", *fields)

@@ -3,7 +3,7 @@
 This module contains various functions that can be useful for processing ACIS
 data.
 
-The array_result function requires the numpy library: 
+The array_result function (optional) requires the numpy library: 
     <http://numpy.scipy.org/>
 
 This implementation is based on ACIS Web Services Version 2:
@@ -17,7 +17,7 @@ import re
 try:
     import numpy
 except ImportError:
-    pass  # don't define numpy_array()
+    pass
 
 __all__ = ("sids_table", "result_array")
 

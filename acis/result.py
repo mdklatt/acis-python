@@ -55,7 +55,8 @@ class _JsonResult(object):
         # Define the elems attribute.
         try:
             elems = query["params"]["elems"]
-        except KeyError:  # no elems
+        except KeyError:  # no elems (ok for StnMetaResult)
+            self.elems = tuple()
             return
         try:  # a comma-delimited string?
             self.elems = annotate([elem.strip() for elem in elems.split(",")])
@@ -105,6 +106,8 @@ class _DataResult(_JsonResult):
 
         """
         super(_DataResult, self).__init__(query)
+        if not self.elems:
+            raise ResultError("no elems found in result")
         self.data = {}
         self.meta = {}
         self.smry = {}
@@ -213,7 +216,7 @@ class MultiStnDataResult(_DataResult):
 
         """
         # The number of records for every site is equal to the number of dates, 
-        # so date_iter will automatically reset when adnvancing to the next
+        # so date_iter will automatically reset when advancing to the next
         # site.
         # TODO: Correct dates for "groupby" results, c.f. date_range().
         date_iter = itertools.cycle(self._dates)

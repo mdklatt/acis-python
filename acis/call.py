@@ -11,6 +11,7 @@ This implementation is based on ACIS Web Services Version 2:
 """
 from .__version__ import __version__
 
+import contextlib
 import json
 import urllib
 import urllib2
@@ -57,7 +58,8 @@ class WebServicesCall(object):
             result = json.loads(stream.read())
         except ValueError:
             raise ResultError("server returned invalid JSON")
-        stream.close()
+        finally:
+            stream.close()
         return result
 
     def _post(self, data):

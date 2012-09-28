@@ -1,4 +1,4 @@
-""" The acis library.
+""" The acis library package.
 
 This library provides tools for ACIS Web Services clients.
 

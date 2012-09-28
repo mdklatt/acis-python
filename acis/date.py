@@ -20,8 +20,8 @@ import dateutil.relativedelta
 
 __all__ = ("date_object", "date_string", "date_trunc", "date_range")
 
-
 _DATE_REGEX = re.compile(r"^(\d{4})(?:-?(\d{2}))?(?:-?(\d{2}))?$")
+
 
 def date_object(date):
     """ Convert an ACIS date string to a datetime.date object.
@@ -39,7 +39,7 @@ def date_object(date):
 
 
 def date_string(date):
-    """ Return an ACIS-format date string from a date object.
+    """ Return an ACIS date string from a date object.
 
     The date_obj parameter can be any object that has year, month, and day
     attributes, e.g. datetime.date or datetime.datetime. The datetime versions
@@ -57,7 +57,7 @@ def date_string(date):
 def date_delta(interval):
     """ Determine the date delta for an interval.
 
-    An interval can be a name ("dly", "mly", "yly") or a (yr, mo, da) sequence.
+    An interval can be a name ("dly", "mly", "yly") or a (y, m, d) sequence.
     
     """
     named_deltas = {
@@ -107,7 +107,8 @@ def date_range(sdate, edate=None, interval="dly"):
     date_trunc function).
     
     """
-    edate = sdate if edate is None else edate
+    if edate is None:
+        edate = sdate
     sdate = date_object(date_trunc(sdate, interval))
     edate = date_object(date_trunc(edate, interval))
     delta = date_delta(interval)
