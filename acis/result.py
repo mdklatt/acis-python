@@ -18,13 +18,11 @@ This implementation is based on ACIS Web Services Version 2:
 """
 from .__version__ import __version__
 
-import collections
 import itertools
 
 from ._misc import annotate
 from ._misc import date_span
 from .date import date_range
-from .error import RequestError
 from .error import ResultError
 
 __all__ = ("StnMetaResult", "StnDataResult", "MultiStnDataResult")
@@ -182,7 +180,6 @@ class MultiStnDataResult(_DataResult):
 
         """
         super(MultiStnDataResult, self).__init__(query)
-        params = query["params"]
         self._dates = tuple(date_range(*date_span(query["params"])))
         for site in query["result"]["data"]:
             try:
@@ -193,11 +190,9 @@ class MultiStnDataResult(_DataResult):
             # For single-date requests MultStnData returns the single record
             # for each site as a 1D list instead of a 2D list, i.e. no time
             # dimension. (StnData returns a 2D list no matter what.)
-            #
-            # self.data[uid] = site["data"]  # preferred
-            data2d = len(self._dates) > 1
-            self.data[uid] = site["data"] if data2d else [site["data"]] 
-            # END WORKAROUND
+            if len(self._dates) == 1:  # 1D result
+                site["data"] = [site["data"]]
+            self.data[uid] = site["data"]
             try:
                 self.smry[uid]  = site["smry"]
             except KeyError:  # no "smry"

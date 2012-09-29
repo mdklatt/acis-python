@@ -11,7 +11,6 @@ This implementation is based on ACIS Web Services Version 2:
 """
 from .__version__ import __version__
 
-import contextlib
 import json
 import urllib
 import urllib2

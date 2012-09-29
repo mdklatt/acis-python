@@ -51,11 +51,11 @@ def sids_table(sids):
 
 if "numpy" in globals():  # conditional compilation
     def result_array(result):
-            """ Convert a data result to a numpy record array.
+        """ Convert a data result to a numpy record array.
     
-            """
-            # Element names are converted to plain strings because numpy does
-            # not play well with Unicode.
-            elems = [(str(elem), object) for elem in result.elems]
-            dtype = [("uid", int), ("date", str, 10)] + elems
-            return numpy.array([tuple(record) for record in result], dtype)
+        """
+        # Element names are converted to plain strings because numpy does
+        # not play well with Unicode.
+        elems = [(str(elem), object) for elem in result.elems]
+        dtype = [("uid", int), ("date", str, 10)] + elems
+        return numpy.array([tuple(record) for record in result], dtype)
