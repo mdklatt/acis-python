@@ -53,12 +53,12 @@ class _Request(object):
         """ Set the metadata fields for this request.
 
         """
-        self._params["meta"] = list(set(fields))  # no duplicates
+        self._params["meta"] = tuple(set(fields))  # no duplicates
         return
 
         
 class _PlaceTimeRequest(_Request):
-    """ Abstract base class for requests for spatiotemporal data.
+    """ Abstract base class for spatiotemporal data reuests.
 
     """        
     def location(self, **options):
@@ -247,4 +247,3 @@ class GeneralRequest(_Request):
         """
         super(GeneralRequest, self).metadata("id", *fields)
         return
-        
