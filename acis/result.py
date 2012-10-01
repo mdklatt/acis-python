@@ -118,10 +118,7 @@ class _DataResult(_JsonResult):
         records.
 
         """
-        count = 0
-        for uid in self.data:
-            count += len(self.data[uid])
-        return count
+        return sum(map(len, self.data.values())) 
 
     def __iter__(self):
         """ Iterate over all data records.
