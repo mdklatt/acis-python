@@ -39,7 +39,7 @@ class SidsTableFunctionTest(unittest.TestCase):
         with self.assertRaises(ValueError) as context:
             sids_table(sids)
         message = "invalid SID: 13967"
-        self.assertEqual(message, context.exception.message)
+        self.assertEqual(message, str(context.exception))
         return
 
     def test_unknown_type(self):
@@ -50,7 +50,7 @@ class SidsTableFunctionTest(unittest.TestCase):
         with self.assertRaises(ValueError) as context:
             sids_table(sids)
         message = "unknown SID type: 9999"
-        self.assertEqual(message, context.exception.message)
+        self.assertEqual(message, str(context.exception))
         return
 
 

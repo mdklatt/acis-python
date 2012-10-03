@@ -79,7 +79,7 @@ params = {"date": "2012-08-03", "elems": "mint,maxt"}  # oops, no site
 try:
     result = acis_call(params)
 except acis.RequestError as err:
-    print "Oops: {0:s}".format(err.message)
+    print "Oops: {0:s}".format(str(err))
 print "-"*40
 
 
@@ -132,7 +132,7 @@ except TypeError:
 try:
     request.location(id="OKC")  # oops, wrong keyword
 except acis.RequestError as err:
-    print "Oops: {0:s}".format(err.message)
+    print "Oops: {0:s}".format(str(err))
 print "-"*40
 
 

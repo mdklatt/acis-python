@@ -58,7 +58,7 @@ class WebServicesCallTest(unittest.TestCase):
         """
         with self.assertRaises(RequestError) as context:
             self._call({})  # empty parameters
-        self.assertEqual("Need sId", context.exception.message)
+        self.assertEqual("Need sId", str(context.exception))
         return
 
 
