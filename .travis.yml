@@ -28,4 +28,3 @@ script: python test/test_acis.py
 branches:
     only:
         - master
-        - dev-0.1-py26
