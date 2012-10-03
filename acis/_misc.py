@@ -1,11 +1,23 @@
 """ Miscellaneous implementation functions.
 
 """
-import collections
-
 from .date import date_object
 from .date import date_string
 from .error import RequestError
+
+
+def counter(sequence):
+    """ Replacement for collections.Counter for Python <2.7.
+    
+    """
+    counts = {}
+    for item in sequence:
+        try:
+            counts[item] += 1
+        except KeyError:
+            counts[item] = 1
+    return counts
+    
 
 def annotate(sequence):
     """ Annotate duplicate items in a sequence to make them unique.
@@ -18,7 +30,7 @@ def annotate(sequence):
     # while successive duplicates are annotated and the count is decremented. 
     # Reverse the sequence again to restore the orignal order.
     annotated = list(reversed(sequence))
-    for key, count in collections.Counter(annotated).items():
+    for key, count in counter(annotated).items():
         if count == 1:
             continue
         for pos, item in enumerate(annotated):

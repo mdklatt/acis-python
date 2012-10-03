@@ -81,7 +81,7 @@ class StnMetaResult(_JsonResult):
         super(StnMetaResult, self).__init__(query)
         meta = query["result"]["meta"]
         try:
-            self.meta = {site.pop("uid"): site for site in meta}
+            self.meta = dict((site.pop("uid"), site) for site in meta)
         except KeyError:
             raise ResultError("metadata does not contain uid")
         return
