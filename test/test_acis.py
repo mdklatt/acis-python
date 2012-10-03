@@ -3,10 +3,11 @@
 This script runs all tests in this directory.
 
 """
+import _unit
+
 import os
 import sys
 import unittest
-
 
 def main(argv):
     """ Run all tests in this directory.

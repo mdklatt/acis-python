@@ -22,7 +22,7 @@ class TestData(object):
         """        
         self._data = {}
         root = xml.etree.ElementTree.parse(data_file)
-        for elem in root.iterfind("value"):
+        for elem in root.findall("value"):
             name, dtype = elem.get("name"), elem.get("dtype")
             convert = self._conversions.get(dtype, ast.literal_eval)
             self._data[name] = convert(elem.text.strip())

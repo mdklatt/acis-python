@@ -3,9 +3,11 @@
 The module can be executed on its own or incorporated into a larger test suite.
 
 """
+import _path
+import _unit
+
 import unittest
 
-import _env
 from acis import RequestError
 from acis import ResultError
 

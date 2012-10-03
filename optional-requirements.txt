@@ -4,4 +4,5 @@
 # without them. Dependencies can be installed using pip:
 #     pip install -r optional-requirements.txt 
 
-numpy>=1.6
+numpy>=1.6  # required for result_array()
+unittest2>=0.5  # required for running tests (Python 2.6 only)
