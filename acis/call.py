@@ -68,8 +68,10 @@ class WebServicesCall(object):
 
         """
         HTTP_BAD = 400
+        TIMEOUT = 15  # seconds
+        request = urllib2.Request(self.url, data)
         try:
-            stream = urllib2.urlopen(urllib2.Request(self.url, data))
+            stream = urllib2.urlopen(request, timeout=TIMEOUT)
         except urllib2.HTTPError as err:
             # This doesn't do the right thing for a "soft 404", e.g. an ISP
             # redirects to a custom error or search page for a DNS lookup
