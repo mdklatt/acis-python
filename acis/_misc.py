@@ -43,7 +43,10 @@ def annotate(sequence):
 def elem_aliases(elems):
     """ Return a tuple of element aliases.
     
-    The parameter is the "elems" value from a params object.
+    The parameter is the "elems" value from a params object. The alias will be
+    the element name or "vXnn" for var major nn. Duplicate aliases will have an 
+    index appended to them, e.g. maxt_0, maxt_1, etc.
+    
     """
     try:  # a comma-delimited string?
         aliases = [elem.strip() for elem in elems.split(",")]
