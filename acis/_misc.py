@@ -29,7 +29,7 @@ def annotate(sequence):
     # while successive duplicates are annotated and the count is decremented. 
     # Reverse the sequence again to restore the orignal order.
     annotated = list(reversed(sequence))
-    for key, count in counter(annotated).items():
+    for key, count in counter(annotated).iteritems():
         if count == 1:
             continue
         for pos, item in enumerate(annotated):

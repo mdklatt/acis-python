@@ -113,7 +113,7 @@ class _DataResult(_JsonResult):
         records.
 
         """
-        return sum(map(len, self.data.values())) 
+        return sum(map(len, self.data.itervalues())) 
 
     def __iter__(self):
         """ Iterate over all data records.
@@ -157,7 +157,7 @@ class StnDataResult(_DataResult):
         iterate over each group, not each individual record.
 
         """
-        for uid, data in self.data.items():
+        for uid, data in self.data.iteritems():
             for record in data:
                 yield [uid] + record
         return
@@ -207,7 +207,7 @@ class MultiStnDataResult(_DataResult):
         # site.
         # TODO: Correct dates for "groupby" results, c.f. date_range().
         date_iter = itertools.cycle(self._dates)
-        for uid, data in self.data.items():
+        for uid, data in self.data.iteritems():
             for record in data:
                 yield [uid, date_iter.next()] + record
         return
