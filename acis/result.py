@@ -22,6 +22,7 @@ import itertools
 
 from ._misc import annotate
 from ._misc import date_span
+from ._misc import elem_aliases
 from .date import date_range
 from .error import ResultError
 
@@ -36,7 +37,12 @@ class _JsonResult(object):
         """ Initialize a _JsonResult object.
 
         The query parameter is a dict containing the "params" dict that was
-        sent to the server and the "result" dict that it returned.
+        sent to the server and the "result" dict that it returned. The elems 
+        attribute is a tuple of element aliases for this result. The alias is 
+        normally just the element name or "vXnn" for var major, but if there 
+        are multiple instances of the same element the alias is the name plus 
+        an index number, e.g. maxt_0, maxt_1, etc.
+
 
         """
         # Check for required values.
@@ -52,17 +58,9 @@ class _JsonResult(object):
             
         # Define the elems attribute.
         try:
-            elems = query["params"]["elems"]
+            self.elems = elem_aliases(query["params"]["elems"])
         except KeyError:  # no elems (ok for StnMetaResult)
             self.elems = tuple()
-            return
-        try:  # a comma-delimited string?
-            self.elems = annotate([elem.strip() for elem in elems.split(",")])
-        except AttributeError:  # no split(), not a str
-            try:  # sequence of element objects (dicts)?
-                self.elems = annotate([elem["name"] for elem in elems])
-            except TypeError:  # no string indices, not a dict
-                self.elems = annotate(elems) # a sequence of strings
         return
         
 
@@ -93,11 +91,8 @@ class _DataResult(_JsonResult):
     _DataResult objects have data, meta, and smry attributes corresponding to
     the data, metadata, and summary result in the result object. Each attribute
     is a dict keyed to the ACIS site UID so this field must be included in the
-    result metadata. The elems attribute is a tuple of element aliases for this
-    result. The alias is normally just the element name, but if there are 
-    multiple instances of the same element the alias is the name plus an index 
-    number, e.g. maxt0, maxt1, etc.
-
+    result metadata. 
+    
     """
     def __init__(self, query):
         """ Initialize a _DataResult object.

@@ -1,7 +1,7 @@
 <TestData>
     <description></description>
     <value name="params" dtype="json">
-        {"sids":"okc,okcthr","date":"2011-12-31","elems":"mint,maxt",
+        {"sids":"okc,okcthr","date":"2011-12-31","elems":"mint,2",
          "output":"csv"}
     </value>
     <value name="records" dtype="list">

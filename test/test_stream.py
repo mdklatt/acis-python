@@ -21,7 +21,7 @@ class _StreamTest(unittest.TestCase):
     """ Private base class for testing stream classes.
 
     This class should be excluded from test discovery and execution. Child
-    classes must define the _JSON_FILE and _TEST_CLASS class attributes.
+    classes must define the _DATA and _class class attributes.
 
     """
     @classmethod
@@ -46,10 +46,11 @@ class _StreamTest(unittest.TestCase):
         """
         self.assertSequenceEqual([], self._stream.elems)
         self._stream.add_element("maxt")
-        self._stream.add_element("mint")
-        self.assertSequenceEqual(("maxt","mint"), self._stream.elems)
+        self._stream.add_element(2)
+        self.assertSequenceEqual(("maxt", "vX2"), self._stream.elems)
         self._stream.add_element("maxt")  # duplicates ok
-        self.assertSequenceEqual(("maxt0","mint","maxt1"), self._stream.elems)
+        self.assertSequenceEqual(("maxt_0", "vX2", "maxt_1"), 
+                                                            self._stream.elems)
         self._stream.clear_elements()
         self.assertSequenceEqual([], self._stream.elems)        
         return
@@ -84,7 +85,7 @@ class StnDataStreamTest(_StreamTest):
         self._stream.dates("2011-12-31", "2012-01-01")
         self._stream.location(sid="okc")
         self._stream.add_element("mint")
-        self._stream.add_element("maxt")
+        self._stream.add_element(1)  # maxt
         self.assertSequenceEqual(self._records, list(self._stream))
         self.assertDictEqual(self._meta, self._stream.meta)
         return
@@ -108,7 +109,7 @@ class MultiStnDataStreamTest(_StreamTest):
         self._stream.date("2011-12-31")
         self._stream.location(sids="okc,OKCthr")
         self._stream.add_element("mint")
-        self._stream.add_element("maxt")
+        self._stream.add_element(1)  # maxt
         self.assertSequenceEqual(self._records, list(self._stream))
         self.assertDictEqual(self._meta, self._stream.meta)
         return

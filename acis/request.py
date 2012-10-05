@@ -137,12 +137,18 @@ class _DataRequest(_PlaceTimeRequest):
         self._interval = valid_interval(value)
         return
 
-    def add_element(self, name, **options):
+    def add_element(self, ident, **options):
         """ Add an element to this request.
 
+        If ident is an integer (literal or string) it will be treated as a
+        var major (vX) specifier.
+        
         """
-        elem = dict([("name", name)] + options.items())
-        self._params["elems"].append(elem)
+        try:
+            ident = ("vX", int(ident))
+        except ValueError:  # not an integer
+            ident = ("name", ident)
+        self._params["elems"].append(dict([ident] + options.items()))
         return
 
     def clear_elements(self):

@@ -3,7 +3,7 @@
     <value name="params" dtype="json">
         {"sids":"okc,tul","sdate":"20111231","edate":"20120101",
          "meta":"uid,county,name","elems":[{"name":"mint","smry":"min"},
-         {"name":"maxt","smry":"max"}]}
+         {"vX":1,"smry":"max"}]}
     </value>
     <value name="result" dtype="json">
         {"data":[{"meta":{"county":"40109","uid":92,
@@ -28,5 +28,5 @@
          [14134,"2011-12-31","36","70"],
          [14134,"2012-01-01","34","55"]]
     </value>
-    <value name="elems" dtype="tuple">("mint", "maxt")</value>
+    <value name="elems" dtype="tuple">("mint", "vX1")</value>
 </TestData>

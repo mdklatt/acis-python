@@ -6,19 +6,6 @@ from .date import date_string
 from .error import RequestError
 
 
-def counter(sequence):
-    """ Replacement for collections.Counter for Python <2.7.
-    
-    """
-    counts = {}
-    for item in sequence:
-        try:
-            counts[item] += 1
-        except KeyError:
-            counts[item] = 1
-    return counts
-    
-
 def annotate(sequence):
     """ Annotate duplicate items in a sequence to make them unique.
     
@@ -26,6 +13,18 @@ def annotate(sequence):
     of the sequence is preserved, and it is returned as a tuple.
     
     """
+    def counter(sequence):
+        """ Replacement for collections.Counter for Python <2.7.
+    
+        """
+        counts = {}
+        for item in sequence:
+            try:
+                counts[item] += 1
+            except KeyError:
+                counts[item] = 1
+        return counts
+
     # Reverse the sequence, then the duplicate count acts as a reverse index 
     # while successive duplicates are annotated and the count is decremented. 
     # Reverse the sequence again to restore the orignal order.
@@ -37,9 +36,33 @@ def annotate(sequence):
             if item != key:
                 continue
             count -= 1
-            annotated[pos] = item + "{0:d}".format(count)
+            annotated[pos] = "{0:s}_{1:d}".format(item, count)
     return tuple(reversed(annotated))             
 
+
+def elem_aliases(elems):
+    """ Return a tuple of element aliases.
+    
+    The parameter is the "elems" value from a params object.
+    """
+    try:  # a comma-delimited string?
+        aliases = [elem.strip() for elem in elems.split(",")]
+    except AttributeError:  # no split(), not a str
+        try:  # sequence of element objects (dicts)?
+            aliases = []
+            for elem in elems:
+                # KeyError if elem doesn't contain "name" or "vX".
+                aliases.append(elem.get("name", None) or elem["vX"])
+        except TypeError:  # no string indices, not a dict
+            aliases = annotate(elems) # a sequence of strings
+    for pos, alias in enumerate(aliases):
+        try:
+            aliases[pos] = "vX{0:d}".format(int(alias))
+        except ValueError:  # not an integer
+            pass
+    return annotate(aliases)
+    
+ 
     
 def date_params(sdate, edate=None):
     """ Define the date parameters for a call.

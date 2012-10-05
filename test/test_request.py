@@ -66,7 +66,7 @@ class StnMetaRequestTest(_RequestTest):
         """
         self._request.location(county="40109")
         self._request.dates("1890-01-01", "1907-11-15")
-        self._request.elements("maxt", "mint")
+        self._request.elements(1, "mint")  # 1: maxt
         self._request.metadata("county", "name")  # uid should be automatic
         query = self._request.submit()
         self.assertDictEqual(self._query["result"], query["result"])
@@ -109,7 +109,7 @@ class StnDataRequestTest(_RequestTest):
         self._request.location(sid="okc")
         self._request.dates("2011-12-31", "2012-01-01")
         self._request.add_element("mint", smry="min")
-        self._request.add_element("maxt", smry="max")
+        self._request.add_element(1, smry="max")  # select maxt by vX
         self._request.metadata("county", "name")  # uid should be automatic
         query = self._request.submit()
         self.assertDictEqual(self._query["result"], query["result"])
@@ -161,7 +161,7 @@ class MultiStnDataRequestTest(_RequestTest):
         self._request.location(sids=("okc", "tul"))
         self._request.dates("2011-12-31", "2012-01-01")
         self._request.add_element("mint", smry="min")
-        self._request.add_element("maxt", smry="max")
+        self._request.add_element("1", smry="max")  # select maxt by vX string
         self._request.metadata("county", "name")  # uid should be automatic
         query = self._request.submit()
         self.assertDictEqual(self._query["result"], query["result"])

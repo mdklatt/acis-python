@@ -2,7 +2,7 @@
     <description></description>
     <value name="params" dtype="json">
         {"sid":"okc","sdate":"2011-12-31","edate":"2012-01-01",
-         "elems":"mint,maxt","output":"csv"}
+         "elems":"mint,1","output":"csv"}
      </value>
      <value name="records" dtype="list">
          [["okc","2011-12-31","35","71"], ["okc","2012-01-01","34","50"]]

@@ -18,6 +18,7 @@ import itertools
 
 from ._misc import annotate
 from ._misc import date_params
+from ._misc import elem_aliases
 from ._misc import valid_interval
 from .call import WebServicesCall
 from .error import RequestError
@@ -49,11 +50,12 @@ class _CsvStream(object):
         """ Getter method for the elems attribute.
 
         This is a list of element aliases. The alias is normally just the 
-        element name, but if there are multiple instances of the same element 
-        the alias is the name plus an index number, e.g. maxt0, maxt1, etc. 
+        element name or "vXnn" for var major, but if there are multiple 
+        instances of the same element the alias is the name plus an index 
+        number, e.g. maxt_0, maxt_1, etc. 
 
         """
-        return annotate([elem["name"] for elem in self._params["elems"]])
+        return elem_aliases(self._params["elems"])
 
     def interval(self, value):
         """ Set the interval for this stream.
@@ -64,12 +66,15 @@ class _CsvStream(object):
         self._interval = valid_interval(value)
         return
 
-    def add_element(self, name, **options):
+    def add_element(self, ident, **options):
         """ Add an element to this stream.
 
         """
-        elem = dict([("name", name)] + options.items())
-        self._params["elems"].append(elem)
+        try:
+            ident = ("vX", int(ident))
+        except ValueError:  # not an integer
+            ident = ("name", ident)
+        self._params["elems"].append(dict([ident] + options.items()))
         return
 
     def clear_elements(self):
