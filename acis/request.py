@@ -15,6 +15,7 @@ This implementation is based on ACIS Web Services Version 2:
 from .__version__ import __version__
 
 from ._misc import date_params
+from ._misc import make_element
 from ._misc import valid_interval
 from .call import WebServicesCall
 from .error import RequestError
@@ -144,11 +145,9 @@ class _DataRequest(_PlaceTimeRequest):
         var major (vX) specifier.
         
         """
-        try:
-            ident = ("vX", int(ident))
-        except ValueError:  # not an integer
-            ident = ("name", ident)
-        self._params["elems"].append(dict([ident] + options.items()))
+        elem = make_element(ident)
+        elem.update(options)
+        self._params["elems"].append(elem)
         return
 
     def clear_elements(self):
@@ -165,11 +164,11 @@ class StnMetaRequest(_StnRequest):
     """
     _call = WebServicesCall("StnMeta")
 
-    def elements(self, *names):
+    def elements(self, *idents):
         """ Set the elements for this request.
         
         """
-        self._params["elems"] = names
+        self._params["elems"] = tuple(map(make_element, idents))
         return
         
         

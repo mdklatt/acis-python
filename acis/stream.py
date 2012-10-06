@@ -18,7 +18,7 @@ import itertools
 
 from ._misc import annotate
 from ._misc import date_params
-from ._misc import elem_aliases
+from ._misc import make_element
 from ._misc import valid_interval
 from .call import WebServicesCall
 from .error import RequestError
@@ -50,12 +50,12 @@ class _CsvStream(object):
         """ Getter method for the elems attribute.
 
         This is a list of element aliases. The alias is normally just the 
-        element name or "vXnn" for var major, but if there are multiple 
+        element name or "vxN" for var major N, but if there are multiple 
         instances of the same element the alias is the name plus an index 
         number, e.g. maxt_0, maxt_1, etc. 
 
         """
-        return elem_aliases(self._params["elems"])
+        return annotate([elem["alias"] for elem in self._params["elems"]])
 
     def interval(self, value):
         """ Set the interval for this stream.
@@ -70,11 +70,9 @@ class _CsvStream(object):
         """ Add an element to this stream.
 
         """
-        try:
-            ident = ("vX", int(ident))
-        except ValueError:  # not an integer
-            ident = ("name", ident)
-        self._params["elems"].append(dict([ident] + options.items()))
+        elem = make_element(ident)
+        elem.update(options)
+        self._params["elems"].append(elem)
         return
 
     def clear_elements(self):
@@ -137,7 +135,7 @@ class StnDataStream(_CsvStream):
     _call = WebServicesCall("StnData")
 
     def location(self, **options):
-        """ Set the location optoins for this request.
+        """ Set the location options for this request.
 
         StnData only accepts a single "uid" or "sid" parameter.
 

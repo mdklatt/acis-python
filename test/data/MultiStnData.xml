@@ -28,5 +28,5 @@
          [14134,"2011-12-31","36","70"],
          [14134,"2012-01-01","34","55"]]
     </value>
-    <value name="elems" dtype="tuple">("mint", "vX1")</value>
+    <value name="elems" dtype="tuple">("mint", "vx1")</value>
 </TestData>

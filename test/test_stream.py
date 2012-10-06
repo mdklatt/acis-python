@@ -47,9 +47,9 @@ class _StreamTest(unittest.TestCase):
         self.assertSequenceEqual([], self._stream.elems)
         self._stream.add_element("maxt")
         self._stream.add_element(2)
-        self.assertSequenceEqual(("maxt", "vX2"), self._stream.elems)
+        self.assertSequenceEqual(("maxt", "vx2"), self._stream.elems)
         self._stream.add_element("maxt")  # duplicates ok
-        self.assertSequenceEqual(("maxt_0", "vX2", "maxt_1"), 
+        self.assertSequenceEqual(("maxt_0", "vx2", "maxt_1"), 
                                                             self._stream.elems)
         self._stream.clear_elements()
         self.assertSequenceEqual([], self._stream.elems)        

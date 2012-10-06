@@ -22,7 +22,7 @@ import itertools
 
 from ._misc import annotate
 from ._misc import date_span
-from ._misc import elem_aliases
+from ._misc import make_element
 from .date import date_range
 from .error import ResultError
 
@@ -58,9 +58,11 @@ class _JsonResult(object):
             
         # Define the elems attribute.
         try:
-            self.elems = elem_aliases(query["params"]["elems"])
+            elems = map(make_element, query["params"]["elems"])
         except KeyError:  # no elems (ok for StnMetaResult)
             self.elems = tuple()
+        else:
+            self.elems = annotate([elem["alias"] for elem in elems])
         return
         
 

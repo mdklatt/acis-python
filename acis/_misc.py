@@ -40,33 +40,32 @@ def annotate(sequence):
     return tuple(reversed(annotated))             
 
 
-def elem_aliases(elems):
-    """ Return a tuple of element aliases.
+def make_element(elem):
+    """ Construct an element object.
     
-    The parameter is the "elems" value from a params object. The alias will be
-    the element name or "vXnn" for var major nn. Duplicate aliases will have an 
-    index appended to them, e.g. maxt_0, maxt_1, etc.
+    The elem parameter can a be an element name, a var major (vX) code, or a
+    a dict. An element can have a user-specified alias assigned to the "alias"
+    key if elem is a dict. Otherwise, the alias will be the element name or
+    or for var major code N.
     
     """
-    try:  # a comma-delimited string?
-        aliases = [elem.strip() for elem in elems.split(",")]
-    except AttributeError:  # no split(), not a str
-        try:  # sequence of element objects (dicts)?
-            aliases = []
-            for elem in elems:
-                # KeyError if elem doesn't contain "name" or "vX".
-                aliases.append(elem.get("name", None) or elem["vX"])
-        except TypeError:  # no string indices, not a dict
-            aliases = annotate(elems) # a sequence of strings
-    for pos, alias in enumerate(aliases):
+    # This alias option is not supported by ACIS, but unknown options are
+    # ignored by the server, so an element object can store arbitrary data.
+    try:
+        assert set(elem.iterkeys()) & set(("name", "vX"))
+    except AttributeError:  # no iterkeys, string or int?
         try:
-            aliases[pos] = "vX{0:d}".format(int(alias))
+            elem = {"vX": int(elem)}
         except ValueError:  # not an integer
-            pass
-    return annotate(aliases)
-    
+            elem = {"name": elem.lower()}
+    if "alias" not in elem:
+        try:
+            elem["alias"] = elem["name"]
+        except KeyError:
+            elem["alias"] = "vx{0:d}".format(elem["vX"])
+    return elem 
+         
  
-    
 def date_params(sdate, edate=None):
     """ Define the date parameters for a call.
 
