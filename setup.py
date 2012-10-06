@@ -18,7 +18,7 @@ def main():
         "requires":     ("dateutil",),
         "author":       "Michael Klatt",
         "author_email": "mdklatt@ou.edu",
-	    "url":          "https://github.com/mdklatt/acis-python",
+        "url":          "https://github.com/mdklatt/acis-python",
     }
     distutils.core.setup(**dist)
     return 0
