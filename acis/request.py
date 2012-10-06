@@ -184,7 +184,7 @@ class StnDataRequest(_StnRequest, _DataRequest):
         StnData only accepts a single "uid" or "sid" parameter.
 
         """
-        if not set(options.iterkeys()) < {"uid", "sid"}:
+        if not set(options.iterkeys()) < set(("uid", "sid")):
             raise RequestError("StnData requires uid or sid")
         super(StnDataRequest, self).location(**options)
         return
