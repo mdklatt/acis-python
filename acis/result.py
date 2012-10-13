@@ -148,7 +148,7 @@ class StnDataResult(_DataResult):
         except KeyError:
             raise ResultError("metadata does not contain uid")
         self.meta[uid] = result["meta"]
-        self.data[uid] = result["data"]
+        self.data[uid] = result.get("data", [])
         self.smry[uid] = result.get("smry", [])
         return
 
@@ -185,12 +185,12 @@ class MultiStnDataResult(_DataResult):
             # for each site as a 1D list instead of a 2D list, i.e. no time
             # dimension. (StnData returns a 2D list no matter what.)
             if len(self._dates) == 1:  # 1D result
-                site["data"] = [site["data"]]
-            self.data[uid] = site["data"]
-            try:
-                self.smry[uid]  = site["smry"]
-            except KeyError:  # no "smry"
-                continue
+                try:
+                    site["data"] = [site["data"]]
+                except KeyError:
+                    pass
+            self.data[uid] = site.get("data", [])
+            self.smry[uid] = site.get("smry", [])
         return
 
     def __iter__(self):

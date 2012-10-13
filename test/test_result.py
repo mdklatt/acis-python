@@ -173,6 +173,17 @@ class StnDataResultTest(_DataResultTest):
         self.assertRaises(ResultError, self._class, self._query)
         return
 
+    def test_smry_only(self):
+        """ Test a smry_only result.
+
+        """
+        del self._query["result"]["data"]
+        result = self._class(self._query)
+        self.assertDictEqual(self._smry, result.smry)
+        for record in result:  
+            self.assertTrue(False)  # data should be empty
+        return
+
 
 class MultiStnDataResultTest(_DataResultTest):
     """ Unit testing for the MultiStnDataResultTest class.
@@ -214,6 +225,18 @@ class MultiStnDataResultTest(_DataResultTest):
         """
         self._query["result"]["data"][0]["meta"].pop("uid")
         self.assertRaises(ResultError, self._class, self._query)
+        return
+
+    def test_smry_only(self):
+        """ Test a smry_only result.
+
+        """
+        for site in self._query["result"]["data"]:    
+            del site["data"]
+        result = self._class(self._query)
+        self.assertDictEqual(self._smry, result.smry)
+        for record in result:  
+            self.assertTrue(False)  # data should be empty
         return
 
 
