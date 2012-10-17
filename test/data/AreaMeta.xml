@@ -1,0 +1,22 @@
+<TestData>
+	<description></description>
+    <value name="area" dtype="str">"cwa"</value>
+	<value name="params" dtype="json">{"state":"ok","meta":"id,name"}</value>
+    <value name="result" dtype="json">
+        {"meta":[{"id":"AMA","name":"Amarillo, TX"},
+        {"id":"DDC","name":"Dodge City,KS"},
+        {"id":"FWD","name":"Dallas/Fort Worth, TX"},
+        {"id":"ICT","name":"Wichita,KS"},
+        {"id":"OUN","name":"Norman/Oklahoma City, OK"},
+        {"id":"SHV","name":"Shreveport, LA"},{"id":"TSA","name":"Tulsa, OK"}]}
+    </value>
+    <value name="meta" dtype="dict">
+        {"AMA": {"name": "Amarillo, TX"},
+         "DDC": {"name": "Dodge City,KS"},
+         "FWD": {"name": "Dallas/Fort Worth, TX"},
+         "ICT": {"name": "Wichita,KS"},
+         "OUN": {"name": "Norman/Oklahoma City, OK"},
+         "SHV": {"name": "Shreveport, LA"},
+         "TSA": {"name": "Tulsa, OK"}}
+    </value>
+</TestData>

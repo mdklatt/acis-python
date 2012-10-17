@@ -14,6 +14,7 @@ from acis import RequestError
 from acis import StnMetaRequest
 from acis import StnDataRequest
 from acis import MultiStnDataRequest
+from acis import AreaMetaRequest
 
 # Define the TestCase classes for this module. Each public component of the
 # module being tested has its own TestCase.
@@ -28,7 +29,7 @@ class _RequestTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         raise NotImplementedError
-        
+
     def setUp(self):
         """ Set up the test fixture.
 
@@ -48,18 +49,18 @@ class StnMetaRequestTest(_RequestTest):
 
     """
     _class = StnMetaRequest
-    
+
     @classmethod
     def setUpClass(cls):
         """ Initialize the StnMetaRequestTest class.
-        
+
         This is called before any tests are run. This is part of the unittest
         API.
-        
+
         """
         cls._DATA = TestData("data/StnMeta.xml")
         return
-        
+
     def test_submit(self):
         """ Test the submit method for a normal request.
 
@@ -78,21 +79,21 @@ class StnDataRequestTest(_RequestTest):
 
     """
     _class = StnDataRequest
-    
+
     @classmethod
     def setUpClass(cls):
         """ Initialize the StnDataRequestTest class.
-        
+
         This is called before any tests are run. This is part of the unittest
         API.
-        
+
         """
         cls._DATA = TestData("data/StnData.xml")
         return
 
     def test_interval(self):
         """ Test the interval method.
-        
+
         """
         self._request.interval("dly")
         self._request.interval("mly")
@@ -101,7 +102,7 @@ class StnDataRequestTest(_RequestTest):
         self._request.interval([1, 0, 0])
         self.assertTrue(True)  # no execptions
         return
-        
+
     def test_submit(self):
         """ Test the submit method.
 
@@ -121,18 +122,18 @@ class MultiStnDataRequestTest(_RequestTest):
 
     """
     _class = MultiStnDataRequest
-    
+
     @classmethod
     def setUpClass(cls):
         """ Initialize the MultiStnDataRequestTest class.
-        
+
         This is called before any tests are run. This is part of the unittest
         API.
-        
+
         """
         cls._DATA = TestData("data/MultiStnData.xml")
         return
-        
+
     def test_single_date(self):
         """ Test for a single date.
 
@@ -144,7 +145,7 @@ class MultiStnDataRequestTest(_RequestTest):
 
     def test_interval(self):
         """ Test the interval method.
-        
+
         """
         self._request.interval("dly")
         self._request.interval("mly")
@@ -168,10 +169,52 @@ class MultiStnDataRequestTest(_RequestTest):
         return
 
 
+class AreaMetaRequestTest(_RequestTest):
+    """ Unit testing for the AreaMetaRequest class.
+
+    """
+    _class = AreaMetaRequest
+
+    @classmethod
+    def setUpClass(cls):
+        """ Initialize the MultiStnDataRequestTest class.
+
+        This is called before any tests are run. This is part of the unittest
+        API.
+
+        """
+        cls._DATA = TestData("data/AreaMeta.xml")
+        return
+
+    def setUp(self):
+        """ Set up the test fixture.
+
+        This is called before each test is run so that they are isolated from
+        any side effects. This is part of the unittest API.
+
+        """
+        params = self._DATA.params
+        result = self._DATA.result
+        self._query = {"params": params, "result": result}
+        self._request = self._class(self._DATA.area)
+        return
+
+    def test_submit(self):
+        """ Test the submit method for a normal request.
+
+        """
+        self._request.state("OK")
+        self._request.metadata("name")
+        query = self._request.submit()
+        self.assertDictEqual(self._query["result"], query["result"])
+        return
+
+
 # Specify the test cases to run for this module. Private bases classes need
 # to be explicitly excluded from automatic discovery.
 
-_TEST_CASES = (StnMetaRequestTest, StnDataRequestTest, MultiStnDataRequestTest)
+_TEST_CASES = (StnMetaRequestTest, StnDataRequestTest, MultiStnDataRequestTest,
+               AreaMetaRequestTest)
 
 def load_tests(loader, tests, pattern):
     """ Define a TestSuite for this module.

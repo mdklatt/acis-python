@@ -26,7 +26,8 @@ from ._misc import make_element
 from .date import date_range
 from .error import ResultError
 
-__all__ = ("StnMetaResult", "StnDataResult", "MultiStnDataResult")
+__all__ = ("StnMetaResult", "StnDataResult", "MultiStnDataResult",
+           "AreaMetaResult")
 
 
 class _JsonResult(object):
@@ -37,10 +38,10 @@ class _JsonResult(object):
         """ Initialize a _JsonResult object.
 
         The query parameter is a dict containing the "params" dict that was
-        sent to the server and the "result" dict that it returned. The elems 
-        attribute is a tuple of element aliases for this result. The alias is 
-        normally just the element name or "vXnn" for var major, but if there 
-        are multiple instances of the same element the alias is the name plus 
+        sent to the server and the "result" dict that it returned. The elems
+        attribute is a tuple of element aliases for this result. The alias is
+        normally just the element name or "vXnn" for var major, but if there
+        are multiple instances of the same element the alias is the name plus
         an index number, e.g. maxt_0, maxt_1, etc.
 
 
@@ -55,7 +56,7 @@ class _JsonResult(object):
             raise ResultError(result["error"])
         except KeyError:  # no error
             pass
-            
+
         # Define the elems attribute.
         try:
             elems = map(make_element, query["params"]["elems"])
@@ -64,7 +65,7 @@ class _JsonResult(object):
         else:
             self.elems = annotate([elem["alias"] for elem in elems])
         return
-        
+
 
 
 class StnMetaResult(_JsonResult):
@@ -93,8 +94,8 @@ class _DataResult(_JsonResult):
     _DataResult objects have data, meta, and smry attributes corresponding to
     the data, metadata, and summary result in the result object. Each attribute
     is a dict keyed to the ACIS site UID so this field must be included in the
-    result metadata. 
-    
+    result metadata.
+
     """
     def __init__(self, query):
         """ Initialize a _DataResult object.
@@ -115,7 +116,7 @@ class _DataResult(_JsonResult):
         records.
 
         """
-        return sum(map(len, self.data.itervalues())) 
+        return sum(map(len, self.data.itervalues()))
 
     def __iter__(self):
         """ Iterate over all data records.
@@ -155,7 +156,7 @@ class StnDataResult(_DataResult):
     def __iter__(self):
         """ Iterate over all data records.
 
-        Records are in chronological order. For a "groupby" result this will 
+        Records are in chronological order. For a "groupby" result this will
         iterate over each group, not each individual record.
 
         """
@@ -204,7 +205,7 @@ class MultiStnDataResult(_DataResult):
         BE CORRECT.
 
         """
-        # The number of records for every site is equal to the number of dates, 
+        # The number of records for every site is equal to the number of dates,
         # so date_iter will automatically reset when advancing to the next
         # site.
         # TODO: Correct dates for "groupby" results, c.f. date_range().
@@ -212,4 +213,23 @@ class MultiStnDataResult(_DataResult):
         for uid, data in self.data.iteritems():
             for record in data:
                 yield [uid, date_iter.next()] + record
+        return
+
+
+class AreaMetaResult(_JsonResult):
+    """ A result from a General area metdata call.
+
+    This is only for results of an area General call, e.g. basin, county, etc.
+
+    """
+    def __init__(self, query):
+        """ Initialize an AreaMetaResult object
+
+        """
+        super(AreaMetaResult, self).__init__(query)
+        meta = query["result"]["meta"]
+        try:
+            self.meta = dict((area.pop("id"), area) for area in meta)
+        except KeyError:
+            raise ResultError("metadata does not contain id")
         return

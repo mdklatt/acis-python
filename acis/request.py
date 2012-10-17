@@ -21,21 +21,22 @@ from .call import WebServicesCall
 from .error import RequestError
 
 
-__all__ = ("StnMetaRequest", "StnDataRequest", "MultiStnDataRequest")
+__all__ = ("StnMetaRequest", "StnDataRequest", "MultiStnDataRequest",
+           "AreaMetaRequest")
 
 
 class _Request(object):
-    """ Abstract base class for all request objects. 
-    
+    """ Abstract base class for all request objects.
+
     """
     # Child classes must define this as an appropriate WebServicesCall (or
     # equivalent). It can be either a class or object attribute/method as
     # needed.
     _call = None
-        
+
     def __init__(self):
         """ Initialize a _Request object.
-        
+
         """
         self._params = {}
         return
@@ -57,11 +58,11 @@ class _Request(object):
         self._params["meta"] = tuple(set(fields))  # no duplicates
         return
 
-        
+
 class _PlaceTimeRequest(_Request):
     """ Abstract base class for spatiotemporal data reuests.
 
-    """        
+    """
     def location(self, **options):
         """ Define the location options for this request.
 
@@ -86,10 +87,10 @@ class _PlaceTimeRequest(_Request):
 
 class _StnRequest(_PlaceTimeRequest):
     """ Abstract base class for station (meta)data requests.
-    
+
     For compatibility with Result classes the "uid" metadata field is part of
     every request (see result.py).
-    
+
     """
     def __init__(self):
         """ Initialize a _SiteRequest object.
@@ -98,10 +99,10 @@ class _StnRequest(_PlaceTimeRequest):
         super(_StnRequest, self).__init__()
         self._params["meta"] = ["uid"]
         return
-    
+
     def metadata(self, *fields):
         """ Set the metadata fields for this request.
-        
+
         """
         super(_StnRequest, self).metadata("uid", *fields)
         return
@@ -113,7 +114,7 @@ class _DataRequest(_PlaceTimeRequest):
     """
     def __init__(self):
         """ Initialize a _DataRequest object.
-        
+
         """
         super(_DataRequest, self).__init__()
         self._params["elems"] = []
@@ -133,7 +134,7 @@ class _DataRequest(_PlaceTimeRequest):
         """ Set the interval for this request.
 
         The default interval is daily.
-        
+
         """
         self._interval = valid_interval(value)
         return
@@ -143,7 +144,7 @@ class _DataRequest(_PlaceTimeRequest):
 
         If ident is an integer (literal or string) it will be treated as a
         var major (vX) specifier.
-        
+
         """
         elem = make_element(ident)
         elem.update(options)
@@ -166,12 +167,12 @@ class StnMetaRequest(_StnRequest):
 
     def elements(self, *idents):
         """ Set the elements for this request.
-        
+
         """
         self._params["elems"] = tuple(map(make_element, idents))
         return
-        
-        
+
+
 class StnDataRequest(_StnRequest, _DataRequest):
     """ A StnData request.
 
@@ -207,48 +208,51 @@ class MultiStnDataRequest(_StnRequest, _DataRequest):
             raise RequestError("MultiStnData does not accept POR")
         self._params.update(date_params(sdate, edate))
         return
- 
- 
+
+
 # Development versions--not part of public interface. Testing and corresponding
-# Result objects are still needed.      
+# Result objects are still needed.
 
 class GridDataRequest(_DataRequest):
     """ A GridData request.
-        
+
     """
     def grid(self, id):
         """ Set the grid ID for this request.
-        
+
         """
         self._params["grid"] = id
         return
-        
 
-class GeneralRequest(_Request):
-    """ A General request.
-    
+
+class AreaMetaRequest(_Request):
+    """ A General request for area metadata.
+
     """
     def __init__(self, area):
-        """ Initalize a GeneralRequest object.
-        
+        """ Initalize an AreaMetaRequest object.
+
         The "id" metadata field is part of every request.
-        
+
         """
-        super(GeneralRequest, self).__init__()
+        super(AreaMetaRequest, self).__init__()
         self._call = WebServicesCall("General/{0:s}".format(area))
         self._params["meta"] = "id"
         return
-        
-    def state(self, postal):
-        """ Set the state for this request.
-        
-        """    
+
+    def state(self, *postal):
+        """ Set the state(s) for this request.
+
+        """
         self._params["state"] = postal
         return
-        
+
     def metadata(self, *fields):
         """ Set the metadata fields for this request.
-        
+
+        For compatibility with AreaMetaResult the id field is requested by
+        default (see result.py).
+
         """
-        super(GeneralRequest, self).metadata("id", *fields)
+        super(AreaMetaRequest, self).metadata("id", *fields)
         return

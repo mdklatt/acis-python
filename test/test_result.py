@@ -14,6 +14,7 @@ from acis import ResultError
 from acis import StnMetaResult
 from acis import StnDataResult
 from acis import MultiStnDataResult
+from acis import AreaMetaResult
 
 
 # Define the TestCase classes for this module. Each public component of the
@@ -24,18 +25,18 @@ class StnMetaResultTest(unittest.TestCase):
 
     """
     _class = StnMetaResult
-    
+
     @classmethod
     def setUpClass(cls):
         """ Initialize the StnMetaResultTest class.
-        
+
         This is called before any tests are run. This is part of the unittest
         API.
-        
+
         """
         cls._DATA = TestData("data/StnMeta.xml")
-        return    
-   
+        return
+
     def setUp(self):
         """ Set up the test fixture.
 
@@ -68,7 +69,7 @@ class StnMetaResultTest(unittest.TestCase):
         self.assertRaises(ResultError, self._class, self._query)
         return
 
-        
+
 class _DataResultTest(StnMetaResultTest):
     """ Private base class for testing result classes with data.
 
@@ -77,17 +78,17 @@ class _DataResultTest(StnMetaResultTest):
 
     """
     _class = None  # the class under test
-    
+
     @classmethod
     def setUpClass(cls):
         raise NotImplementedError
-            
+
     def test_uid_missing(self):
         """ Test for exception for missing site UID.
 
         """
         raise NotImplementedError
-                
+
     def test_data(self):
         """ Test the data attribute.
 
@@ -130,24 +131,24 @@ class _DataResultTest(StnMetaResultTest):
         self.assertSequenceEqual(self._records, list(result))
         return
 
-         
+
 class StnDataResultTest(_DataResultTest):
     """ Unit testing for the StnDataResult class.
 
     """
     _class = StnDataResult
-    
+
     @classmethod
     def setUpClass(cls):
         """ Initialize the StnDataResultTest class.
-        
+
         This is called before any tests are run. This is part of the unittest
         API.
-        
+
         """
         cls._DATA = TestData("data/StnData.xml")
-        return  
-          
+        return
+
     def setUp(self):
         """ Set up the test fixture.
 
@@ -167,7 +168,7 @@ class StnDataResultTest(_DataResultTest):
 
     def test_uid_missing(self):
         """ Test for exception for missing site UID.
-        
+
         """
         self._query["result"]["meta"].pop("uid")
         self.assertRaises(ResultError, self._class, self._query)
@@ -180,7 +181,7 @@ class StnDataResultTest(_DataResultTest):
         del self._query["result"]["data"]
         result = self._class(self._query)
         self.assertDictEqual(self._smry, result.smry)
-        for record in result:  
+        for record in result:
             self.assertTrue(False)  # data should be empty
         return
 
@@ -190,18 +191,18 @@ class MultiStnDataResultTest(_DataResultTest):
 
     """
     _class = MultiStnDataResult
-    
+
     @classmethod
     def setUpClass(cls):
         """ Initialize the StnMetaResult class.
-        
+
         This is called before any tests are run. This is part of the unittest
         API.
-        
+
         """
         cls._DATA = TestData("data/MultiStnData.xml")
-        return  
-          
+        return
+
     def setUp(self):
         """ Set up the test fixture.
 
@@ -221,7 +222,7 @@ class MultiStnDataResultTest(_DataResultTest):
 
     def test_uid_missing(self):
         """ Test for exception for missing site UID.
-        
+
         """
         self._query["result"]["data"][0]["meta"].pop("uid")
         self.assertRaises(ResultError, self._class, self._query)
@@ -231,19 +232,70 @@ class MultiStnDataResultTest(_DataResultTest):
         """ Test a smry_only result.
 
         """
-        for site in self._query["result"]["data"]:    
+        for site in self._query["result"]["data"]:
             del site["data"]
         result = self._class(self._query)
         self.assertDictEqual(self._smry, result.smry)
-        for record in result:  
+        for record in result:
             self.assertTrue(False)  # data should be empty
+        return
+
+
+class AreaMetaResultTest(unittest.TestCase):
+    """ Unit testing for the AreaMetaResult class.
+
+    """
+    _class = AreaMetaResult
+
+    @classmethod
+    def setUpClass(cls):
+        """ Initialize the AreaMetaResultTest class.
+
+        This is called before any tests are run. This is part of the unittest
+        API.
+
+        """
+        cls._DATA = TestData("data/AreaMeta.xml")
+        return
+
+    def setUp(self):
+        """ Set up the test fixture.
+
+        This is called before each test is run so that they are isolated from
+        any side effects. This is part of the unittest API.
+
+        """
+        params = self._DATA.params
+        result = self._DATA.result
+        self._query = {"params": params, "result": result}
+        self._meta = AreaMetaResultTest._DATA.meta
+        return
+
+    def test_meta(self):
+        """ Test the meta attribute.
+
+        Metadata should be stored grouped by site and stored as a dict keyed
+        to the area ID.
+
+        """
+        result = self._class(self._query)
+        self.assertDictEqual(self._meta, result.meta)
+        return
+
+    def test_id_missing(self):
+        """ Test for exception for missing site UID.
+
+        """
+        self._query["result"]["meta"][0].pop("id")
+        self.assertRaises(ResultError, self._class, self._query)
         return
 
 
 # Specify the test cases to run for this module. Abstract bases classes need
 # to be explicitly excluded from automatic discovery.
 
-_TEST_CASES = (StnMetaResultTest, StnDataResultTest, MultiStnDataResultTest)
+_TEST_CASES = (StnMetaResultTest, StnDataResultTest, MultiStnDataResultTest,
+               AreaMetaResultTest)
 
 def load_tests(loader, tests, pattern):
     """ Define a TestSuite for this module.
