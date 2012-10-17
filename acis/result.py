@@ -27,7 +27,7 @@ from .date import date_range
 from .error import ResultError
 
 __all__ = ("StnMetaResult", "StnDataResult", "MultiStnDataResult",
-           "AreaMetaResult")
+           "GridDataResult", "AreaMetaResult")
 
 
 class _JsonResult(object):
@@ -213,6 +213,46 @@ class MultiStnDataResult(_DataResult):
         for uid, data in self.data.iteritems():
             for record in data:
                 yield [uid, date_iter.next()] + record
+        return
+
+
+class GridDataResult(_JsonResult):
+    """ A result from a GridData call.
+
+    """
+    def __init__(self, query):
+        """ Initialize a GridDataResult object.
+
+        """
+        super(GridDataResult, self).__init__(query)
+        result = query["result"]
+        self.meta = result.get("meta", [])
+        self.data = result.get("data", [])
+        self.smry = result.get("smry", [])
+        try:
+            raster = self.data[0][1]
+        except IndexError:  # data is empty
+            self.shape = (0, 0)
+            return
+        self.shape = (len(raster), len(raster[0]))  # raster < 2x2?
+        return
+
+    def __len__(self):
+        """ Return the number of data records in this result.
+
+        """
+        nx, ny = self.shape
+        return nx * ny * len(self.data)
+
+
+    def __iter__(self):
+        """ Iterate over all data records.
+
+        """
+        nx, ny = self.shape
+        for t, j, i in itertools.product(self.data, range(nx), range(ny)):
+            date = t[0]
+            yield [(j, i), date] + [elem[j][i] for elem in t[1:]]
         return
 
 

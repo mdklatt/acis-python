@@ -22,7 +22,7 @@ from .error import RequestError
 
 
 __all__ = ("StnMetaRequest", "StnDataRequest", "MultiStnDataRequest",
-           "AreaMetaRequest")
+           "GridDataRequest", "AreaMetaRequest")
 
 
 class _Request(object):
@@ -210,18 +210,29 @@ class MultiStnDataRequest(_StnRequest, _DataRequest):
         return
 
 
-# Development versions--not part of public interface. Testing and corresponding
-# Result objects are still needed.
-
 class GridDataRequest(_DataRequest):
     """ A GridData request.
 
     """
+    _call = WebServicesCall("GridData")
+
     def grid(self, id):
         """ Set the grid ID for this request.
 
         """
         self._params["grid"] = id
+        return
+
+    def dates(self, sdate, edate=None):
+        """ Set the date range (inclusive) for this request.
+
+        GridData does not accept period-of-record ("por").
+
+        """
+        if (sdate.lower() == "por" or (edate is not None and
+                                                      edate.lower() == "por")):
+            raise RequestError("GridData does not accept POR")
+        self._params.update(date_params(sdate, edate))
         return
 
 

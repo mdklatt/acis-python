@@ -14,6 +14,7 @@ from acis import ResultError
 from acis import StnMetaResult
 from acis import StnDataResult
 from acis import MultiStnDataResult
+from acis import GridDataResult
 from acis import AreaMetaResult
 
 
@@ -241,6 +242,114 @@ class MultiStnDataResultTest(_DataResultTest):
         return
 
 
+class GridDataResultTest(unittest.TestCase):
+    """ Unit testing for the GridDataResult class.
+
+    """
+    _class = GridDataResult
+
+    @classmethod
+    def setUpClass(cls):
+        """ Initialize the GridDataResultTest class.
+
+        This is called before any tests are run. This is part of the unittest
+        API.
+
+        """
+        cls._DATA = TestData("data/GridData.xml")
+        return
+
+    def setUp(self):
+        """ Set up the test fixture.
+
+        This is called before each test is run so that they are isolated from
+        any side effects. This is part of the unittest API.
+
+        """
+        params = self._DATA.params
+        result = self._DATA.result
+        self._query = {"params": params, "result": result}
+        self._meta = self._DATA.meta
+        self._data = self._DATA.data
+        self._smry = self._DATA.smry
+        self._records = self._DATA.records
+        self._elems = self._DATA.elems
+        self._shape = self._DATA.shape
+        return
+
+    def test_meta(self):
+        """ Test the meta attribute.
+
+        Metadata should be stored grouped by site and stored as a dict keyed
+        to the site UID.
+
+        """
+        result = self._class(self._query)
+        self.assertSequenceEqual(self._meta, result.meta)
+        return
+
+    def test_data(self):
+        """ Test the data attribute.
+
+        """
+        result = self._class(self._query)
+        self.assertSequenceEqual(self._data, result.data)
+        return
+
+    def test_smry(self):
+        """ Test the smry attribute.
+
+        """
+        result = self._class(self._query)
+        self.assertSequenceEqual(self._smry, result.smry)
+        return
+
+    def test_smry_only(self):
+        """ Test a smry_only result.
+
+        """
+        del self._query["result"]["data"]
+        result = self._class(self._query)
+        self.assertSequenceEqual(self._smry, result.smry)
+        for record in result:
+            self.assertTrue(False)  # data should be empty
+        return
+
+    def test_elems(self):
+        """ Test the elems attribute.
+
+        """
+        result = self._class(self._query)
+        self.assertSequenceEqual(self._elems, result.elems)
+        return
+
+    def test_shape(self):
+        """ Test the shape attribute.
+
+        """
+        result = self._class(self._query)
+        self.assertSequenceEqual(self._shape, result.shape)
+
+    def test_len(self):
+        """ Test the __len__ method.
+
+        """
+        result = self._class(self._query)
+        self.assertEqual(len(self._records), len(result))
+        return
+
+    def test_iter(self):
+        """ Test the __iter__ method.
+
+        """
+        # Iteration is tested twice to check for idempotentcy.
+        result = self._class(self._query)
+        self.assertSequenceEqual(self._records, list(result))
+        self.assertSequenceEqual(self._records, list(result))
+        return
+
+
+
 class AreaMetaResultTest(unittest.TestCase):
     """ Unit testing for the AreaMetaResult class.
 
@@ -295,7 +404,7 @@ class AreaMetaResultTest(unittest.TestCase):
 # to be explicitly excluded from automatic discovery.
 
 _TEST_CASES = (StnMetaResultTest, StnDataResultTest, MultiStnDataResultTest,
-               AreaMetaResultTest)
+               GridDataResultTest, AreaMetaResultTest)
 
 def load_tests(loader, tests, pattern):
     """ Define a TestSuite for this module.

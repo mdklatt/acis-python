@@ -14,6 +14,7 @@ from acis import RequestError
 from acis import StnMetaRequest
 from acis import StnDataRequest
 from acis import MultiStnDataRequest
+from acis import GridDataRequest
 from acis import AreaMetaRequest
 
 # Define the TestCase classes for this module. Each public component of the
@@ -210,11 +211,55 @@ class AreaMetaRequestTest(_RequestTest):
         return
 
 
+class GridDataRequestTest(_RequestTest):
+    """ Unit testing for the GridDataRequest class.
+
+    """
+    _class = GridDataRequest
+
+    @classmethod
+    def setUpClass(cls):
+        """ Initialize the GridDataRequestTest class.
+
+        This is called before any tests are run. This is part of the unittest
+        API.
+
+        """
+        cls._DATA = TestData("data/GridData.xml")
+        return
+
+    def test_interval(self):
+        """ Test the interval method.
+
+        """
+        self._request.interval("dly")
+        self._request.interval("mly")
+        self._request.interval("yly")
+        self._request.interval((0, 1, 0))
+        self._request.interval([1, 0, 0])
+        self.assertTrue(True)  # no execptions
+        return
+
+    def test_submit(self):
+        """ Test the submit method.
+
+        """
+        self._request.location(bbox=(-97.05, 35, -97, 35.05))
+        self._request.grid(1)
+        self._request.dates("2012-01-01", "2012-01-02")
+        self._request.add_element(1, smry="max")  # select maxt by vX
+        self._request.add_element("mint", smry="min")
+        self._request.metadata("ll")
+        query = self._request.submit()
+        self.assertDictEqual(self._query["result"], query["result"])
+        return
+
+
 # Specify the test cases to run for this module. Private bases classes need
 # to be explicitly excluded from automatic discovery.
 
 _TEST_CASES = (StnMetaRequestTest, StnDataRequestTest, MultiStnDataRequestTest,
-               AreaMetaRequestTest)
+               GridDataRequestTest, AreaMetaRequestTest)
 
 def load_tests(loader, tests, pattern):
     """ Define a TestSuite for this module.
