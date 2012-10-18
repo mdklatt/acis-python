@@ -48,7 +48,7 @@ class _Request(object):
         constructor; see result.py).
 
         """
-        return {"params": self.params, "result": self._call(self.params)}
+        return {"params": self._params, "result": self._call(self._params)}
 
     def metadata(self, *fields):
         """ Set the metadata fields for this request.
@@ -127,17 +127,6 @@ class _DataRequest(_PlaceTimeRequest):
         self._interval = "dly"
         return
 
-    @property
-    def params(self):
-        """ Return a fully-constructed params object.
-        
-        """
-        # Make sure each element has the same interval.
-        for elem in self._params["elems"]:
-            elem['interval'] = self._interval
-        return self._params
-        
-
     def interval(self, value):
         """ Set the interval for this request.
 
@@ -145,6 +134,8 @@ class _DataRequest(_PlaceTimeRequest):
 
         """
         self._interval = valid_interval(value)
+        for elem in self._params["elems"]:
+            elem['interval'] = self._interval
         return
 
     def add_element(self, ident, **options):
@@ -155,6 +146,7 @@ class _DataRequest(_PlaceTimeRequest):
 
         """
         elem = make_element(ident)
+        options["interval"] = self._interval
         elem.update(options)
         self._params["elems"].append(elem)
         return
