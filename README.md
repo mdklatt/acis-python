@@ -35,8 +35,8 @@ The library requires a single import:
         
 The [tutorial][3] has examples of how to use the library.
         
-Known Issues
-------------
+Known Issues/Limitations
+------------------------
 * MultiStnDataResult will give the wrong dates when iterating over "groupby" results.
 
 

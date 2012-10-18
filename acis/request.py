@@ -5,8 +5,7 @@ and retrieving the result from the server. There is a class for each type of
 web services call (StnData, MultiStnData, etc).
 
 These classes are designed to be used with their result module counterparts,
-but this is not mandatory. GridData and General calls are not currently
-implemented; use a WebServicesCall instead (see the call module).
+but this is not mandatory. 
 
 This implementation is based on ACIS Web Services Version 2:
     <http://data.rcc-acis.org/doc/>.

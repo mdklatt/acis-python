@@ -4,13 +4,12 @@ The goal of this module is to provide a common interface regardless of the call
 (StnData, MultiStnData, etc.) that generated the result. If the result contains
 metadata they will be stored as a dict keyed by site identifier. If a result
 contains data they will also be stored as a dict keyed to the same identifer
-used for the metadata. Iterating over a StnData or MultiStnData result will
-yield data in the same format.
+used for the metadata. GridData results are similar, but rasters are used 
+instead of dicts.
 
 These classes are designed to used with their request module counterparts, but
 this is not mandatory. A current limitation is the handling of "groupby"
-results; see the class documentation for specifics. GridData and General call
-results are not currently implemented.
+results; see the class documentation for specifics. 
 
 This implementation is based on ACIS Web Services Version 2:
     <http://data.rcc-acis.org/doc/>.
