@@ -231,7 +231,7 @@ class GridDataResult(_JsonResult):
         """
         super(GridDataResult, self).__init__(query)
         result = query["result"]
-        self.meta = result.get("meta", [])
+        self.meta = result.get("meta", {})
         self.data = result.get("data", [])
         self.smry = result.get("smry", [])
         if not self.data:
