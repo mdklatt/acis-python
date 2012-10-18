@@ -219,6 +219,12 @@ class MultiStnDataResult(_DataResult):
 class GridDataResult(_JsonResult):
     """ A result from a GridData call.
 
+    If a "loc" point value was used to make the GridData call the meta, data,
+    and smry attributes will contain scalar values rather than rasters (2D 
+    arrays). In cases where a raster is desired use "bbox" instead to retrieve
+    1x1 arrays:
+        loc(lon, lat) => bbox(lon, lat, lon, lat) 
+    
     """
     def __init__(self, query):
         """ Initialize a GridDataResult object.
@@ -229,12 +235,14 @@ class GridDataResult(_JsonResult):
         self.meta = result.get("meta", [])
         self.data = result.get("data", [])
         self.smry = result.get("smry", [])
-        try:
-            raster = self.data[0][1]
-        except IndexError:  # data is empty
+        if not self.data:
             self.shape = (0, 0)
-            return
-        self.shape = (len(raster), len(raster[0]))  # raster < 2x2?
+        else:
+            elem = self.data[0][1]
+            try:
+                self.shape = (len(elem), len(elem[0]))
+            except TypeError:  # elem is a scalar
+                self.shape = (1, 1)
         return
 
     def __len__(self):
@@ -248,11 +256,20 @@ class GridDataResult(_JsonResult):
     def __iter__(self):
         """ Iterate over all data records.
 
+        Each record is of the form (pos, date, elem1, ...). The pos element is
+        analagous to uid in other Result types and can be used to refer to the
+        corresponding point value in the meta and smry attributes (unless 
+        these are scalar values; see above). 
+        
         """
         nx, ny = self.shape
-        for t, j, i in itertools.product(self.data, range(nx), range(ny)):
-            date = t[0]
-            yield [(j, i), date] + [elem[j][i] for elem in t[1:]]
+        for day, j, i in itertools.product(self.data, range(nx), range(ny)):
+            date = day[0]
+            try:
+                elems = [elem[j][i] for elem in day[1:]]
+            except TypeError:  # scalars
+                elems = day[1:]
+            yield [(j, i), date] + elems
         return
 
 
