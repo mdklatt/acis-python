@@ -48,7 +48,7 @@ class _Request(object):
         constructor; see result.py).
 
         """
-        return {"params": self._params, "result": self._call(self._params)}
+        return {"params": self.params, "result": self._call(self.params)}
 
     def metadata(self, *fields):
         """ Set the metadata fields for this request.
@@ -57,6 +57,13 @@ class _Request(object):
         self._params["meta"] = tuple(set(fields))  # no duplicates
         return
 
+    @property
+    def params(self):
+        """ Read-only access to _params.
+        
+        """
+        return self._params
+        
 
 class _PlaceTimeRequest(_Request):
     """ Abstract base class for spatiotemporal data reuests.
@@ -120,14 +127,16 @@ class _DataRequest(_PlaceTimeRequest):
         self._interval = "dly"
         return
 
-    def submit(self):
-        """ Submit a request to the server.
-
+    @property
+    def params(self):
+        """ Return a fully-constructed params object.
+        
         """
-        # Add interval to each element before submitting request.
+        # Make sure each element has the same interval.
         for elem in self._params["elems"]:
             elem['interval'] = self._interval
-        return super(_DataRequest, self).submit()
+        return self._params
+        
 
     def interval(self, value):
         """ Set the interval for this request.
