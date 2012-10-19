@@ -374,3 +374,61 @@ for record in array:
     print "The high temperature for {0:s} on {1:s} was {2:s}F.".format(
        name, record["date"], record["maxt"])
 print "-"*40
+
+
+"""
+*** Using AreaMetaRequest ***
+
+An AreaMetaRequest will retrieve area (county, river basin, etc.) metadata.
+This example will retrieve all the climate divisions in Oklahoma.
+
+"""
+print "EXAMPLE 13\n"
+request = acis.AreaMetaRequest("climdiv")  # initialize with the area type
+request.location(state="OK")
+request.metadata("name")  # area id is included by default
+result = acis.AreaMetaResult(request.submit())
+print "OKLAHOMA CLIMATE DIVISIONS"
+for id in sorted(result.meta.keys()):
+    print "{0:s} ({1:s})".format(result.meta[id]["name"], id)
+print "-"*40
+
+
+"""
+*** Using a RequestQueue ***
+
+Requests can be executed in parallel on the ACIS server using a RequestQueue.
+This should help performance when the server is the bottleneck. This example
+will find the all-time record high temperature for August for Oklahoma City.
+Each day of the month is a separate request. Normal execution would require
+waiting for each request to be completed by the server before the next one
+is executed. However, by submitting each request simultaneously, the server
+can process each on in parallel.
+
+This is an experimental feature at this point. USE AT YOUR OWN RISK.
+
+"""
+print "EXAMPLE 14\n"
+import acis.queue  # not part of the standard package
+
+request = acis.StnDataRequest()
+request.location(sid="OKC")
+request.metadata("name")
+request.interval((1, 0, 0))
+request.add_element("maxt", duration=1, smry="max", smry_only=1)
+queue = acis.queue.RequestQueue()
+for mday in range(1, 32):
+    sdate = "1890-08-{0:02d}".format(mday)
+    edate = "2012-08-{0:02d}".format(mday)
+    request.dates(sdate, edate)
+    queue.add(request, acis.StnDataResult)
+queue.execute()
+for index, result in enumerate(queue):
+    mday = index + 1
+    for uid, site in result.smry.items():
+        name = result.meta[uid]["name"]
+        maxt = site[0]
+    print "At {0:s} the record high for August {1:d} is {2:s}F.".format(name,
+        mday, maxt)    
+print "-"*40
+
