@@ -59,13 +59,14 @@ class RequestQueue(object):
         self._sockets = {}
         self._queue = []
         self._results = []
-        pass
+        return
         
     def add(self, request, result_type=None):
         """ Add a Request to the queue.
         
         The optional result paramater can be a Result class or anything that
-        accepts a query object as an argument.
+        accepts a query object as an argument; the query dict will be 
+        converted to a result_type object.
         
         """
         url = urlparse.urlparse(request._call.url)
@@ -90,10 +91,10 @@ class RequestQueue(object):
                 # doesn't take the entire queue down, but punt for now. 
                 raise
             query = {"params": params, "result": json_result}
-            if result_type is None:
-                self._results.append(query)
-            else:
-                self._results.append(result_type(query))
+            try:
+                self._results.append(result_type(query))                
+            except TypeError:  # result_type is None
+                self._results.append(query)                
         return
         
     def __iter__(self):
@@ -112,19 +113,19 @@ class RequestQueue(object):
 class _HttpRequest(asyncore.dispatcher):
     """ A single asynchronous HTTP request.
 
-    """
+    """    
     @staticmethod
     def _post(path, data):
         """ Generate a POST request string.
         
         """
-        crlf = "\r\n"
+        CRLF = "\r\n"
         post = ["POST {0:s} HTTP/1.0".format(path)]
         post.append("Content-Type: application/x-www-form-urlencoded")
         post.append("Content-Length: {0:d}".format(len(data)))
         post.append("")
         post.append(data)
-        return crlf.join(post)
+        return CRLF.join(post)
         
     def __init__(self, host, path, data, map):
         """ Initialize an _HttpRequest object.
@@ -145,7 +146,8 @@ class _HttpRequest(asyncore.dispatcher):
         """
         # The reply should consist of a status line, header lines (ignored)
         # followed by a blank line, and then the content.
-        http, code, message = self._buffer.readline().rstrip().split(" ", 2)
+        status = self._buffer.readline().rstrip().split(" ", 2)
+        code, message = status[1:]
         self.status = (int(code), message)
         for header in self._buffer:
             if not header.rstrip():
@@ -197,6 +199,6 @@ class _HttpRequest(asyncore.dispatcher):
     # def handle_error(self):
     #     # Catch exceptions here so a single error doesn't take the whole queue
     #     # down. Or something. Not sure how this works yet.        
-    #     return
+    #     pass
         
 
