@@ -57,6 +57,13 @@ class _Request(object):
         self._params["meta"] = tuple(set(fields))  # no duplicates
         return
 
+    def location(self, **options):
+        """ Set the location options for this request.
+
+        """
+        self._params.update(options)
+        return
+
     @property
     def params(self):
         """ Read-only access to _params.
@@ -69,13 +76,6 @@ class _PlaceTimeRequest(_Request):
     """ Abstract base class for spatiotemporal data reuests.
 
     """
-    def location(self, **options):
-        """ Define the location options for this request.
-
-        """
-        self._params.update(options)
-        return
-
     def dates(self, sdate, edate=None):
         """ Set the date range (inclusive) for this request.
 
@@ -249,13 +249,6 @@ class AreaMetaRequest(_Request):
         super(AreaMetaRequest, self).__init__()
         self._call = WebServicesCall("General/{0:s}".format(area))
         self._params["meta"] = "id"
-        return
-
-    def state(self, *postal):
-        """ Set the state(s) for this request.
-
-        """
-        self._params["state"] = postal
         return
 
     def metadata(self, *fields):

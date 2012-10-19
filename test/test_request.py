@@ -204,7 +204,7 @@ class AreaMetaRequestTest(_RequestTest):
         """ Test the submit method for a normal request.
 
         """
-        self._request.state("OK")
+        self._request.location(state="OK")
         self._request.metadata("name")
         query = self._request.submit()
         self.assertDictEqual(self._query["result"], query["result"])
