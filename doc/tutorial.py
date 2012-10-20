@@ -423,7 +423,7 @@ for mday in range(1, 32):
     request.dates(sdate, edate)
     queue.add(request, acis.StnDataResult)
 queue.execute()
-for index, result in enumerate(queue):
+for index, result in enumerate(queue.results):
     mday = index + 1
     for uid, site in result.smry.items():
         name = result.meta[uid]["name"]

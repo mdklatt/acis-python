@@ -56,9 +56,9 @@ class RequestQueue(object):
         """ Initialize a RequestQueue object.
         
         """
+        self.results = []
         self._sockets = {}
         self._queue = []
-        self._results = []
         return
         
     def add(self, request, result_type=None):
@@ -92,22 +92,10 @@ class RequestQueue(object):
                 raise
             query = {"params": params, "result": json_result}
             try:
-                self._results.append(result_type(query))                
+                self.results.append(result_type(query))                
             except TypeError:  # result_type is None
-                self._results.append(query)                
+                self.results.append(query)                
         return
-        
-    def __iter__(self):
-        """ Iterate over all results in the queue.
-        
-        """
-        return iter(self._results)
-        
-    def __getitem__(self, key):
-        """ Array access to individual results in the queue.
-        
-        """
-        return self._results[key]
         
         
 class _HttpRequest(asyncore.dispatcher):

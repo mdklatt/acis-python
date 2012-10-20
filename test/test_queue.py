@@ -60,7 +60,7 @@ class RequestQueueTest(unittest.TestCase):
         queue.add(self._request)
         queue.add(self._request)
         queue.execute()
-        for item in queue:
+        for item in queue.results:
             self.assertDictEqual(self._query["result"], item["result"])
         return
 
@@ -73,22 +73,11 @@ class RequestQueueTest(unittest.TestCase):
         queue.add(self._request, StnDataResult)
         queue.execute()
         result = StnDataResult(self._query)
-        for item in queue:
+        for item in queue.results:
             self.assertDictEqual(result.meta, item.meta)
             self.assertDictEqual(result.data, item.data)
             self.assertDictEqual(result.smry, item.smry)
         return
-        
-    def test_array(self):
-        """ Test array access.
-        
-        """
-        queue = RequestQueue()
-        queue.add(self._request)
-        queue.add(self._request, StnDataResult)
-        queue.execute()
-        self.assertTrue(isinstance(queue[0], dict))
-        self.assertTrue(isinstance(queue[1], StnDataResult))
 
 
 # Specify the test cases to run for this module. Private bases classes need
