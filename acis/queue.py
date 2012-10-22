@@ -69,7 +69,7 @@ class RequestQueue(object):
         converted to a result_type object.
         
         """
-        url = urlparse.urlparse(request._call.url)
+        url = urlparse.urlparse(request.url)
         data = urllib.urlencode({"params": json.dumps(request.params)})
         http_request = _HttpRequest(url.netloc, url.path, data, self._sockets)
         self._queue.append((http_request, request.params, result_type))
@@ -78,8 +78,9 @@ class RequestQueue(object):
     def execute(self):
         """ Execute all requests in the queue.
         
-        When execution is complete, each element of the queue will contain a
-        query object or the optional result type specified for that request.
+        When execution is complete, each element of the results attribute will 
+        contain a query object or the optional result type specified for that 
+        request.
         
         """
         asyncore.loop(map=self._sockets)  # execute all requests in this queue

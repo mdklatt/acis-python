@@ -66,10 +66,17 @@ class _Request(object):
 
     @property
     def params(self):
-        """ Read-only access to _params.
+        """ The parameters for this request.
         
         """
         return self._params
+
+    @property
+    def url(self):
+        """ The URL for this request.
+        
+        """
+        return self._call.url
         
 
 class _PlaceTimeRequest(_Request):
