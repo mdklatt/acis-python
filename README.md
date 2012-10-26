@@ -1,10 +1,13 @@
 acis-python
-========
+===========
 
 Overview
 --------
+[![build status][11]][12]
+
 The [acis-python][1] library provides tools for [ACIS Web Services][5] client 
 applications. There is also a [PHP version][7].
+
 
 
 Requirements
@@ -19,6 +22,7 @@ Requirements can be installed using `pip`:
     pip install -r requirements.txt
     pip install -r optional-requirements.txt
 
+
 Installation
 ------------
 Place the [acis][2] directory in the Python [module search path][6]. The 
@@ -27,18 +31,26 @@ Place the [acis][2] directory in the Python [module search path][6]. The
 
     python setup.py install --user  # install for the current user
 
+
 Usage
 -----
 The library requires a single import:
 
     import acis
+
+`RequestQueue` is not part of the core library yet and requires a separate 
+import:
+
+	import acis.queue
         
 The [tutorial][3] has examples of how to use the library.
-        
+
+
 Known Issues/Limitations
 ------------------------
-* MultiStnDataResult will give the wrong dates when iterating over "groupby" results.
-
+* `MultiStnDataResult` will give the wrong dates when iterating over "groupby" results.
+* `GridDataResult` cannot be used with image output.
+* `RequestQueue` should be considered experimental.
 
 <!-- REFERENCES -->
 [1]: http://github.com/mdklatt/acis-python "acis-python"
@@ -51,3 +63,5 @@ Known Issues/Limitations
 [8]: http://labix.org/python-dateutil "dateutil"
 [9]: http://numpy.scipy.org "numpy"
 [10]: http://pypi.python.org/pypi/unittest2 "unittest2"
+[11]: https://travis-ci.org/mdklatt/acis-python.png?branch=master "Travis logo"
+[12]: https://travis-ci.org/mdklatt/acis-python "Travis-CI"
