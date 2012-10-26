@@ -1,6 +1,6 @@
 """ Parallel execution of multiple ACIS Requests.
 
-*USE AT YOUR OWN RISK.*  
+* USE AT YOUR OWN RISK. *  
 
 In situations where server-side processing is the bottleneck, application
 performance can be enhanced by executing requests in parallel on the ACIS
@@ -8,9 +8,7 @@ server.
 
 This is _very_ alpha and cannot handle things like server redirects (but ACIS
 isn't doing this...yet). An error with one request will take the whole queue
-down. The way it hooks into Request objects required very little modification 
-of request.py (and those changes were good regardless), but it still seems 
-kludgy. The interface should not be considered stable. 
+down. The interface should not be considered stable. 
 
 """
 import asyncore
@@ -33,8 +31,6 @@ class RequestQueue(object):
         """ Retrieve the JSON result from the reply returned by the server.
         
         """
-        # TODO: This was mostly pulled from call.py so some refactoring is in
-        # order.
         code, message = reply.status
         if code != 200:
             # This doesn't do the right thing for a "soft 404", e.g. an ISP
@@ -57,7 +53,7 @@ class RequestQueue(object):
         
         """
         self.results = []
-        self._sockets = {}
+        self._sockmap = {}
         self._queue = []
         return
         
@@ -71,19 +67,19 @@ class RequestQueue(object):
         """
         url = urlparse.urlparse(request.url)
         data = urllib.urlencode({"params": json.dumps(request.params)})
-        http_request = _HttpRequest(url.netloc, url.path, data, self._sockets)
+        http_request = _HttpRequest(url.netloc, url.path, data, self._sockmap)
         self._queue.append((http_request, request.params, result_type))
         return
         
     def execute(self):
         """ Execute all requests in the queue.
         
-        When execution is complete, each element of the results attribute will 
+        When execution is complete each element of the results attribute will 
         contain a query object or the optional result type specified for that 
         request.
         
         """
-        asyncore.loop(map=self._sockets)  # execute all requests in this queue
+        asyncore.loop(map=self._sockmap)  # execute all requests in this queue
         for http_request, params, result_type in self._queue:
             try:
                 json_result = self._parse(http_request)
@@ -121,7 +117,7 @@ class _HttpRequest(asyncore.dispatcher):
         
         """
         asyncore.dispatcher.__init__(self, map=map)
-        self.status = (-1, "")
+        self.status = None
         self.content = None
         self._buffer = cStringIO.StringIO()
         self._request = self._post(path, data)
@@ -158,7 +154,6 @@ class _HttpRequest(asyncore.dispatcher):
         """
         # There's no guarantee that all of the data will be sent as a single
         # chunk, so repeat until there is nothing left to send.
-        #print self._request
         count = self.send(self._request)
         self._request = self._request[count:]
         return
@@ -173,11 +168,14 @@ class _HttpRequest(asyncore.dispatcher):
         """ Write data from the server to a buffer.
         
         """
+        # The chunk size was chosen arbitrarily so there may be room for some
+        # optimization, but the bottlneck is almost certainly going to be on 
+        # the server not during data transfer.
         self._buffer.write(self.recv(8192))
         return
         
     def handle_close(self):
-        """ The server has closed the connection, so parse the request.
+        """ The server has closed the connection, so parse the reply.
         
         """
         self.close()
