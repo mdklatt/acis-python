@@ -57,18 +57,18 @@ class RequestQueue(object):
         self._queue = []
         return
         
-    def add(self, request, result_type=None):
+    def add(self, request, callback=None):
         """ Add a Request to the queue.
         
-        The optional result paramater can be a Result class or anything that
-        accepts a query object as an argument; the query dict will be 
-        converted to a result_type object.
+        During execution the resulting query object is passed to callback and
+        the return value is stored; if no callback is specified the query
+        object is stored.
         
         """
         url = urlparse.urlparse(request.url)
         data = urllib.urlencode({"params": json.dumps(request.params)})
         http_request = _HttpRequest(url.netloc, url.path, data, self._sockmap)
-        self._queue.append((http_request, request.params, result_type))
+        self._queue.append((http_request, request.params, callback))
         return
         
     def execute(self):
@@ -80,17 +80,17 @@ class RequestQueue(object):
         
         """
         asyncore.loop(map=self._sockmap)  # execute all requests in this queue
-        for http_request, params, result_type in self._queue:
+        for http_request, params, callback in self._queue:
             try:
-                json_result = self._parse(http_request)
+                result = self._parse(http_request)
             except:
                 # Need to do something about exceptions so that a single error
                 # doesn't take the entire queue down, but punt for now. 
                 raise
-            query = {"params": params, "result": json_result}
+            query = {"params": params, "result": result}
             try:
-                self.results.append(result_type(query))                
-            except TypeError:  # result_type is None
+                self.results.append(callback(query))                
+            except TypeError:  # no callback
                 self.results.append(query)                
         return
         
