@@ -52,9 +52,7 @@ class RequestQueue(object):
         """ Initialize a RequestQueue object.
         
         """
-        self.results = []
-        self._sockmap = {}
-        self._queue = []
+        self.clear()
         return
         
     def add(self, request, callback=None):
@@ -92,6 +90,15 @@ class RequestQueue(object):
                 self.results.append(callback(query))                
             except TypeError:  # no callback
                 self.results.append(query)                
+        return
+    
+    def clear(self):
+        """ Clear all requests and results in the queue.
+        
+        """
+        self.results = []
+        self._sockmap = {}
+        self._queue = []
         return
         
         
