@@ -32,10 +32,10 @@ def date_object(date):
     """
     match = _DATE_REGEX.search(date)
     try:
-        yr, mo, da = (int(s) if s is not None else 1 for s in match.groups())
+        y, m, d = (int(s) if s is not None else 1 for s in match.groups())
     except AttributeError:  # match is None
         raise ValueError("invalid date format: {0:s}".format(date))
-    return datetime.date(yr, mo, da)
+    return datetime.date(y, m, d)
 
 
 def date_string(date):
@@ -48,10 +48,10 @@ def date_string(date):
 
     """
     try:
-        yr, mo, da = date.year, date.month, date.day
+        y, m, d = date.year, date.month, date.day
     except AttributeError:
         raise TypeError("need a date object")
-    return "{0:04d}-{1:02d}-{2:02d}".format(yr, mo, da)
+    return "{0:04d}-{1:02d}-{2:02d}".format(y, m, d)
 
 
 def date_delta(interval):
@@ -69,8 +69,8 @@ def date_delta(interval):
         interval = named_deltas[interval.lower()]
     except AttributeError:  # not a str
         pass
-    yr, mo, da = interval
-    return dateutil.relativedelta.relativedelta(years=yr, months=mo, days=da)
+    y, m, d = interval
+    return dateutil.relativedelta.relativedelta(years=y, months=m, days=d)
 
 
 def date_trunc(date, interval):
@@ -81,7 +81,7 @@ def date_trunc(date, interval):
     
     """
     try:
-        yr, mo, da = _DATE_REGEX.search(date).groups()
+        y, m, d = _DATE_REGEX.search(date).groups()
     except AttributeError:  # match is None
         raise ValueError("invalid date string: {0:s}".format(date))
     precision = {"yly": 1, "mly": 2}
@@ -89,11 +89,11 @@ def date_trunc(date, interval):
         prec = precision[interval.lower()]
     except (AttributeError, KeyError):  # not a str or unknown interval
         prec = 3  # daily
-    date = [yr]
+    date = [y]
     if prec >= 2:
-        date.append(mo if mo is not None else "01")
+        date.append(m if m is not None else "01")
     if prec == 3:
-        date.append(da if da is not None else "01")
+        date.append(d if d is not None else "01")
     return "-".join(date)
 
     

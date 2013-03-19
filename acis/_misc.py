@@ -46,7 +46,7 @@ def make_element(elem):
     The elem parameter can a be an element name, a var major (vX) code, or a
     a dict. An element can have a user-specified alias assigned to the "alias"
     key if elem is a dict. Otherwise, the alias will be the element name or
-    or for var major code N.
+    or 'vxN'for var major code N.
     
     """
     # This alias option is not supported by ACIS, but unknown options are
@@ -101,12 +101,12 @@ def valid_interval(value):
     except AttributeError:  # no lower(), not a str
         # Normalize a (y, m, d) sequence of ints.
         try:  
-            yr, mo, da = (int(x) for x in value)
+            y, m, d = (int(x) for x in value)
         except ValueError:  # not ints
             raise RequestError("invalid interval: {0:s}".format(value))
-        mo = 0 if da > 0 else mo
-        yr = 0 if (mo > 0 or da > 0) else yr
-        value = (yr, mo, da)             
+        m = 0 if d > 0 else m
+        y = 0 if (m > 0 or d > 0) else y
+        value = (y, m, d)             
     else:
         if value not in ("dly", "mly", "yly"):
             raise RequestError("invalid interval name: {0:s}".format(value))
@@ -114,22 +114,18 @@ def valid_interval(value):
 
 
 def date_span(params):
-    """
-    Determine the start date, end date, and interval for a call.
+    """ Determine the start date, end date, and interval for a call.
     
     If there is no end date it will None. If there is no interval it will be
     "dly".
     
     """
-    try:
-        sdate = params["sdate"]
-    except KeyError:
-        sdate = params["date"]
-    edate = params.get("edate", None)
+    sdate = params.get("sdate") or params.get("date")
+    edate = params.get("edate")
     try:
         # All elements must have the same interval, so check the first 
         # element for an interval specification.
-        interval = params["elems"][0]["interval"]
-    except (TypeError, KeyError): # not a sequence or no explicit interval
+        interval = params["elems"][0].get("interval", "dly")
+    except TypeError: # not a sequence
         interval = "dly"  # default value is daily
     return sdate, edate, interval
