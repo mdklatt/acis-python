@@ -61,7 +61,7 @@ class RequestQueue(object):
         During execution the resulting query object is passed to callback and
         the return value is stored; if no callback is specified the query
         object is stored.
-        
+                
         """
         url = urlparse.urlparse(request.url)
         data = urllib.urlencode({"params": json.dumps(request.params)})
@@ -129,6 +129,10 @@ class _HttpRequest(asyncore.dispatcher):
         self._buffer = cStringIO.StringIO()
         self._request = self._post(path, data)
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
+        # Connection fails with with a socket.gaierror exception ("nodename nor
+        # servname provided, or not known") for more than 248 open connections;
+        # perhaps the ACIS server fails to respond if there are too many 
+        # connections from one client.
         self.connect((host, 80))
         return
 
@@ -156,11 +160,9 @@ class _HttpRequest(asyncore.dispatcher):
         return len(self._request) > 0
         
     def handle_write(self):
-        """ Send data to the server.
+        """ Send a chunk of data to the server.
         
         """
-        # There's no guarantee that all of the data will be sent as a single
-        # chunk, so repeat until there is nothing left to send.
         count = self.send(self._request)
         self._request = self._request[count:]
         return
@@ -172,12 +174,12 @@ class _HttpRequest(asyncore.dispatcher):
         return True  # retrieve all data from the server
         
     def handle_read(self):
-        """ Write data from the server to a buffer.
+        """ Read a chunk of data from the server.
         
         """
         # The chunk size was chosen arbitrarily so there may be room for some
-        # optimization, but the bottlneck is almost certainly going to be on 
-        # the server not during data transfer.
+        # optimization, but any bottleneck is almost certainly going to be on 
+        # the server, not during data transfer.
         self._buffer.write(self.recv(8192))
         return
         
