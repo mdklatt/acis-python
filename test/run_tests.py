@@ -1,13 +1,10 @@
-""" Master test script for the acis package.
-
-This script runs all tests in this directory.
+""" Master test script.
 
 """
-import _unit
-
-import os
+import os.path
 import sys
-import unittest
+
+import _unittest as unittest
 
 def main(argv):
     """ Run all tests in this directory.

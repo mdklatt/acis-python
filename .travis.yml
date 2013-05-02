@@ -20,7 +20,7 @@ install:
 
 # Test script
 
-script: python test/test_acis.py
+script: python test/run_tests.py
 
 
 # Branch restrictions
