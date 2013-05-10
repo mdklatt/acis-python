@@ -1,13 +1,12 @@
 """ Set up the test path.
 
-The working directory is changed to the test directory, and the module search
-path is modified so that the local version of the library is imported.
+The module search path is modified so that the local version of the library is 
+imported.
 
 """
-import os.path
-import sys
+from os.path import join
+from os.path import dirname
+from sys import path
 
-_TEST_PATH = os.path.dirname(__file__)
-_ROOT_PATH = os.path.join(os.path.dirname(__file__), "..")
-os.chdir(_TEST_PATH)
-sys.path.insert(0, _ROOT_PATH)
+_ROOT_PATH = join(dirname(__file__), "..")
+path.insert(0, _ROOT_PATH)

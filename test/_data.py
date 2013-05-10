@@ -1,7 +1,10 @@
-import ast
-import copy
-import json
-import xml.etree.ElementTree
+from ast import literal_eval
+from copy import deepcopy
+from json import loads
+from os import chdir
+from os import getcwd
+from os.path import dirname
+from xml.etree.ElementTree import parse
 
 
 class TestData(object):
@@ -13,24 +16,32 @@ class TestData(object):
     """
     _conversions = { 
         # Conversions for non-native data types.
-        "json": json.loads,  # native type will be a dict
-    }
+        "json": loads}  # native type will be a dict
 
     def __init__(self, data_file):
-        """ Initialize a TestScenario object. 
+        """ Initialize this object. 
         
-        """        
-        self._data = {}
-        root = xml.etree.ElementTree.parse(data_file)
-        for elem in root.findall("value"):
-            name, dtype = elem.get("name"), elem.get("dtype")
-            convert = self._conversions.get(dtype, ast.literal_eval)
-            self._data[name] = convert(elem.text.strip())
+        """
+        cwd = getcwd()
+        try:
+            chdir(dirname(__file__))        
+            self._data = {}
+            root = parse(data_file)
+            for elem in root.findall("value"):
+                name, dtype = elem.get("name"), elem.get("dtype")
+                convert = self._conversions.get(dtype, literal_eval)
+                self._data[name] = convert(elem.text.strip())
+        finally:
+            # Restore the original working directory no matter what.
+            chdir(cwd)
         return
             
     def __getattr__(self, name):
+        """ Return a data attribute.
+                
+        """
         # A deep copy is returned so that all values are independent.
         try:
-            return copy.deepcopy(self._data[name])
+            return deepcopy(self._data[name])
         except KeyError:
             raise AttributeError("unknown value: '{0:s}'".format(name))
