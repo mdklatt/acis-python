@@ -6,12 +6,11 @@ import sys
 
 import _unittest as unittest
 
-def main(argv):
+def main(argv=None):
     """ Run all tests in this directory.
 
     The test directory is searched for all test scripts ('test_*.py'), and all
-    the unit tests (TestCase implementations) they contain are run as a single
-    test suite.
+    the unit tests they contain are run as a single test suite.
     
     """
     path = os.path.join(os.path.dirname(__file__))
