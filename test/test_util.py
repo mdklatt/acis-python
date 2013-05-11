@@ -23,8 +23,8 @@ class SidsTableFunctionTest(unittest.TestCase):
         """ Test normal operation.
 
         """
-        sids = ("13967 1", "346661 2")
-        table = {"WBAN": "13967", "COOP": "346661"}
+        sids = ("13967 1", "346661 2", "346664 2")
+        table = {"WBAN": ["13967"], "COOP": ["346661", "346664"]}
         self.assertDictEqual(table, sids_table(sids))
         return
 

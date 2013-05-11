@@ -44,7 +44,7 @@ def sids_table(sids):
         except AttributeError:  # search returned None
             raise ValueError("invalid SID: {0:s}".format(sid))
         try:
-            table[_SID_TYPES[int(code)]] = ident
+            table.setdefault(_SID_TYPES[int(code)], list()).append(ident)
         except KeyError:
             raise ValueError("unknown SID type: {0:s}".format(code))
     return table

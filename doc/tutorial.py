@@ -154,7 +154,7 @@ September 1, 2012.
 print "EXAMPLE 5\n"
 request = acis.StnDataRequest()
 request.location(sid="OKC")
-request.dates("2012-09-01", "por")
+request.dates("2013-05-01", "por")
 request.add_element("maxt")
 request.add_element("mint")
 request.metadata("name")
@@ -295,7 +295,7 @@ print "({0:d} records returned)".format(len(result))
 print "-"*40
 
 
-"""
+""" 
 *** Using Streams ***
 
 A potential drawback of using a Request/Result is that the entire result object
@@ -336,7 +336,7 @@ print "-"*40
 *** Utility Functions ***
 
 The sids_table function can be used to interpret the "sids" metadata field.
-This example will find all CoCoRaHS sites in Cleveland County, OK.
+This example will find all CoCoRaHS sites in Cleveland County, OK. 
 
 """
 print "EXAMPLE 11\n"
@@ -346,8 +346,8 @@ request.metadata("sids", "name")
 result = acis.StnMetaResult(request.submit())
 for site in result.meta.values():
     try:
-        sid = acis.sids_table(site["sids"])["CoCoRaHS"]
-    except KeyError:  # no CoCoRaHS id
+        sid = acis.sids_table(site["sids"])["CoCoRaHS"][0]  # use first ID
+    except KeyError:  # no CoCoRaHS id(s)
         continue
     print "{0:s}: {1:s}".format(sid, site["name"])
 print "-"*40
@@ -403,7 +403,7 @@ will find the all-time record high temperature for August for Oklahoma City.
 Each day of the month is a separate request. Normal execution would require
 waiting for each request to be completed by the server before the next one
 is executed. However, by submitting each request simultaneously, the server
-can process each on in parallel.
+can process each one in parallel.
 
 This is an experimental feature at this point. USE AT YOUR OWN RISK.
 
