@@ -23,17 +23,12 @@ class DecodeSidsFunctionTest(unittest.TestCase):
         """ Test normal operation.
 
         """
-        sids = ("13967 1", "346661 2", "346664 2")
-        table = {"WBAN": ["13967"], "COOP": ["346661", "346664"]}
-        self.assertDictEqual(table, decode_sids(sids))
-        return
-
-    def test_unknown_type(self):
-        """ Test for unknown network type.
-
-        """
-        sids = ("13967 9999",)
-        self.assertEqual(9999, decode_sids(sids).keys()[0])
+        encoded = ("13967 1", "346661 2", "346664 2", "A123 9999")
+        decoded = {
+            "WBAN": ["13967"], 
+            "COOP": ["346661", "346664"], 
+            9999: ["A123"]}
+        self.assertDictEqual(decoded, decode_sids(encoded))
         return
 
     def test_bad_format(self):
