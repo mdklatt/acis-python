@@ -28,6 +28,14 @@ class SidsTableFunctionTest(unittest.TestCase):
         self.assertDictEqual(table, sids_table(sids))
         return
 
+    def test_unknown_type(self):
+        """ Test for unknown network type.
+
+        """
+        sids = ("13967 9999",)
+        self.assertEqual(9999, sids_table(sids).keys()[0])
+        return
+
     def test_bad_format(self):
         """ Test exception for invalid sid format.
 
@@ -36,17 +44,6 @@ class SidsTableFunctionTest(unittest.TestCase):
         with self.assertRaises(ValueError) as context:
             sids_table(sids)
         message = "invalid SID: 13967"
-        self.assertEqual(message, str(context.exception))
-        return
-
-    def test_unknown_type(self):
-        """ Test exception for unknown type code.
-
-        """
-        sids = ("13967 9999",)
-        with self.assertRaises(ValueError) as context:
-            sids_table(sids)
-        message = "unknown SID type: 9999"
         self.assertEqual(message, str(context.exception))
         return
 

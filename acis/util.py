@@ -21,33 +21,31 @@ except ImportError:
 
 __all__ = ("sids_table", "result_array")
 
-_SID_REGEX = re.compile(r"^([^ ]*) (\d+)$")
-
-_SID_TYPES = {
-      1: "WBAN",    2: "COOP",   3: "FAA",  4: "WMO",       5: "ICAO",
-      6: "GHCN",    7: "NWSLI",  8: "RCC",  9: "ThreadEx", 10: "CoCoRaHS",
-     16: "AWDN",   29: "SNOTEL"}
-
 
 def sids_table(sids):
-    """ Return a dict of site IDs keyed by their ID types.
+    """ Return a dict of site IDs keyed by their network types.
 
     The parameter is a list of SIDs from ACIS metadata where each SID is a
-    single string containing an identifier and its integer type code separated
-    by a space, e.g. "13697 1".
+    single string containing an identifier and its network type separated by a
+    space, e.g. "13697 1". There can be more than one ID per network.
 
     """
     table = {}
     for sid in sids:
         try:
-            ident, code = _SID_REGEX.search(sid).groups()
+            ident, ntype = sids_table._regex.search(sid).groups()
         except AttributeError:  # search returned None
             raise ValueError("invalid SID: {0:s}".format(sid))
-        try:
-            table.setdefault(_SID_TYPES[int(code)], list()).append(ident)
-        except KeyError:
-            raise ValueError("unknown SID type: {0:s}".format(code))
+        ntype = int(ntype)
+        network = sids_table._networks.get(ntype, ntype)
+        table.setdefault(network, list()).append(ident)
     return table
+
+sids_table._regex = re.compile(r"^([^ ]*) (\d+)$")
+sids_table._networks = {
+     1: "WBAN",      2: "COOP",      3: "FAA",       4: "WMO", 
+     5: "ICAO",      6: "GHCN",      7: "NWSLI",     8: "RCC",  
+     9: "ThreadEx", 10: "CoCoRaHS", 16: "AWDN",     29: "SNOTEL"}
 
 
 if "numpy" in globals():  # conditional compilation
