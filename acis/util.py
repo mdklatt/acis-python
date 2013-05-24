@@ -33,10 +33,10 @@ def decode_sids(sids):
     table = {}
     for sid in sids:
         try:
-            ident, ntype = decode_sids._regex.search(sid).groups()
-        except AttributeError:  # search returned None
+            ident, ntype = sid.split()
+            ntype = int(ntype)
+        except ValueError:  # not enough items in split or int() failed
             raise ValueError("invalid SID: {0:s}".format(sid))
-        ntype = int(ntype)
         network = decode_sids._networks.get(ntype, ntype)
         table.setdefault(network, list()).append(ident)
     return table
