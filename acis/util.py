@@ -26,7 +26,7 @@ _SID_REGEX = re.compile(r"^([^ ]*) (\d+)$")
 _SID_TYPES = {
       1: "WBAN",    2: "COOP",   3: "FAA",  4: "WMO",       5: "ICAO",
       6: "GHCN",    7: "NWSLI",  8: "RCC",  9: "ThreadEx", 10: "CoCoRaHS",
-     29: "SNOTEL"}
+     16: "AWDN",   29: "SNOTEL"}
 
 
 def sids_table(sids):
