@@ -335,7 +335,7 @@ print "-"*40
 """
 *** Utility Functions ***
 
-The sids_table function can be used to interpret the "sids" metadata field.
+The decode_sids function can be used to interpret the "sids" metadata field.
 This example will find all CoCoRaHS sites in Cleveland County, OK. 
 
 """
@@ -346,7 +346,7 @@ request.metadata("sids", "name")
 result = acis.StnMetaResult(request.submit())
 for site in result.meta.values():
     try:
-        sid = acis.sids_table(site["sids"])["CoCoRaHS"][0]  # use first ID
+        sid = acis.decode_sids(site["sids"])["CoCoRaHS"][0]  # use first ID
     except KeyError:  # no CoCoRaHS id(s)
         continue
     print "{0:s}: {1:s}".format(sid, site["name"])

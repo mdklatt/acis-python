@@ -8,15 +8,15 @@ import _unittest as unittest
 from _data import TestData
 
 from acis import result_array
-from acis import sids_table
+from acis import decode_sids
 from acis import StnDataResult
 
 
 # Define the TestCase classes for this module. Each public component of the
 # module being tested has its own TestCase.
 
-class SidsTableFunctionTest(unittest.TestCase):
-    """ Unit testing for the sids_table function.
+class DecodeSidsFunctionTest(unittest.TestCase):
+    """ Unit testing for the decode_sids function.
 
     """
     def test(self):
@@ -25,7 +25,7 @@ class SidsTableFunctionTest(unittest.TestCase):
         """
         sids = ("13967 1", "346661 2", "346664 2")
         table = {"WBAN": ["13967"], "COOP": ["346661", "346664"]}
-        self.assertDictEqual(table, sids_table(sids))
+        self.assertDictEqual(table, decode_sids(sids))
         return
 
     def test_unknown_type(self):
@@ -33,7 +33,7 @@ class SidsTableFunctionTest(unittest.TestCase):
 
         """
         sids = ("13967 9999",)
-        self.assertEqual(9999, sids_table(sids).keys()[0])
+        self.assertEqual(9999, decode_sids(sids).keys()[0])
         return
 
     def test_bad_format(self):
@@ -42,7 +42,7 @@ class SidsTableFunctionTest(unittest.TestCase):
         """
         sids = ("13967",)  # missing type code
         with self.assertRaises(ValueError) as context:
-            sids_table(sids)
+            decode_sids(sids)
         message = "invalid SID: 13967"
         self.assertEqual(message, str(context.exception))
         return
@@ -78,7 +78,7 @@ class ResultArrayFunctionTest(unittest.TestCase):
 # Specify the test cases to run for this module. Private bases classes need
 # to be explicitly excluded from automatic discovery.
 
-_TEST_CASES = (SidsTableFunctionTest, ResultArrayFunctionTest)
+_TEST_CASES = (DecodeSidsFunctionTest, ResultArrayFunctionTest)
 
 def load_tests(loader, tests, pattern):
     """ Define a TestSuite for this module.

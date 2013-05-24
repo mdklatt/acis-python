@@ -19,10 +19,10 @@ try:
 except ImportError:
     pass
 
-__all__ = ("sids_table", "result_array")
+__all__ = ("decode_sids", "result_array")
 
 
-def sids_table(sids):
+def decode_sids(sids):
     """ Return a dict of site IDs keyed by their network types.
 
     The parameter is a list of SIDs from ACIS metadata where each SID is a
@@ -33,16 +33,16 @@ def sids_table(sids):
     table = {}
     for sid in sids:
         try:
-            ident, ntype = sids_table._regex.search(sid).groups()
+            ident, ntype = decode_sids._regex.search(sid).groups()
         except AttributeError:  # search returned None
             raise ValueError("invalid SID: {0:s}".format(sid))
         ntype = int(ntype)
-        network = sids_table._networks.get(ntype, ntype)
+        network = decode_sids._networks.get(ntype, ntype)
         table.setdefault(network, list()).append(ident)
     return table
 
-sids_table._regex = re.compile(r"^([^ ]*) (\d+)$")
-sids_table._networks = {
+decode_sids._regex = re.compile(r"^([^ ]*) (\d+)$")
+decode_sids._networks = {
      1: "WBAN",      2: "COOP",      3: "FAA",       4: "WMO", 
      5: "ICAO",      6: "GHCN",      7: "NWSLI",     8: "RCC",  
      9: "ThreadEx", 10: "CoCoRaHS", 16: "AWDN",     29: "SNOTEL"}
