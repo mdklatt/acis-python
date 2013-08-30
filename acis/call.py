@@ -11,7 +11,13 @@ This implementation is based on ACIS Web Services Version 2:
 """
 from .__version__ import __version__
 
-import json
+try:
+    # Use the external simplejson library if it's available. With Python 2.6
+    # this can improve performance 2-4x for large data requests. There is no
+    # difference for Python 2.7.
+    import simplejson as json
+except ImportError:
+    import json
 import urllib
 import urllib2
 import urlparse
