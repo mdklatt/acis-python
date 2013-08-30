@@ -10,14 +10,9 @@ This implementation is based on ACIS Web Services Version 2:
     <http://data.rcc-acis.org/doc/>.
 
 """
-from .__version__ import __version__
+from __future__ import absolute_import
 
-import re
-
-try:
-    import numpy
-except ImportError:
-    pass
+from re import compile
 
 __all__ = ("decode_sids", "result_array")
 
@@ -41,14 +36,19 @@ def decode_sids(sids):
         table.setdefault(network, list()).append(ident)
     return table
 
-decode_sids._regex = re.compile(r"^([^ ]*) (\d+)$")
+decode_sids._regex = compile(r"^([^ ]*) (\d+)$")
 decode_sids._networks = {
      1: "WBAN",      2: "COOP",      3: "FAA",       4: "WMO", 
      5: "ICAO",      6: "GHCN",      7: "NWSLI",     8: "RCC",  
      9: "ThreadEx", 10: "CoCoRaHS", 16: "AWDN",     29: "SNOTEL"}
 
 
-if "numpy" in globals():  # conditional compilation
+try:
+    import numpy
+except ImportError:
+    pass
+else:
+    # Define function if numpy is available.
     def result_array(result):
         """ Convert a data result to a numpy record array.
     

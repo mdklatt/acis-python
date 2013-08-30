@@ -1,6 +1,8 @@
 """ Miscellaneous implementation functions.
 
 """
+from __future__ import absolute_import
+
 from .date import date_object
 from .date import date_string
 from .error import RequestError

@@ -9,18 +9,23 @@ This implementation is based on ACIS Web Services Version 2:
     <http://data.rcc-acis.org/doc/>.
 
 """
-from .__version__ import __version__
+from __future__ import absolute_import
 
 try:
     # Use the external simplejson library if it's available. With Python 2.6
     # this can improve performance 2-4x for large data requests. There is no
     # difference for Python 2.7.
-    import simplejson as json
+    from simplejson import dumps
+    from simplejson import loads
 except ImportError:
-    import json
-import urllib
-import urllib2
-import urlparse
+    from json import dumps
+    from json import loads
+
+from urllib import urlencode
+from urllib2 import Request
+from urllib2 import HTTPError
+from urllib2 import urlopen
+from urlparse import urljoin
 
 from .error import RequestError
 from .error import ResultError
@@ -44,7 +49,7 @@ class WebServicesCall(object):
         "StnData", etc.
 
         """
-        self.url = urlparse.urljoin(self._SERVER, call_type)
+        self.url = urljoin(self._SERVER, call_type)
         return
 
     def __call__(self, params):
@@ -56,11 +61,11 @@ class WebServicesCall(object):
         output types a stream object gets returned.
 
         """
-        stream = self._post(urllib.urlencode({"params": json.dumps(params)}))
+        stream = self._post(urlencode({"params": dumps(params)}))
         if params.get("output", "json").lower() != "json":
             return stream
         try:
-            result = json.loads(stream.read())
+            result = loads(stream.read())
         except ValueError:
             raise ResultError("server returned invalid JSON")
         finally:
@@ -75,10 +80,10 @@ class WebServicesCall(object):
         """
         HTTP_BAD = 400
         TIMEOUT = 15  # seconds
-        request = urllib2.Request(self.url, data)
+        request = Request(self.url, data)
         try:
-            stream = urllib2.urlopen(request, timeout=TIMEOUT)
-        except urllib2.HTTPError as err:
+            stream = urlopen(request, timeout=TIMEOUT)
+        except HTTPError as err:
             # This doesn't do the right thing for a "soft 404", e.g. an ISP
             # redirects to a custom error or search page for a DNS lookup
             # failure and returns a 200 (OK) code.

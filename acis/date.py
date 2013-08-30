@@ -11,34 +11,34 @@ The external dateutil library is required:
     <http://pypi.python.org/pypi/python-dateutil>.
 
 """
-from .__version__ import __version__
+from __future__ import absolute_import
 
-import datetime
-import re
+from datetime import date
+from re import compile
 
-import dateutil.relativedelta
+from dateutil.relativedelta import relativedelta
 
 __all__ = ("date_object", "date_string", "date_trunc", "date_range")
 
-_DATE_REGEX = re.compile(r"^(\d{4})(?:-?(\d{2}))?(?:-?(\d{2}))?$")
+_DATE_REGEX = compile(r"^(\d{4})(?:-?(\d{2}))?(?:-?(\d{2}))?$")
 
 
-def date_object(date):
+def date_object(datestr):
     """ Convert an ACIS date string to a datetime.date object.
 
     Valid date formats are YYYY[-MM[-DD]] (hyphens are optional but leading
     zeroes are not; no two-digit years).
 
     """
-    match = _DATE_REGEX.search(date)
+    match = _DATE_REGEX.search(datestr)
     try:
         y, m, d = (int(s) if s is not None else 1 for s in match.groups())
     except AttributeError:  # match is None
-        raise ValueError("invalid date format: {0:s}".format(date))
-    return datetime.date(y, m, d)
+        raise ValueError("invalid date format: {0:s}".format(datestr))
+    return date(y, m, d)
 
 
-def date_string(date):
+def date_string(dateobj):
     """ Return an ACIS date string from a date object.
 
     The date_obj parameter can be any object that has year, month, and day
@@ -48,7 +48,7 @@ def date_string(date):
 
     """
     try:
-        y, m, d = date.year, date.month, date.day
+        y, m, d = dateobj.year, dateobj.month, dateobj.day
     except AttributeError:
         raise TypeError("need a date object")
     return "{0:04d}-{1:02d}-{2:02d}".format(y, m, d)
@@ -63,17 +63,16 @@ def date_delta(interval):
     named_deltas = {
         "dly": (0, 0, 1),
         "mly": (0, 1, 0),
-        "yly": (1, 0, 0),
-    }
+        "yly": (1, 0, 0)}
     try:
         interval = named_deltas[interval.lower()]
     except AttributeError:  # not a str
         pass
     y, m, d = interval
-    return dateutil.relativedelta.relativedelta(years=y, months=m, days=d)
+    return relativedelta(years=y, months=m, days=d)
 
 
-def date_trunc(date, interval):
+def date_trunc(datestr, interval):
     """ Truncate a date to the precision defined by interval.
     
     The only intervals that have an effect are "yly" and "mly". For all other
@@ -81,20 +80,20 @@ def date_trunc(date, interval):
     
     """
     try:
-        y, m, d = _DATE_REGEX.search(date).groups()
+        y, m, d = _DATE_REGEX.search(datestr).groups()
     except AttributeError:  # match is None
-        raise ValueError("invalid date string: {0:s}".format(date))
+        raise ValueError("invalid date string: {0:s}".format(datestr))
     precision = {"yly": 1, "mly": 2}
     try:
         prec = precision[interval.lower()]
     except (AttributeError, KeyError):  # not a str or unknown interval
         prec = 3  # daily
-    date = [y]
+    datestr = [y]
     if prec >= 2:
-        date.append(m if m is not None else "01")
+        datestr.append(m if m is not None else "01")
     if prec == 3:
-        date.append(d if d is not None else "01")
-    return "-".join(date)
+        datestr.append(d if d is not None else "01")
+    return "-".join(datestr)
 
     
 def date_range(sdate, edate=None, interval="dly"):

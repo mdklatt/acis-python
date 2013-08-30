@@ -11,12 +11,17 @@ isn't doing this...yet). An error with one request will take the whole queue
 down. The interface should not be considered stable. 
 
 """
-import asyncore
-import cStringIO
-import json
-import socket
-import urllib
-import urlparse
+from __future__ import absolute_import
+
+from asyncore import dispatcher
+from asyncore import loop
+from cStringIO import StringIO
+from json import dumps
+from json import loads
+from socket import AF_INET
+from socket import SOCK_STREAM
+from urllib import urlencode
+from urlparse import urlparse
 
 from acis import RequestError
 from acis import ResultError
@@ -44,7 +49,7 @@ class RequestQueue(object):
                 error = "HTTP error: {0:s} ({1:d})".format(message, code)
                 raise RuntimeError(error)
         try:
-            return json.loads(reply.content)
+            return loads(reply.content)
         except ValueError:
             raise ResultError("server returned invalid JSON")
         
@@ -63,8 +68,8 @@ class RequestQueue(object):
         object is stored.
                 
         """
-        url = urlparse.urlparse(request.url)
-        data = urllib.urlencode({"params": json.dumps(request.params)})
+        url = urlparse(request.url)
+        data = urlencode({"params": dumps(request.params)})
         http_request = _HttpRequest(url.netloc, url.path, data, self._sockmap)
         self._queue.append((http_request, request.params, callback))
         return
@@ -77,7 +82,7 @@ class RequestQueue(object):
         request.
         
         """
-        asyncore.loop(map=self._sockmap)  # execute all requests in this queue
+        loop(map=self._sockmap)  # execute all requests in this queue
         for http_request, params, callback in self._queue:
             try:
                 result = self._parse(http_request)
@@ -102,7 +107,7 @@ class RequestQueue(object):
         return
         
         
-class _HttpRequest(asyncore.dispatcher):
+class _HttpRequest(dispatcher):
     """ A single asynchronous HTTP request.
 
     """    
@@ -123,12 +128,12 @@ class _HttpRequest(asyncore.dispatcher):
         """ Initialize an _HttpRequest object.
         
         """
-        asyncore.dispatcher.__init__(self, map=map)
+        dispatcher.__init__(self, map=map)
         self.status = None
         self.content = None
-        self._buffer = cStringIO.StringIO()
+        self._buffer = StringIO()
         self._request = self._post(path, data)
-        self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.create_socket(AF_INET, SOCK_STREAM)
         # Connection fails with with a socket.gaierror exception ("nodename nor
         # servname provided, or not known") for more than 248 open connections;
         # perhaps the ACIS server fails to respond if there are too many 
@@ -151,7 +156,7 @@ class _HttpRequest(asyncore.dispatcher):
         self.content = self._buffer.read()
         return
 
-    # Implement the asyncore.dispatcher interface.
+    # Implement the dispatcher interface.
     
     def writable(self):
         """ Return True while there are data to send to the server.

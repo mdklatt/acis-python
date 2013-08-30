@@ -11,10 +11,10 @@ This implementation is based on ACIS Web Services Version 2:
     <http://data.rcc-acis.org/doc/>.
 
 """
-from .__version__ import __version__
+from __future__ import absolute_import
 
-import contextlib
-import itertools
+from contextlib import closing
+from itertools import chain
 
 from ._misc import annotate
 from ._misc import date_params
@@ -87,8 +87,8 @@ class _CsvStream(object):
 
         """
         first_line, stream = self._connect()
-        with contextlib.closing(stream):
-            line_iter = itertools.chain([first_line], stream)
+        with closing(stream):
+            line_iter = chain([first_line], stream)
             self._header(line_iter)
             for line in line_iter:
                 yield self._record(line.rstrip())

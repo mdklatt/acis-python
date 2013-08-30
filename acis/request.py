@@ -11,7 +11,7 @@ This implementation is based on ACIS Web Services Version 2:
     <http://data.rcc-acis.org/doc/>.
 
 """
-from .__version__ import __version__
+from __future__ import absolute_import
 
 from ._misc import date_params
 from ._misc import make_element

@@ -15,9 +15,10 @@ This implementation is based on ACIS Web Services Version 2:
     <http://data.rcc-acis.org/doc/>.
 
 """
-from .__version__ import __version__
+from __future__ import absolute_import
 
-import itertools
+from itertools import cycle
+from itertools import product
 
 from ._misc import annotate
 from ._misc import date_span
@@ -208,7 +209,7 @@ class MultiStnDataResult(_DataResult):
         # so date_iter will automatically reset when advancing to the next
         # site.
         # TODO: Correct dates for "groupby" results, c.f. date_range().
-        date_iter = itertools.cycle(self._dates)
+        date_iter = cycle(self._dates)
         for uid, data in self.data.iteritems():
             for record in data:
                 yield [uid, date_iter.next()] + record
@@ -262,7 +263,7 @@ class GridDataResult(_JsonResult):
         
         """
         nx, ny = self.shape
-        for day, j, i in itertools.product(self.data, range(nx), range(ny)):
+        for day, j, i in product(self.data, range(nx), range(ny)):
             date = day[0]
             try:
                 elems = [elem[j][i] for elem in day[1:]]
