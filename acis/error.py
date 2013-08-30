@@ -1,16 +1,7 @@
 """ Exception classes for the acis library.
 
-All exception classes should be defined in this module.
-
 """
-__all__ = ("Error", "RequestError", "ResultError")
-
-
-class Error(Exception):
-    """ The base class for all acis exceptions.
-
-    """
-    pass
+__all__ = ("RequestError", "ResultError")
 
 
 class RequestError(Exception):
@@ -20,7 +11,7 @@ class RequestError(Exception):
     pass
 
 
-class ResultError(Error):
+class ResultError(Exception):
     """ An invalid result.
 
     """
