@@ -30,7 +30,7 @@ def annotate(sequence):
     # Reverse the sequence, then the duplicate count acts as a reverse index 
     # while successive duplicates are annotated and the count is decremented. 
     # Reverse the sequence again to restore the orignal order.
-    annotated = list(reversed(sequence))
+    annotated = list(reversed(list(sequence)))
     for key, count in counter(annotated).iteritems():
         if count == 1:
             continue

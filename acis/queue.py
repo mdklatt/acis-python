@@ -116,13 +116,13 @@ class _HttpRequest(dispatcher):
         """ Generate a POST request string.
         
         """
-        CRLF = "\r\n"
+        crlf = "\r\n"
         post = ["POST {0:s} HTTP/1.0".format(path)]
         post.append("Content-Type: application/x-www-form-urlencoded")
         post.append("Content-Length: {0:d}".format(len(data)))
         post.append("")
         post.append(data)
-        return CRLF.join(post)
+        return crlf.join(post)
         
     def __init__(self, host, path, data, map):
         """ Initialize an _HttpRequest object.

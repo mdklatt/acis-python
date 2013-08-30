@@ -55,7 +55,7 @@ class _CsvStream(object):
         number, e.g. maxt_0, maxt_1, etc. 
 
         """
-        return annotate([elem["alias"] for elem in self._params["elems"]])
+        return annotate(elem["alias"] for elem in self._params["elems"])
 
     def interval(self, value):
         """ Set the interval for this stream.

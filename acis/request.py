@@ -142,7 +142,7 @@ class _DataRequest(_PlaceTimeRequest):
         """
         self._interval = valid_interval(value)
         for elem in self._params["elems"]:
-            elem['interval'] = self._interval
+            elem["interval"] = self._interval
         return
 
     def add_element(self, ident, **options):

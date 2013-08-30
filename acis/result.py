@@ -63,7 +63,7 @@ class _JsonResult(object):
         except KeyError:  # no elems (ok for StnMetaResult)
             self.elems = tuple()
         else:
-            self.elems = annotate([elem["alias"] for elem in elems])
+            self.elems = annotate(elem["alias"] for elem in elems)
         return
 
 

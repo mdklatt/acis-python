@@ -40,7 +40,8 @@ class WebServicesCall(object):
     error handling, and decoding of the returned result.
 
     """
-    _SERVER = "http://data.rcc-acis.org"
+    _server = "http://data.rcc-acis.org"
+    _timeout = 15  # seconds
 
     def __init__(self, call_type):
         """ Initialize a WebServicesCall.
@@ -49,7 +50,7 @@ class WebServicesCall(object):
         "StnData", etc.
 
         """
-        self.url = urljoin(self._SERVER, call_type)
+        self.url = urljoin(self._server, call_type)
         return
 
     def __call__(self, params):
@@ -78,16 +79,15 @@ class WebServicesCall(object):
         The data parameter must be a properly encoded and escaped string.
 
         """
-        HTTP_BAD = 400
-        TIMEOUT = 15  # seconds
+        http_bad = 400
         request = Request(self.url, data)
         try:
-            stream = urlopen(request, timeout=TIMEOUT)
+            stream = urlopen(request, timeout=self._timeout)
         except HTTPError as err:
             # This doesn't do the right thing for a "soft 404", e.g. an ISP
             # redirects to a custom error or search page for a DNS lookup
             # failure and returns a 200 (OK) code.
-            if err.code == HTTP_BAD:
+            if err.code == http_bad:
                 # If the ACIS server returns this code it also provides a
                 # helpful plain text error message as the content.
                 raise RequestError(err.read().rstrip())
