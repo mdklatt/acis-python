@@ -10,8 +10,9 @@ from distutils.core import Command
 from distutils.core import setup
 from sys import exit
 
-from acis import __version__
 from test import run as run_tests
+
+execfile("acis/__version__.py")
 
 SETUP_CONFIG = {
     "name":         "acis",
