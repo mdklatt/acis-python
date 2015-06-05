@@ -60,7 +60,7 @@ Known Issues/Limitations
 ------------------------
 * `MultiStnDataResult` will give the wrong dates when iterating over "groupby" results.
 * `GridDataResult` cannot be used with image output.
-* `RequestQueue` should be considered experimental.
+* `RequestQueue` is currently failing its unit tests, apparently because of a change on the server.
 
 <!-- REFERENCES -->
 [1]: http://github.com/mdklatt/acis-python "acis-python"

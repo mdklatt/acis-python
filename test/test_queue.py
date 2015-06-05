@@ -15,6 +15,9 @@ from acis.queue import RequestQueue
 # Define the TestCase classes for this module. Each public component of the
 # module being tested has its own TestCase.
 
+# FIXME: As of 2015-06-05 this fails for every test with the ACIS server
+# returning 404 errors. This appears to be due to a change on the server.
+
 class RequestQueueTest(unittest.TestCase):
     """ Unit testing for the RequestQueue class.
 
@@ -49,6 +52,7 @@ class RequestQueueTest(unittest.TestCase):
         #self._result = StnDataResult(self._query)
         return
         
+    @unittest.expectedFailure  # FIXME
     def test_execute(self):
         """ Test the execute method.
         
@@ -61,6 +65,7 @@ class RequestQueueTest(unittest.TestCase):
             self.assertDictEqual(self._query["result"], item["result"])
         return
 
+    @unittest.expectedFailure  # FIXME
     def test_execute_callback(self):
         """ Test the execute method with a callback.
         
@@ -76,6 +81,7 @@ class RequestQueueTest(unittest.TestCase):
             # self.assertDictEqual(result.smry, item.smry)
         return
     
+    @unittest.expectedFailure  # FIXME
     def test_clear(self):
         queue = RequestQueue()
         queue.add(self._request)
